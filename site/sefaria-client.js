@@ -222,10 +222,27 @@
       }
 
       if (referenceInfo.kind === "folder") {
+        let quality;
+        if (referenceInfo.firstAvailableSectionRef) {
+          const sample = await this.loadText(referenceInfo.firstAvailableSectionRef, options);
+          quality = textQuality(sample.text);
+          if (quality.status === "missing" || quality.status === "unvocalized") {
+            return {
+              ...base,
+              ...referenceInfo,
+              categories: base.categories || [],
+              quality,
+              valid: false,
+              availability: "unavailable"
+            };
+          }
+        }
+
         return {
           ...base,
           ...referenceInfo,
           categories: base.categories || [],
+          quality,
           availability: "browse"
         };
       }

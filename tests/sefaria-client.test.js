@@ -101,26 +101,55 @@ test("validates an importable result and preserves Sefaria metadata", async () =
   assert.equal(requests.length, 2);
 });
 
-test("classifies collection references without requesting their text", async () => {
+test("classifies a collection after verifying its first available section", async () => {
   const requests = [];
   const client = new SefariaClient({
     fetchImpl: async (url) => {
       requests.push(url);
-      return jsonResponse(refPayload({
-        normalized: "Siddur Ashkenaz",
-        hebrew: "סידור אשכנז",
-        url_ref: "Siddur_Ashkenaz",
-        node_type: "SchemaNode",
-        depth: null,
-        start_indexes: []
-      }));
+      return url.includes("/api/ref/")
+        ? jsonResponse(refPayload({
+          normalized: "Siddur Ashkenaz",
+          hebrew: "סידור אשכנז",
+          url_ref: "Siddur_Ashkenaz",
+          node_type: "SchemaNode",
+          navigation_refs: {
+            first_available_section_ref: "Siddur Ashkenaz, Weekday, Shacharit, Preparatory Prayers 1"
+          },
+          depth: null,
+          start_indexes: []
+        }))
+        : jsonResponse(textPayload());
     }
   });
 
   const result = await client.validateResult({ ref: "Siddur Ashkenaz", source: "name" });
   assert.equal(result.availability, "browse");
   assert.equal(result.kind, "folder");
-  assert.equal(requests.length, 1);
+  assert.equal(result.quality.status, "vocalized");
+  assert.equal(requests.length, 2);
+});
+
+test("rejects a collection whose available Hebrew is unvocalized", async () => {
+  const client = new SefariaClient({
+    fetchImpl: async (url) => url.includes("/api/ref/")
+      ? jsonResponse(refPayload({
+        normalized: "Siddur Rashi",
+        hebrew: "סידור רש\"י",
+        url_ref: "Siddur_Rashi",
+        navigation_refs: { first_available_section_ref: "Siddur Rashi 1" },
+        depth: 2,
+        start_indexes: []
+      }))
+      : jsonResponse(textPayload({
+        ref: "Siddur Rashi 1",
+        versions: [{ language: "he", text: "תניא היה רבי מאיר אומר" }]
+      }))
+  });
+
+  const result = await client.validateResult({ ref: "Siddur Rashi", source: "name" });
+  assert.equal(result.valid, false);
+  assert.equal(result.availability, "unavailable");
+  assert.equal(result.quality.status, "unvocalized");
 });
 
 test("does not offer unvocalized Hebrew as directly importable", async () => {
