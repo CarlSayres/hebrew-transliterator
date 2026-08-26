@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hebrew Transliterator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-labelledby="app-title">
+        <header class="masthead">
+          <div>
+            <nav class="tool-nav" aria-label="Tools">
+              <a class="tool-nav-link active" href="index.html" aria-current="page">Hebrew transliteration</a>
+            </nav>
+            <h1 id="app-title">Hebrew Transliterator</h1>
+            <p class="intro-text">
+              Paste any vocalized Hebrew into the box below, or search for a biblical or liturgical text using Sefaria and import it for transliteration. Created by Cantor Carl Sayres.
+            </p>
+          </div>
+          <div class="masthead-actions">
+            <div class="style-controls">
+              <label class="style-picker" for="styleSelect">
+                <span>Style</span>
+                <select id="styleSelect"></select>
+              </label>
+              <div class="option-row">
+                <label class="option-toggle" for="doubleDageshToggle">
+                  <input id="doubleDageshToggle" type="checkbox">
+                  <span>Double dagesh chazak</span>
+                </label>
+                <label class="option-toggle" for="stressMarkToggle">
+                  <input id="stressMarkToggle" type="checkbox">
+                  <span>Stress marks</span>
+                </label>
+              </div>
+              <fieldset class="radio-options" aria-label="Tzere output">
+                <legend>Tzere</legend>
+                <label>
+                  <input type="radio" name="tzereOverride" value="e">
+                  <span>e</span>
+                </label>
+                <label>
+                  <input type="radio" name="tzereOverride" value="ei">
+                  <span>ei</span>
+                </label>
+              </fieldset>
+              <div class="sound-controls">
+                <label class="sound-picker" for="chetOverride">
+                  <span>ח</span>
+                  <select id="chetOverride">
+                    <option value="h">h</option>
+                    <option value="ḥ">ḥ</option>
+                    <option value="ch">ch</option>
+                    <option value="kh">kh</option>
+                  </select>
+                </label>
+                <label class="sound-picker" for="khafOverride">
+                  <span>כ / ך</span>
+                  <select id="khafOverride">
+                    <option value="h">h</option>
+                    <option value="ḥ">ḥ</option>
+                    <option value="ch">ch</option>
+                    <option value="kh">kh</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <button id="sampleButton" class="secondary-button" type="button">Sample</button>
+          </div>
+        </header>
+
+        <section class="sefaria-panel" aria-labelledby="sefariaLabel">
+          <label id="sefariaLabel" class="sefaria-label" for="sefariaQuery">Import from Sefaria</label>
+          <div class="sefaria-controls">
+            <input
+              id="sefariaQuery"
+              class="sefaria-input"
+              type="search"
+              autocomplete="off"
+              placeholder="Genesis 1:1, Deut 6:4-9, Baruch Sheamar, Mi Chamocha, Aleinu, Siddur, Haggadah"
+            >
+            <button id="sefariaImportButton" class="secondary-button" type="button">Import exact ref</button>
+            <button id="sefariaSearchButton" class="secondary-button quiet-button" type="button">Search name/phrase</button>
+          </div>
+          <p class="sefaria-help">
+            Use Search for prayer names or phrases. Use Import for exact references like Genesis 1:1 or Psalms 23.
+          </p>
+          <div id="sefariaStatus" class="sefaria-status" role="status" aria-live="polite"></div>
+          <div id="sefariaResults" class="sefaria-results" aria-label="Sefaria search results"></div>
+        </section>
+
+        <div class="editor-grid">
+          <label class="panel" for="hebrewInput">
+            <span class="panel-label">Vocalized Hebrew</span>
+            <textarea
+              id="hebrewInput"
+              dir="rtl"
+              spellcheck="false"
+              placeholder="הקלד עברית מנוקדת כאן"
+            ></textarea>
+          </label>
+
+          <section class="panel" aria-labelledby="outputLabel">
+            <div class="output-header">
+              <span id="outputLabel" class="panel-label">Transliteration</span>
+              <button id="copyButton" class="icon-button" type="button" aria-label="Copy transliteration" title="Copy">
+                <span aria-hidden="true">Copy</span>
+              </button>
+            </div>
+            <output id="transliterationOutput" class="output" aria-live="polite"></output>
+            <div id="transliterationNotice" class="output-notice" role="status" aria-live="polite"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="rulesets/morphhb-silent-initial-mem-sheva.js"></script>
+    <script src="rulesets/modern-sefardi.js"></script>
+    <script src="transliterator.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

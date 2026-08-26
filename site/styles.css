@@ -1,0 +1,464 @@
+:root {
+  color-scheme: light;
+  --bg: #f7f5ef;
+  --surface: #fffefa;
+  --text: #24211c;
+  --muted: #6d675d;
+  --line: #d8d1c4;
+  --accent: #146b63;
+  --accent-strong: #0d514b;
+  --focus: #c27803;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+textarea,
+input,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: clamp(16px, 3vw, 40px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.workspace {
+  width: min(1280px, 100%);
+}
+
+.masthead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(14px, 2.5vw, 28px);
+  margin-bottom: clamp(14px, 2vw, 22px);
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tool-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 6px;
+  flex-wrap: wrap;
+}
+
+.tool-nav-link {
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.tool-nav-link:hover,
+.tool-nav-link:focus {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tool-nav-link.active {
+  color: var(--text);
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4.25rem);
+  line-height: 1;
+  font-weight: 750;
+}
+
+.intro-text {
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.detail-text {
+  max-width: 760px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.masthead-actions {
+  display: flex;
+  align-items: end;
+  gap: clamp(10px, 1.5vw, 14px);
+  flex-wrap: wrap;
+}
+
+.style-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.style-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.style-picker select {
+  min-width: 136px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 24px 6px 9px;
+  background: #ffffff;
+  color: var(--text);
+}
+
+.style-picker select:focus,
+.sound-picker select:focus {
+  outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
+  outline-offset: 0;
+}
+
+.sound-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.sound-picker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sound-picker select {
+  width: 54px;
+  min-width: 54px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 18px 4px 6px;
+  background: #ffffff;
+  color: var(--text);
+}
+
+.option-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stress-toggle {
+  color: var(--accent-strong);
+}
+
+.option-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.radio-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.radio-options legend {
+  float: left;
+  margin-right: 2px;
+}
+
+.radio-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.radio-options input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.sefaria-panel {
+  margin-bottom: clamp(12px, 2vw, 18px);
+  padding: clamp(12px, 1.5vw, 16px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 10px 30px rgba(46, 39, 25, 0.06);
+}
+
+.sefaria-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.sefaria-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+}
+
+.sefaria-input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: var(--text);
+}
+
+.sefaria-input:focus {
+  outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
+  outline-offset: 0;
+}
+
+.quiet-button {
+  background: transparent;
+  color: var(--accent-strong);
+}
+
+.quiet-button:hover {
+  color: white;
+}
+
+.sefaria-help {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.sefaria-status {
+  min-height: 20px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.sefaria-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sefaria-navigation {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.sefaria-breadcrumb {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.result-button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.result-button:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.folder-button {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: color-mix(in srgb, var(--surface-warm) 72%, white);
+}
+
+.back-button {
+  background: var(--text);
+  color: white;
+  border-color: var(--text);
+}
+
+.panel {
+  min-height: clamp(360px, 52vh, 560px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgba(46, 39, 25, 0.08);
+  overflow: hidden;
+}
+
+.panel-label {
+  display: block;
+  padding: 14px 16px 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+textarea,
+.output {
+  flex: 1;
+  width: 100%;
+  min-height: clamp(300px, 44vh, 470px);
+  border: 0;
+  padding: clamp(14px, 2vw, 22px);
+  background: transparent;
+  color: var(--text);
+  font-size: clamp(1.08rem, 1.5vw, 1.35rem);
+  line-height: 1.65;
+  resize: vertical;
+}
+
+textarea {
+  direction: rtl;
+  font-family: "SBL Hebrew", "Ezra SIL", "Taamey David CLM", "Frank Ruehl CLM", "Noto Serif Hebrew", "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2vw, 1.8rem);
+  line-height: 1.45;
+}
+
+textarea:focus {
+  outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
+  outline-offset: -3px;
+}
+
+.output {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.output-notice {
+  border-top: 1px solid var(--line);
+  padding: 10px 16px 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  background: color-mix(in srgb, var(--surface-warm) 72%, white);
+}
+
+.output-notice:empty,
+.output-notice[hidden] {
+  display: none;
+}
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.secondary-button,
+.icon-button {
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.secondary-button {
+  min-width: 92px;
+  padding: 10px 14px;
+}
+
+.icon-button {
+  margin-right: 12px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+}
+
+.secondary-button:hover,
+.icon-button:hover {
+  background: var(--accent-strong);
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    padding: 14px;
+    align-items: stretch;
+  }
+
+  .masthead {
+    align-items: start;
+  }
+
+  .masthead-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sefaria-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    min-height: 360px;
+  }
+}

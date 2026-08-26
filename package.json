@@ -1,0 +1,10 @@
+{
+  "name": "hebrew-transliterator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hebrew transliteration web application",
+  "scripts": {
+    "test": "node --test tests/transliterator.test.js tests/genesis-snapshot.test.js",
+    "deploy": "npx wrangler deploy"
+  }
+}

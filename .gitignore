@@ -1,0 +1,25 @@
+# Local project materials that are not part of the repository
+parser/
+reports/
+DEPLOYMENT_PLAN.md
+
+# Local configuration and secrets
+.dev.vars
+.env
+.env.*
+!.env.example
+
+# Dependencies, generated output, and Cloudflare's local state
+node_modules/
+coverage/
+.wrangler/
+
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.tmp
+*.log
