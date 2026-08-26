@@ -54,6 +54,40 @@
     }
   }
 
+  function normalizedSefariaSearchTerm(value) {
+    return String(value || "")
+      .normalize("NFC")
+      .trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 100);
+  }
+
+  function looksLikeSensitiveSearchTerm(value) {
+    return /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(value) ||
+      /\bhttps?:\/\/|\bwww\./i.test(value) ||
+      /(?:\+?\d[\s().-]*){7,}/.test(value);
+  }
+
+  function recordSefariaSearch(searchTerm, status, resultCount = 0) {
+    const normalizedTerm = normalizedSefariaSearchTerm(searchTerm);
+    if (!normalizedTerm || typeof window.zaraz?.track !== "function") {
+      return;
+    }
+
+    const redacted = looksLikeSensitiveSearchTerm(normalizedTerm);
+    try {
+      void window.zaraz.track("search", {
+        search_term: redacted ? "[redacted]" : normalizedTerm,
+        search_status: status,
+        result_count: Math.max(0, Number(resultCount) || 0),
+        search_mode: "sefaria_name_or_phrase",
+        search_term_redacted: redacted ? "yes" : "no"
+      });
+    } catch {
+      // Analytics must never interfere with Sefaria search.
+    }
+  }
+
   const rulesets = window.HebrewRulesets.all || [window.HebrewRulesets.modernSefardi];
   let transliterator = new window.HebrewTransliterator.Transliterator(rulesets[0]);
   let sefariaNavigationStack = [];
@@ -915,9 +949,15 @@
         ]);
       }
       recordUsageEvent(displayedResultCount > 0 ? "sefaria_search_succeeded" : "sefaria_search_zero_results");
+      recordSefariaSearch(
+        trimmed,
+        displayedResultCount > 0 ? "succeeded" : "zero_results",
+        displayedResultCount
+      );
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
       recordUsageEvent("sefaria_search_failed");
+      recordSefariaSearch(trimmed, "failed");
     } finally {
       setSefariaBusy(false);
     }

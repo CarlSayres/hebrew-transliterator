@@ -27,11 +27,14 @@ deployment. The local Bible parser, MorphHB corpus, generated reports, and
 unrelated scripts and tests are excluded from Git entirely.
 
 Cloudflare Web Analytics measures aggregate visits and performance without an
-application account or persistent user identifier. Product events include the
-geographic fields Cloudflare derives from the request, but never include IP
-addresses, pasted Hebrew, transliteration output, or raw Sefaria search terms.
-The Analytics Engine column map and example queries are documented in
-`docs/ANALYTICS_SCHEMA.md`.
+application account or persistent user identifier. Cloudflare Analytics Engine
+product events include geographic fields Cloudflare derives from the request,
+but never include IP addresses, pasted Hebrew, transliteration output, or raw
+Sefaria search terms. After a visitor grants Analytics consent, Google Analytics
+measures users and sessions and receives normalized searches submitted through
+the dedicated Sefaria name/phrase search control. It never receives the Hebrew
+transliteration input or output. The Analytics Engine column map and example
+queries are documented in `docs/ANALYTICS_SCHEMA.md`.
 
 Cloudflare's deploy command is:
 

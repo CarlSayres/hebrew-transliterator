@@ -10,19 +10,24 @@
     <main class="privacy-page">
       <p><a href="index.html">← Hebrew Transliterator</a></p>
       <h1>Privacy</h1>
-      <p>Hebrew Transliterator is designed to work without an account, advertising cookies, or persistent user identifiers.</p>
+      <p>Hebrew Transliterator works without an account. Optional Google Analytics measurement begins only after you consent to Analytics cookies.</p>
 
       <h2>What is measured</h2>
       <p>Cloudflare Web Analytics provides aggregate page-traffic and performance measurements. The application also records a small set of action counts, such as copying a transliteration, changing a style, or whether a Sefaria search or import succeeded.</p>
+
+      <h2>Optional Google Analytics</h2>
+      <p>If you consent to Analytics, Google Analytics uses a first-party browser identifier to estimate users and sessions. It receives page and referral information, browser and device information, approximate location, and application events. For a Sefaria name or phrase search, it also receives the normalized text entered in the Sefaria search field, whether the search succeeded, and the displayed result count. Obvious email addresses, URLs, and phone-number-like entries are replaced with <code>[redacted]</code>.</p>
+      <p>Google Analytics is not used for advertising personalization. You may accept, reject, or change this optional consent at any time.</p>
+      <p><button type="button" onclick="window.zaraz?.showConsentModal()">Review analytics choices</button></p>
 
       <h2>Approximate location</h2>
       <p>For those action events, Cloudflare derives approximate network location from the request and records the available continent, country, state or region, city, postal code, metro code, timezone, approximate latitude and longitude, European Union indicator, and serving Cloudflare data center. This information may be incomplete or imprecise and is retained in Workers Analytics Engine for three months.</p>
 
       <h2>What is not collected</h2>
-      <p>The application does not send pasted Hebrew, transliteration output, raw Sefaria search terms, names, email addresses, exact street addresses, IP addresses, or persistent user identifiers to its product analytics.</p>
+      <p>The application never sends the Hebrew transliteration input or transliteration output to Google Analytics or Cloudflare product analytics. It does not intentionally collect names, email addresses, exact street addresses, or account identifiers. The optional Google Analytics browser identifier and Sefaria search reporting are limited to visitors who consent.</p>
 
       <h2>Sefaria requests</h2>
-      <p>When you use the Sefaria search or import controls, your browser sends that request directly to Sefaria. Sefaria handles those requests under its own privacy practices.</p>
+      <p>When you use the Sefaria search or import controls, your browser sends that request directly to Sefaria. Sefaria handles those requests under its own privacy practices. If you have consented to Analytics, searches made with the “Search name/phrase” control are also reported to Google Analytics as described above; exact-reference imports are not.</p>
 
       <h2>Operational logs</h2>
       <p>Cloudflare may retain limited request and error metadata needed to operate and secure the site. Application logging is configured not to include Hebrew input, transliteration output, or Sefaria query text.</p>
