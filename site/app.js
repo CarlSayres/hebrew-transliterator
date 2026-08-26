@@ -847,7 +847,8 @@
     const data = await fetchJson("https://www.sefaria.org/api/search-wrapper", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        // Sefaria accepts JSON with a simple content type, avoiding a browser CORS preflight.
+        "Content-Type": "text/plain;charset=UTF-8"
       },
       signal,
       body: JSON.stringify({
