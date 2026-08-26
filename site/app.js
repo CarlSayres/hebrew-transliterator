@@ -31,7 +31,7 @@
       return;
     }
 
-    const body = JSON.stringify({ schemaVersion: 1, event: eventName });
+    const body = JSON.stringify({ schemaVersion: 2, event: eventName });
     try {
       if (navigator.sendBeacon) {
         const queued = navigator.sendBeacon(
