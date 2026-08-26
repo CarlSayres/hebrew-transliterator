@@ -2,16 +2,35 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 
 const {
-  isSiddurCatalogQuery,
+  haggadot,
+  keyForQuery,
+  mahzorim,
+  resultsForKey,
   resultsForQuery,
   siddurim
 } = require("../site/sefaria-catalog");
 
-test("recognizes generic English and Hebrew siddur searches", () => {
-  assert.equal(isSiddurCatalogQuery("Siddur"), true);
-  assert.equal(isSiddurCatalogQuery("siddurim"), true);
-  assert.equal(isSiddurCatalogQuery("סידור"), true);
-  assert.equal(isSiddurCatalogQuery("Siddur Ashkenaz"), false);
+test("recognizes the generic English and Hebrew browse searches", () => {
+  assert.equal(keyForQuery("Siddur"), "siddur");
+  assert.equal(keyForQuery("machzorim"), "mahzor");
+  assert.equal(keyForQuery("Hagaddah"), "haggadah");
+  assert.equal(keyForQuery("נביאים"), "neviim");
+  assert.equal(keyForQuery("Siddur Ashkenaz"), "");
+});
+
+test("catalogs actual Mahzor and Haggadah roots without commentary", () => {
+  assert.equal(mahzorim.length, 10);
+  assert.equal(haggadot.length, 2);
+  assert.equal([...mahzorim, ...haggadot].every((entry) => entry.sampleRef), true);
+  assert.equal([...mahzorim, ...haggadot].some((entry) => /Rabbi Sacks|Commentary/.test(entry.ref)), false);
+});
+
+test("catalogs the full Jewish divisions of Tanakh with chapter counts", () => {
+  assert.equal(resultsForKey("torah").length, 5);
+  assert.equal(resultsForKey("neviim").length, 21);
+  assert.equal(resultsForKey("ketuvim").length, 13);
+  assert.equal(resultsForKey("ketuvim").find((entry) => entry.ref === "Psalms").chapters, 150);
+  assert.equal(resultsForKey("torah").find((entry) => entry.ref === "Genesis").chapters, 50);
 });
 
 test("catalogs only the seven usable Sefaria siddur roots", () => {

@@ -14,6 +14,7 @@
   const sefariaImportButton = document.getElementById("sefariaImportButton");
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
   const sefariaCancelButton = document.getElementById("sefariaCancelButton");
+  const sefariaStartButtons = Array.from(document.querySelectorAll("[data-sefaria-start]"));
   const verboseResultsToggle = document.getElementById("verboseResultsToggle");
   const sefariaStatus = document.getElementById("sefariaStatus");
   const sefariaImportSource = document.getElementById("sefariaImportSource");
@@ -300,7 +301,12 @@
   function setSefariaBusy(isBusy) {
     sefariaImportButton.disabled = isBusy;
     sefariaSearchButton.disabled = isBusy;
+    for (const button of sefariaStartButtons) {
+      button.disabled = isBusy;
+    }
     sefariaCancelButton.hidden = !isBusy;
+    sefariaStatus.classList.toggle("is-busy", isBusy);
+    sefariaResults.setAttribute("aria-busy", String(isBusy));
   }
 
   function beginSefariaRequest() {
@@ -685,6 +691,29 @@
       importSefariaReference(result.ref, result);
       return;
     }
+    if (result.availability === "import-reference") {
+      importSefariaReference(result.ref);
+      return;
+    }
+    if (result.availability === "browse" && result.chapters) {
+      const chapters = Array.from({ length: result.chapters }, (_value, index) => ({
+        ref: `${result.ref} ${index + 1}`,
+        displayLabel: String(index + 1),
+        availability: "import-reference",
+        source: "chapter"
+      }));
+      if (currentSefariaResults) {
+        sefariaNavigationStack.push(currentSefariaResults);
+      }
+      renderRefResults(chapters, {
+        parentRef: result.ref,
+        alreadyValidated: true,
+        chapterStrip: true,
+        showAll: true,
+        statusMessage: `Choose a chapter from ${result.ref}.`
+      });
+      return;
+    }
     if (result.availability === "browse") {
       openSefariaResult(result);
     }
@@ -726,7 +755,7 @@
 
   function renderRefResults(results, options = {}, renderOptions = {}) {
     sefariaResults.textContent = "";
-    const verboseResults = verboseResultsToggle.checked;
+    const verboseResults = verboseResultsToggle.checked && !options.chapterStrip;
     sefariaResults.classList.toggle("verbose-results", verboseResults);
     if (!renderOptions.preserveStack && !options.parentRef) {
       sefariaNavigationStack = [];
@@ -734,8 +763,16 @@
     currentSefariaResults = { results, options };
     renderSefariaNavigation(options);
 
+    let resultHost = sefariaResults;
+    if (options.chapterStrip) {
+      resultHost = document.createElement("div");
+      resultHost.className = "chapter-number-strip";
+      resultHost.setAttribute("aria-label", `Chapters in ${options.parentRef}`);
+      sefariaResults.appendChild(resultHost);
+    }
+
     const uniqueResults = options.alreadyValidated
-      ? results.slice(0, 10)
+      ? (options.showAll ? results : results.slice(0, 10))
       : sefariaResultTools.prepareResults(results, options.query || "", 10);
 
     if (!uniqueResults.length) {
@@ -748,7 +785,7 @@
     }
 
     for (const result of uniqueResults) {
-      const label = options.parentRef ? shortRefLabel(result.ref) : result.ref;
+      const label = result.displayLabel || (options.parentRef ? shortRefLabel(result.ref) : result.ref);
 
       if (!verboseResults) {
         const button = document.createElement("button");
@@ -767,7 +804,7 @@
           button.addEventListener("click", () => handleSefariaResultClick(result));
         }
 
-        sefariaResults.appendChild(button);
+        resultHost.appendChild(button);
         continue;
       }
 
@@ -855,14 +892,16 @@
         actions.appendChild(versionLink);
       }
       card.appendChild(actions);
-      sefariaResults.appendChild(card);
+      resultHost.appendChild(card);
     }
 
     const partialText = options.failedCount
       ? ` ${options.failedCount} additional result${options.failedCount === 1 ? " could" : "s could"} not be verified and ${options.failedCount === 1 ? "was" : "were"} hidden.`
       : "";
     const sourceWarning = options.partialMessage ? ` ${options.partialMessage}` : "";
-    if (options.parentRef) {
+    if (options.statusMessage) {
+      setSefariaStatus(options.statusMessage);
+    } else if (options.parentRef) {
       setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
     } else {
       setSefariaStatus(`Found ${uniqueResults.length} verified result${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
@@ -900,6 +939,22 @@
     const trimmed = query.trim();
     if (!trimmed) {
       setSefariaStatus("Enter a prayer name, phrase, or exact reference.");
+      return;
+    }
+
+    const catalogKey = sefariaCatalog.keyForQuery(trimmed);
+    if (catalogKey && !sefariaCatalog.requiresValidation(catalogKey)) {
+      sefariaImportSource.textContent = "";
+      const catalogResults = sefariaCatalog.resultsForKey(catalogKey);
+      const label = sefariaCatalog.collectionLabels[catalogKey];
+      sefariaQuery.value = label;
+      const displayedResultCount = renderRefResults(catalogResults, {
+        alreadyValidated: true,
+        showAll: true,
+        statusMessage: `Choose a book from ${label}.`
+      });
+      recordUsageEvent("sefaria_search_succeeded");
+      recordSefariaSearch(label, "succeeded", displayedResultCount);
       return;
     }
 
@@ -1003,6 +1058,15 @@
   sefariaSearchButton.addEventListener("click", () => {
     searchSefaria(sefariaQuery.value);
   });
+
+  for (const button of sefariaStartButtons) {
+    button.addEventListener("click", () => {
+      const key = button.dataset.sefariaStart;
+      const label = sefariaCatalog.collectionLabels[key];
+      sefariaQuery.value = label;
+      searchSefaria(label);
+    });
+  }
 
   sefariaCancelButton.addEventListener("click", () => {
     activeSefariaController?.abort();

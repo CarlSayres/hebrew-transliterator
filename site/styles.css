@@ -251,6 +251,37 @@ h1 {
   font-weight: 700;
 }
 
+.sefaria-start-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 9px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.sefaria-start-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  background: #ffffff;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+}
+
+.sefaria-start-button:hover {
+  border-color: var(--accent);
+  background: var(--surface-warm);
+}
+
+.sefaria-start-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .sefaria-controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
@@ -325,6 +356,31 @@ h1 {
   font-size: 0.88rem;
 }
 
+.sefaria-status.is-busy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.sefaria-status.is-busy::before {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  border: 2px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  content: "";
+  animation: sefaria-spin 0.75s linear infinite;
+}
+
+@keyframes sefaria-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .sefaria-import-source {
   color: var(--muted);
   font-size: 0.8rem;
@@ -357,6 +413,22 @@ h1 {
 .sefaria-results:not(.verbose-results) .result-button {
   max-width: 100%;
   text-align: left;
+}
+
+.chapter-number-strip {
+  display: flex;
+  flex: 1 1 100%;
+  gap: 4px;
+  padding: 2px 0 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.chapter-number-strip .result-button {
+  min-width: 30px;
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  text-align: center;
 }
 
 .sefaria-navigation {

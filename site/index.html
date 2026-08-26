@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hebrew Transliterator</title>
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
     <script src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin"></script>
   </head>
   <body>
@@ -74,6 +74,15 @@
 
         <section class="sefaria-panel" aria-labelledby="sefariaLabel">
           <label id="sefariaLabel" class="sefaria-label" for="sefariaQuery">Import from Sefaria</label>
+          <div class="sefaria-start-row" aria-label="Browse Sefaria collections">
+            <span>Browse:</span>
+            <button class="sefaria-start-button" type="button" data-sefaria-start="siddur">Siddur</button>
+            <button class="sefaria-start-button" type="button" data-sefaria-start="mahzor">Mahzor</button>
+            <button class="sefaria-start-button" type="button" data-sefaria-start="haggadah">Haggadah</button>
+            <button class="sefaria-start-button" type="button" data-sefaria-start="torah">Torah</button>
+            <button class="sefaria-start-button" type="button" data-sefaria-start="neviim">Neviim</button>
+            <button class="sefaria-start-button" type="button" data-sefaria-start="ketuvim">Ketuvim</button>
+          </div>
           <div class="sefaria-controls">
             <input
               id="sefariaQuery"
@@ -132,8 +141,8 @@
     <script src="rulesets/modern-sefardi.js"></script>
     <script src="transliterator.js"></script>
     <script src="sefaria-results.js?v=4"></script>
-    <script src="sefaria-catalog.js?v=1"></script>
+    <script src="sefaria-catalog.js?v=2"></script>
     <script src="sefaria-client.js?v=5"></script>
-    <script src="app.js?v=8"></script>
+    <script src="app.js?v=9"></script>
   </body>
 </html>
