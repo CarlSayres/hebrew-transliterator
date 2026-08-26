@@ -15,6 +15,7 @@
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
   const sefariaStatus = document.getElementById("sefariaStatus");
   const sefariaResults = document.getElementById("sefariaResults");
+  const sefariaResultTools = window.HebrewTransliteratorSefaria;
 
   const usageEventNames = new Set([
     "transliteration_copied",
@@ -308,15 +309,6 @@
     const normalized = normalizeSearchTerm(query);
     return liturgySearchAliases.filter((alias) =>
       alias.terms.some((term) => normalizeSearchTerm(term) === normalized)
-    );
-  }
-
-  function looksLikeExactRef(query) {
-    const trimmed = query.trim();
-    return (
-      /\d/.test(trimmed) ||
-      /[:,-]/.test(trimmed) ||
-      /\b(?:genesis|exodus|leviticus|numbers|deuteronomy|deut|psalms?|tehillim|isaiah|jeremiah|ezekiel|samuel|kings|chronicles|job|proverbs|mishlei|ruth|esther|daniel|ezra|nehemiah|micah|jonah|amos|hosea|zechariah|malachi)\b/i.test(trimmed)
     );
   }
 
@@ -674,54 +666,6 @@
     return { ref, categories, source, ...meta };
   }
 
-  function isTanakhRef(ref) {
-    return /^(Genesis|Exodus|Leviticus|Numbers|Deuteronomy|Joshua|Judges|I Samuel|II Samuel|I Kings|II Kings|Isaiah|Jeremiah|Ezekiel|Hosea|Joel|Amos|Obadiah|Jonah|Micah|Nahum|Habakkuk|Zephaniah|Haggai|Zechariah|Malachi|Psalms|Proverbs|Job|Song of Songs|Ruth|Lamentations|Ecclesiastes|Esther|Daniel|Ezra|Nehemiah|I Chronicles|II Chronicles)\b/i.test(ref);
-  }
-
-  function isLiturgyRef(ref, categories = []) {
-    return /Liturgy|Siddur|Machzor|Haggadah/i.test(`${categories.join(" ")} ${ref}`);
-  }
-
-  function isCommentaryRef(ref, categories = []) {
-    return /\bon\b/i.test(ref) || /Commentary/i.test(categories.join(" "));
-  }
-
-  function isImportableSearchResult(result) {
-    const ref = typeof result === "string" ? result : result.ref;
-    const categories = typeof result === "string" ? [] : result.categories || [];
-    const source = typeof result === "string" ? "search" : result.source;
-
-    if (!ref) {
-      return false;
-    }
-
-    if (source === "alias" || source === "schema" || source === "schemaLeaf") {
-      return true;
-    }
-
-    if (isCommentaryRef(ref, categories)) {
-      return false;
-    }
-
-    return isTanakhRef(ref) || isLiturgyRef(ref, categories);
-  }
-
-  function relevantRank(result) {
-    const ref = result.ref || "";
-
-    if (isTanakhRef(ref)) {
-      return 0;
-    }
-    if (isLiturgyRef(ref, result.categories || [])) {
-      return 1;
-    }
-    return 2;
-  }
-
-  function sortRelevantResults(results) {
-    return [...results].sort((a, b) => relevantRank(a) - relevantRank(b));
-  }
-
   function shortRefLabel(ref) {
     const parts = splitRefPath(ref);
     return parts[parts.length - 1] || ref;
@@ -826,26 +770,11 @@
     currentSefariaResults = { results, options };
     renderSefariaNavigation(options);
 
-    const uniqueResults = [];
-    const seenRefs = new Set();
-    const sortedResults = sortRelevantResults(results);
-    const importableResults = sortedResults.filter(isImportableSearchResult);
-    for (const result of importableResults) {
-      const ref = typeof result === "string" ? result : result.ref;
-      if (ref) {
-        if (!seenRefs.has(ref)) {
-          uniqueResults.push(typeof result === "string" ? resultFromRef(ref) : result);
-          seenRefs.add(ref);
-        }
-      }
-      if (uniqueResults.length >= 10) {
-        break;
-      }
-    }
+    const uniqueResults = sefariaResultTools.prepareResults(results, options.query || "", 10);
 
     if (!uniqueResults.length) {
-      const hiddenCount = sortedResults.length - importableResults.length;
-      const hiddenText = hiddenCount > 0 ? " Some Sefaria hits were hidden because they appear to be commentaries or non-liturgy texts." : "";
+      const hiddenCount = results.length;
+      const hiddenText = hiddenCount > 0 ? " Some Sefaria hits were hidden because they were duplicates or were not importable Tanakh or liturgy texts." : "";
       setSefariaStatus(`No importable Tanakh or liturgy results found. Try a prayer name, or Import an exact reference like Genesis 1:1.${hiddenText}`);
       return 0;
     }
@@ -918,9 +847,12 @@
       const aliasResults = aliasMatches.flatMap((alias) =>
         alias.refs.map((ref) => resultFromRef(ref, ["Liturgy"], "alias"))
       );
+      const exactResults = /\d/.test(trimmed)
+        ? [resultFromRef(trimmed, [], "exact")]
+        : [];
       let displayedResultCount = 0;
-      if (aliasResults.length) {
-        displayedResultCount = renderRefResults(aliasResults);
+      if (aliasResults.length || exactResults.length) {
+        displayedResultCount = renderRefResults([...exactResults, ...aliasResults], { query: trimmed });
       }
 
       const queryTerms = [
@@ -934,19 +866,21 @@
       ];
       const settledSearches = await Promise.allSettled(searches);
       const searchErrors = settledSearches.filter((result) => result.status === "rejected");
+      const successfulSearchCount = settledSearches.length - searchErrors.length;
       const remoteResults = settledSearches.flatMap((result) =>
         result.status === "fulfilled" ? result.value : []
       );
 
-      if (!aliasResults.length && !remoteResults.length && searchErrors.length) {
+      if (!exactResults.length && !aliasResults.length && !remoteResults.length && successfulSearchCount === 0) {
         throw searchErrors[0].reason;
       }
 
-      if (remoteResults.length || !aliasResults.length) {
+      if (remoteResults.length || (!aliasResults.length && !exactResults.length)) {
         displayedResultCount = renderRefResults([
+          ...exactResults,
           ...aliasResults,
           ...remoteResults
-        ]);
+        ], { query: trimmed });
       }
       recordUsageEvent(displayedResultCount > 0 ? "sefaria_search_succeeded" : "sefaria_search_zero_results");
       recordSefariaSearch(
@@ -960,14 +894,6 @@
       recordSefariaSearch(trimmed, "failed");
     } finally {
       setSefariaBusy(false);
-    }
-  }
-
-  function importOrSearchSefaria(query) {
-    if (looksLikeExactRef(query)) {
-      importSefariaReference(query);
-    } else {
-      searchSefaria(query);
     }
   }
 
@@ -993,7 +919,7 @@
   });
 
   sefariaImportButton.addEventListener("click", () => {
-    importOrSearchSefaria(sefariaQuery.value);
+    importSefariaReference(sefariaQuery.value);
   });
 
   sefariaSearchButton.addEventListener("click", () => {

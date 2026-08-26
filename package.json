@@ -4,7 +4,7 @@
   "private": true,
   "description": "Hebrew transliteration web application",
   "scripts": {
-    "test": "node --test tests/transliterator.test.js tests/genesis-snapshot.test.js tests/worker-events.test.mjs",
+    "test": "node --test tests/transliterator.test.js tests/genesis-snapshot.test.js tests/sefaria-results.test.js tests/worker-events.test.mjs",
     "deploy": "npx wrangler deploy"
   }
 }

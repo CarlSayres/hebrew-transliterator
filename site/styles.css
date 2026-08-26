@@ -170,11 +170,11 @@ h1 {
 }
 
 .sound-picker select {
-  width: 54px;
-  min-width: 54px;
+  width: 68px;
+  min-width: 68px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 4px 18px 4px 6px;
+  padding: 4px 22px 4px 8px;
   background: #ffffff;
   color: var(--text);
 }
