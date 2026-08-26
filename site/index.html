@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hebrew Transliterator</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2">
     <script src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin"></script>
   </head>
   <body>
@@ -86,9 +86,15 @@
             <button id="sefariaSearchButton" class="secondary-button quiet-button" type="button">Search name/phrase</button>
             <button id="sefariaCancelButton" class="secondary-button cancel-button" type="button" hidden>Cancel</button>
           </div>
-          <p class="sefaria-help">
-            Use Search for prayer names or phrases. Use Import for exact references like Genesis 1:1 or Psalms 23.
-          </p>
+          <div class="sefaria-help-row">
+            <p class="sefaria-help">
+              Use Search for prayer names or phrases. Use Import for exact references like Genesis 1:1 or Psalms 23.
+            </p>
+            <label class="verbose-results-toggle" for="verboseResultsToggle">
+              <input id="verboseResultsToggle" type="checkbox">
+              <span>Verbose search results</span>
+            </label>
+          </div>
           <div id="sefariaStatus" class="sefaria-status" role="status" aria-live="polite"></div>
           <div id="sefariaImportSource" class="sefaria-import-source"></div>
           <div id="sefariaResults" class="sefaria-results" aria-label="Sefaria search results"></div>
@@ -127,6 +133,6 @@
     <script src="transliterator.js"></script>
     <script src="sefaria-results.js?v=3"></script>
     <script src="sefaria-client.js?v=3"></script>
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
   </body>
 </html>

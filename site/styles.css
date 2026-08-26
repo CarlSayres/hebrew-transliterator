@@ -285,11 +285,37 @@ h1 {
   background: #9a3f35;
 }
 
+.sefaria-help-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
 .sefaria-help {
-  margin: 8px 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 0.84rem;
   line-height: 1.4;
+}
+
+.verbose-results-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.verbose-results-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
 }
 
 .sefaria-status {
@@ -316,15 +342,27 @@ h1 {
 }
 
 .sefaria-results {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 6px;
+}
+
+.sefaria-results.verbose-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.sefaria-results:not(.verbose-results) .result-button {
+  max-width: 100%;
+  text-align: left;
 }
 
 .sefaria-navigation {
   grid-column: 1 / -1;
   display: flex;
+  flex: 1 0 100%;
   align-items: center;
   gap: 10px;
   margin-bottom: 2px;

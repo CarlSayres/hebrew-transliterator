@@ -14,6 +14,7 @@
   const sefariaImportButton = document.getElementById("sefariaImportButton");
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
   const sefariaCancelButton = document.getElementById("sefariaCancelButton");
+  const verboseResultsToggle = document.getElementById("verboseResultsToggle");
   const sefariaStatus = document.getElementById("sefariaStatus");
   const sefariaImportSource = document.getElementById("sefariaImportSource");
   const sefariaResults = document.getElementById("sefariaResults");
@@ -724,6 +725,8 @@
 
   function renderRefResults(results, options = {}, renderOptions = {}) {
     sefariaResults.textContent = "";
+    const verboseResults = verboseResultsToggle.checked;
+    sefariaResults.classList.toggle("verbose-results", verboseResults);
     if (!renderOptions.preserveStack && !options.parentRef) {
       sefariaNavigationStack = [];
     }
@@ -744,10 +747,32 @@
     }
 
     for (const result of uniqueResults) {
+      const label = options.parentRef ? shortRefLabel(result.ref) : result.ref;
+
+      if (!verboseResults) {
+        const button = document.createElement("button");
+        button.className = result.availability === "browse"
+          ? "result-button folder-button"
+          : "result-button";
+        button.type = "button";
+        button.textContent = label;
+
+        if (result.availability === "unavailable") {
+          button.disabled = true;
+          button.title = "This Hebrew text is not sufficiently vocalized for automatic transliteration.";
+        } else {
+          const action = result.availability === "browse" ? "Browse sections in" : "Import";
+          button.setAttribute("aria-label", `${action} ${result.ref}`);
+          button.addEventListener("click", () => handleSefariaResultClick(result));
+        }
+
+        sefariaResults.appendChild(button);
+        continue;
+      }
+
       const card = document.createElement("article");
       card.className = "result-card";
 
-      const label = options.parentRef ? shortRefLabel(result.ref) : result.ref;
       const title = document.createElement("h3");
       title.className = "result-card-title";
       title.textContent = result.source === "alias" ? `${label} · suggested` : label;
@@ -975,6 +1000,16 @@
 
   sefariaCancelButton.addEventListener("click", () => {
     activeSefariaController?.abort();
+  });
+
+  verboseResultsToggle.addEventListener("change", () => {
+    if (currentSefariaResults) {
+      renderRefResults(
+        currentSefariaResults.results,
+        currentSefariaResults.options,
+        { preserveStack: true }
+      );
+    }
   });
 
   sefariaQuery.addEventListener("keydown", (event) => {
