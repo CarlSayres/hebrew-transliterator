@@ -83,7 +83,7 @@
               placeholder="Genesis 1:1, Deut 6:4-9, Baruch Sheamar, Mi Chamocha, Aleinu, Siddur, Haggadah"
             >
             <button id="sefariaImportButton" class="secondary-button" type="button">Import exact ref</button>
-            <button id="sefariaSearchButton" class="secondary-button quiet-button" type="button" aria-controls="sefariaResultsPopover" aria-expanded="false">Search name/phrase</button>
+            <button id="sefariaSearchButton" class="secondary-button quiet-button" type="button">Search name/phrase</button>
             <button id="sefariaCancelButton" class="secondary-button cancel-button" type="button" hidden>Cancel</button>
           </div>
           <p class="sefaria-help">
@@ -91,19 +91,7 @@
           </p>
           <div id="sefariaStatus" class="sefaria-status" role="status" aria-live="polite"></div>
           <div id="sefariaImportSource" class="sefaria-import-source"></div>
-          <section
-            id="sefariaResultsPopover"
-            class="sefaria-results-popover"
-            role="dialog"
-            aria-labelledby="sefariaResultsHeading"
-            hidden
-          >
-            <header class="sefaria-results-header">
-              <span id="sefariaResultsHeading">Sefaria results</span>
-              <button id="sefariaResultsClose" class="popover-close-button" type="button" aria-label="Close Sefaria results">Close</button>
-            </header>
-            <div id="sefariaResults" class="sefaria-results" aria-label="Sefaria search results"></div>
-          </section>
+          <div id="sefariaResults" class="sefaria-results" aria-label="Sefaria search results"></div>
         </section>
 
         <div class="editor-grid">
@@ -139,6 +127,6 @@
     <script src="transliterator.js"></script>
     <script src="sefaria-results.js?v=3"></script>
     <script src="sefaria-client.js?v=3"></script>
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
   </body>
 </html>

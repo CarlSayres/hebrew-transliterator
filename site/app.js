@@ -16,8 +16,6 @@
   const sefariaCancelButton = document.getElementById("sefariaCancelButton");
   const sefariaStatus = document.getElementById("sefariaStatus");
   const sefariaImportSource = document.getElementById("sefariaImportSource");
-  const sefariaResultsPopover = document.getElementById("sefariaResultsPopover");
-  const sefariaResultsClose = document.getElementById("sefariaResultsClose");
   const sefariaResults = document.getElementById("sefariaResults");
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({ timeoutMs: 9000 });
@@ -297,19 +295,6 @@
     sefariaStatus.textContent = message;
   }
 
-  function showSefariaResults() {
-    sefariaResultsPopover.hidden = false;
-    sefariaSearchButton.setAttribute("aria-expanded", "true");
-  }
-
-  function closeSefariaResults(options = {}) {
-    sefariaResultsPopover.hidden = true;
-    sefariaSearchButton.setAttribute("aria-expanded", "false");
-    if (options.restoreFocus) {
-      sefariaQuery.focus();
-    }
-  }
-
   function setSefariaBusy(isBusy) {
     sefariaImportButton.disabled = isBusy;
     sefariaSearchButton.disabled = isBusy;
@@ -507,7 +492,6 @@
           quality: window.HebrewTransliteratorSefariaClient.textQuality(payload.text)
         };
       }
-      closeSefariaResults();
       insertImportedText(result.text);
       const warning = result.quality?.status === "unvocalized"
         ? " The source contains no vowel points, so transliteration will be limited."
@@ -751,7 +735,6 @@
       : sefariaResultTools.prepareResults(results, options.query || "", 10);
 
     if (!uniqueResults.length) {
-      closeSefariaResults();
       const checkedText = options.failedCount
         ? " Sefaria returned possible matches, but none could be verified as usable Hebrew texts."
         : "";
@@ -831,7 +814,8 @@
       link.href = result.sourceUrl;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.textContent = "View on Sefaria";
+      link.textContent = "Sefaria";
+      link.setAttribute("aria-label", `View ${result.ref} on Sefaria`);
       actions.appendChild(link);
       const versionSource = safeExternalUrl(result.versionSource);
       if (versionSource) {
@@ -840,7 +824,8 @@
         versionLink.href = versionSource;
         versionLink.target = "_blank";
         versionLink.rel = "noopener noreferrer";
-        versionLink.textContent = "Version source";
+        versionLink.textContent = "Version";
+        versionLink.setAttribute("aria-label", `View the source for ${result.versionTitle || result.ref}`);
         actions.appendChild(versionLink);
       }
       card.appendChild(actions);
@@ -856,8 +841,6 @@
     } else {
       setSefariaStatus(`Found ${uniqueResults.length} verified result${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
     }
-    showSefariaResults();
-
     return uniqueResults.length;
   }
 
@@ -896,7 +879,6 @@
 
     const controller = beginSefariaRequest();
     setSefariaStatus(`Searching Sefaria for ${trimmed}...`);
-    closeSefariaResults();
     sefariaImportSource.textContent = "";
     sefariaResults.textContent = "";
     sefariaNavigationStack = [];
@@ -995,31 +977,10 @@
     activeSefariaController?.abort();
   });
 
-  sefariaResultsClose.addEventListener("click", () => {
-    closeSefariaResults({ restoreFocus: true });
-  });
-
   sefariaQuery.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
       searchSefaria(sefariaQuery.value);
-    }
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !sefariaResultsPopover.hidden) {
-      closeSefariaResults({ restoreFocus: true });
-    }
-  });
-
-  document.addEventListener("pointerdown", (event) => {
-    if (
-      !sefariaResultsPopover.hidden &&
-      event.target instanceof Element &&
-      !sefariaResultsPopover.contains(event.target) &&
-      !event.target.closest(".sefaria-controls")
-    ) {
-      closeSefariaResults();
     }
   });
 
