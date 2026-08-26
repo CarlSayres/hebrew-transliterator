@@ -16,6 +16,44 @@
   const sefariaStatus = document.getElementById("sefariaStatus");
   const sefariaResults = document.getElementById("sefariaResults");
 
+  const usageEventNames = new Set([
+    "transliteration_copied",
+    "sefaria_search_succeeded",
+    "sefaria_search_zero_results",
+    "sefaria_search_failed",
+    "sefaria_import_succeeded",
+    "sefaria_import_failed",
+    "style_selected"
+  ]);
+
+  function recordUsageEvent(eventName) {
+    if (!usageEventNames.has(eventName) || location.protocol === "file:") {
+      return;
+    }
+
+    const body = JSON.stringify({ schemaVersion: 1, event: eventName });
+    try {
+      if (navigator.sendBeacon) {
+        const queued = navigator.sendBeacon(
+          "/api/event",
+          new Blob([body], { type: "application/json" })
+        );
+        if (queued) {
+          return;
+        }
+      }
+
+      fetch("/api/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        keepalive: true
+      }).catch(() => {});
+    } catch {
+      // Analytics must never interfere with transliteration.
+    }
+  }
+
   const rulesets = window.HebrewRulesets.all || [window.HebrewRulesets.modernSefardi];
   let transliterator = new window.HebrewTransliterator.Transliterator(rulesets[0]);
   let sefariaNavigationStack = [];
@@ -533,8 +571,10 @@
       const text = await fetchSefariaText(trimmed);
       insertImportedText(text);
       setSefariaStatus(`Imported ${trimmed}.`);
+      recordUsageEvent("sefaria_import_succeeded");
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
+      recordUsageEvent("sefaria_import_failed");
     } finally {
       setSefariaBusy(false);
     }
@@ -773,7 +813,7 @@
       const hiddenCount = sortedResults.length - importableResults.length;
       const hiddenText = hiddenCount > 0 ? " Some Sefaria hits were hidden because they appear to be commentaries or non-liturgy texts." : "";
       setSefariaStatus(`No importable Tanakh or liturgy results found. Try a prayer name, or Import an exact reference like Genesis 1:1.${hiddenText}`);
-      return;
+      return 0;
     }
 
     for (const result of uniqueResults) {
@@ -794,6 +834,8 @@
     } else {
       setSefariaStatus(`Found ${uniqueResults.length} result${uniqueResults.length === 1 ? "" : "s"}. Click a result to open it or import it.`);
     }
+
+    return uniqueResults.length;
   }
 
   function renderSefariaResults(hits) {
@@ -842,8 +884,9 @@
       const aliasResults = aliasMatches.flatMap((alias) =>
         alias.refs.map((ref) => resultFromRef(ref, ["Liturgy"], "alias"))
       );
+      let displayedResultCount = 0;
       if (aliasResults.length) {
-        renderRefResults(aliasResults);
+        displayedResultCount = renderRefResults(aliasResults);
       }
 
       const queryTerms = [
@@ -866,13 +909,15 @@
       }
 
       if (remoteResults.length || !aliasResults.length) {
-        renderRefResults([
+        displayedResultCount = renderRefResults([
           ...aliasResults,
           ...remoteResults
         ]);
       }
+      recordUsageEvent(displayedResultCount > 0 ? "sefaria_search_succeeded" : "sefaria_search_zero_results");
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
+      recordUsageEvent("sefaria_search_failed");
     } finally {
       setSefariaBusy(false);
     }
@@ -890,6 +935,7 @@
 
   styleSelect.addEventListener("change", () => {
     setStyle(styleSelect.value);
+    recordUsageEvent("style_selected");
   });
 
   doubleDageshToggle?.addEventListener("change", setOptions);
@@ -940,6 +986,7 @@
       selection.removeAllRanges();
       selection.addRange(range);
     }
+    recordUsageEvent("transliteration_copied");
   });
 
   populateStyleSelect();
