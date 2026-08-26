@@ -253,7 +253,7 @@ h1 {
 
 .sefaria-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: 10px;
 }
 
@@ -280,6 +280,11 @@ h1 {
   color: white;
 }
 
+.cancel-button {
+  border-color: #9a3f35;
+  background: #9a3f35;
+}
+
 .sefaria-help {
   margin: 8px 0 0;
   color: var(--muted);
@@ -294,15 +299,31 @@ h1 {
   font-size: 0.88rem;
 }
 
+.sefaria-import-source {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.sefaria-import-source:empty {
+  display: none;
+}
+
+.sefaria-import-source a {
+  color: var(--accent-strong);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
 .sefaria-results {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 8px;
   margin-top: 8px;
 }
 
 .sefaria-navigation {
-  flex: 1 0 100%;
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -332,6 +353,70 @@ h1 {
 .folder-button {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   background: color-mix(in srgb, var(--surface-warm) 72%, white);
+}
+
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.result-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.result-card-hebrew {
+  margin: 0;
+  color: var(--accent-strong);
+  font-family: "SBL Hebrew", "Ezra SIL", "Noto Serif Hebrew", "Times New Roman", serif;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.result-card-excerpt {
+  margin: 0;
+  color: var(--text);
+  font-family: "SBL Hebrew", "Ezra SIL", "Noto Serif Hebrew", "Times New Roman", serif;
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+.result-card-meta,
+.result-card-warning {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.result-card-warning {
+  color: #854119;
+}
+
+.result-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.result-card-actions .result-button {
+  font-weight: 700;
+}
+
+.sefaria-source-link {
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-underline-offset: 3px;
 }
 
 .back-button {

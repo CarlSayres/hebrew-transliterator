@@ -14,6 +14,11 @@ docs/       Transliteration specification
 Only `site/` is published as browser assets. `worker/` contains the small
 server-side entry point used for privacy-safe anonymous event counts.
 
+Sefaria search, reference validation, and text retrieval run directly in the
+visitor's browser. The application does not proxy Sefaria text through the
+Worker and deliberately does not cache Sefaria results locally, so each search
+and exact-reference import uses a fresh response from Sefaria.
+
 ## Run the Public Application Locally
 
 Serve the repository root with a local HTTP server and open `/site/index.html`.

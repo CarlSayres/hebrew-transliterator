@@ -23,14 +23,16 @@
   }
 
   function isLiturgyRef(ref, categories = []) {
-    const hasLiturgyCategory = categories.some((category) =>
+    const categoryList = Array.isArray(categories) ? categories : [categories];
+    const hasLiturgyCategory = categoryList.some((category) =>
       /^(Liturgy|Siddur|Machzor|Haggadah)$/i.test(String(category || "").trim())
     );
     return hasLiturgyCategory || /^(Siddur|Machzor|Haggadah)\b/i.test(String(ref || "").trim());
   }
 
   function isCommentaryRef(ref, categories = []) {
-    return /\bon\b/i.test(String(ref || "")) || /Commentary/i.test(categories.join(" "));
+    const categoryList = Array.isArray(categories) ? categories : [categories];
+    return /\bon\b/i.test(String(ref || "")) || /Commentary/i.test(categoryList.join(" "));
   }
 
   function isImportableSearchResult(result) {

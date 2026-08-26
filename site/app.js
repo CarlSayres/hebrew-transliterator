@@ -13,9 +13,12 @@
   const sefariaQuery = document.getElementById("sefariaQuery");
   const sefariaImportButton = document.getElementById("sefariaImportButton");
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
+  const sefariaCancelButton = document.getElementById("sefariaCancelButton");
   const sefariaStatus = document.getElementById("sefariaStatus");
+  const sefariaImportSource = document.getElementById("sefariaImportSource");
   const sefariaResults = document.getElementById("sefariaResults");
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
+  const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({ timeoutMs: 9000 });
 
   const usageEventNames = new Set([
     "transliteration_copied",
@@ -93,6 +96,7 @@
   let transliterator = new window.HebrewTransliterator.Transliterator(rulesets[0]);
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
+  let activeSefariaController = null;
 
   const liturgySearchAliases = [
     {
@@ -138,7 +142,6 @@
   ];
 
   const sampleText = "בָּרוּךְ שֶׁאָמַר וְהָיָה הָעוֹלָם, בָּרוּךְ הוּא, בָּרוּךְ עֹשֶׂה בְרֵאשִׁית, בָּרוּךְ אוֹמֵר וְעוֹשֶׂה, בָּרוּךְ גּוֹזֵר וּמְקַיֵּם, בָּרוּךְ מְרַחֵם עַל הָאָֽרֶץ, בָּרוּךְ מְרַחֵם עַל הַבְּרִיּוֹת, בָּרוּךְ מְשַׁלֵּם שָׂכָר טוֹב לִירֵאָיו, בָּרוּךְ חַי לָעַד וְקַיָּם לָנֶֽצַח, בָּרוּךְ פּוֹדֶה וּמַצִּיל, בָּרוּךְ שְׁמוֹ: בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵֽינוּ מֶֽלֶךְ הָעוֹלָם הָאֵל הָאָב הָרַחֲמָן הַמְּהֻלָּל בְּפִי עַמּוֹ מְשֻׁבָּח וּמְפֹאָר בִּלְשׁוֹן חֲסִידָיו וַעֲבָדָיו וּבְשִׁירֵי דָוִד עַבְדֶּֽךָ, נְהַלֶּלְךָ יְהֹוָה אֱלֹהֵֽינוּ בִּשְׁבָחוֹת וּבִזְמִירוֹת נְגַדֶּלְךָ וּנְשַׁבֵּחֲךָ וּנְפָאֶרְךָ וְנַזְכִּיר שִׁמְךָ וְנַמְלִיכְךָ מַלְכֵּֽנוּ אֱלֹהֵֽינוּ, יָחִיד, חֵי הָעוֹלָמִים, מֶֽלֶךְ מְשֻׁבָּח וּמְפֹאָר עֲדֵי עַד שְׁמוֹ הַגָּדוֹל: בָּרוּךְ אַתָּה יְהֹוָה מֶֽלֶךְ מְהֻלָּל בַּתִּשְׁבָּחוֹת:";
-  const sefariaIndexCache = new Map();
 
   function updateOutput() {
     if (stressMarkToggle?.checked) {
@@ -295,6 +298,21 @@
   function setSefariaBusy(isBusy) {
     sefariaImportButton.disabled = isBusy;
     sefariaSearchButton.disabled = isBusy;
+    sefariaCancelButton.hidden = !isBusy;
+  }
+
+  function beginSefariaRequest() {
+    activeSefariaController?.abort();
+    activeSefariaController = new AbortController();
+    setSefariaBusy(true);
+    return activeSefariaController;
+  }
+
+  function finishSefariaRequest(controller) {
+    if (activeSefariaController === controller) {
+      activeSefariaController = null;
+      setSefariaBusy(false);
+    }
   }
 
   function normalizeSearchTerm(value) {
@@ -312,70 +330,30 @@
     );
   }
 
-  function stripHtml(value) {
-    const template = document.createElement("template");
-    template.innerHTML = value;
-    return template.content.textContent || template.innerText || "";
-  }
-
-  function flattenText(value) {
-    if (Array.isArray(value)) {
-      return value.map(flattenText).filter(Boolean).join("\n");
-    }
-
-    if (typeof value === "string") {
-      return stripHtml(value).trim();
-    }
-
-    return "";
-  }
-
-  function extractTextFromV3(data) {
-    const versions = Array.isArray(data.versions) ? data.versions : [];
-
-    for (const version of versions) {
-      const text = flattenText(version.text || version.content || version.body);
-      if (text) {
-        return text;
-      }
-    }
-
-    return flattenText(data.text || data.content || data.he);
-  }
-
-  function extractTextFromV1(data) {
-    return flattenText(data.he || data.text);
-  }
-
   function sefariaErrorMessage(error) {
     if (location.protocol === "file:") {
       return "Sefaria could not be reached from this file page. If this keeps happening, run the page from localhost and try again.";
     }
-
-    return error.message || "Sefaria could not be reached.";
-  }
-
-  function noHebrewTextError(reference) {
-    return new Error(`No Hebrew text was found for ${reference}. Sefaria may list this as an empty section.`);
+    if (navigator.onLine === false) {
+      return "You appear to be offline. Transliteration still works with pasted Hebrew, but Sefaria search requires an internet connection.";
+    }
+    if (error?.code === "cancelled") {
+      return "Sefaria request cancelled.";
+    }
+    if (error?.code === "timeout") {
+      return "Sefaria took too long to respond. Please try again.";
+    }
+    if (error?.code === "no_text") {
+      return error.message;
+    }
+    if (error?.status === 429) {
+      return "Sefaria is receiving too many requests right now. Please wait briefly and try again.";
+    }
+    return error?.message || "Sefaria could not be reached. You can still paste Hebrew directly into the editor.";
   }
 
   async function fetchJson(url, options) {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      const error = new Error(`Sefaria returned ${response.status}`);
-      error.status = response.status;
-      try {
-        error.body = await response.text();
-      } catch {
-        error.body = "";
-      }
-      throw error;
-    }
-    return response.json();
-  }
-
-  function isSchemaNodeError(error) {
-    return error?.status === 400 && /schema node ref/i.test(error.body || error.message || "");
+    return sefariaClient.requestJson(url, options);
   }
 
   function splitRefPath(reference) {
@@ -434,140 +412,10 @@
     return node.key || node.title || nodeNames(node)[0] || "";
   }
 
-  function collectLeafRefs(node, pathParts) {
-    const children = childNodes(node);
-    if (!children.length) {
-      if (node?.nodeType !== "JaggedArrayNode") {
-        return [];
-      }
-      const ref = pathParts.join(", ");
-      return node.depth === 1 ? [`${ref} 1`] : [ref];
-    }
-
-    return children.flatMap((child) =>
-      collectLeafRefs(child, appendRefPart(pathParts, primaryNodeName(child)))
-    );
-  }
-
-  async function fetchSefariaIndex(title) {
+  async function fetchSefariaIndex(title, signal) {
     const normalizedTitle = title.trim();
-    if (!sefariaIndexCache.has(normalizedTitle)) {
-      const indexUrl = `https://www.sefaria.org/api/index/${encodeURIComponent(normalizedTitle)}`;
-      sefariaIndexCache.set(normalizedTitle, fetchJson(indexUrl));
-    }
-    return sefariaIndexCache.get(normalizedTitle);
-  }
-
-  async function expandSchemaRef(reference) {
-    const pathParts = splitRefPath(reference);
-    if (!pathParts.length) {
-      return [];
-    }
-
-    const indexData = await fetchSefariaIndex(pathParts[0]);
-    const schemaNode = findSchemaNode(indexData.schema, pathParts);
-    if (!schemaNode) {
-      return [];
-    }
-
-    return collectLeafRefs(schemaNode, pathParts).slice(0, 60);
-  }
-
-  async function fetchExpandedSchemaRef(reference) {
-    const leafRefs = await expandSchemaRef(reference);
-    const childTexts = [];
-    for (const leafRef of leafRefs) {
-      try {
-        const text = await fetchSefariaLeafTextWithSegmentFallback(leafRef);
-        if (text) {
-          childTexts.push(text);
-        }
-      } catch {
-        // Some schema leaves are not text-bearing in older Sefaria endpoints.
-      }
-    }
-    return childTexts.join("\n\n");
-  }
-
-  async function fetchSefariaLeafText(reference) {
-    const encodedRef = encodeURIComponent(reference.trim());
-    const v1Url = `https://www.sefaria.org/api/texts/${encodedRef}?context=0&commentary=0`;
-    const v3Url = `https://www.sefaria.org/api/v3/texts/${encodedRef}?version=source&return_format=text_only`;
-    const preferLegacy = /^(Siddur|Machzor|Haggadah)\b/i.test(reference.trim());
-    let v3Error = null;
-    let v1Error = null;
-
-    if (preferLegacy) {
-      try {
-        const data = await fetchJson(v1Url);
-        const text = extractTextFromV1(data);
-        if (text) {
-          return text;
-        }
-        throw noHebrewTextError(reference);
-      } catch (error) {
-        v1Error = error;
-        if (!/No Hebrew text/.test(error.message || "")) {
-          throw error;
-        }
-      }
-    } else {
-      try {
-        const data = await fetchJson(v3Url);
-        const text = extractTextFromV3(data);
-        if (text) {
-          return text;
-        }
-      } catch (error) {
-        v3Error = error;
-      }
-    }
-
-    try {
-      const data = await fetchJson(v1Url);
-      const text = extractTextFromV1(data);
-      if (!text) {
-        throw noHebrewTextError(reference);
-      }
-      return text;
-    } catch (error) {
-      if (isSchemaNodeError(v3Error) || isSchemaNodeError(error)) {
-        throw error || v3Error;
-      }
-      if (v3Error?.status === 400 || error?.status === 400) {
-        throw new Error("Sefaria found that title, but it is not an importable source text. Try a Tanakh reference or a Siddur, Machzor, or Haggadah section.");
-      }
-      throw error || v1Error || v3Error || new Error("Sefaria could not load that reference.");
-    }
-  }
-
-  async function fetchSefariaLeafTextWithSegmentFallback(reference) {
-    try {
-      return await fetchSefariaLeafText(reference);
-    } catch (error) {
-      if (!/\d$/.test(reference.trim())) {
-        try {
-          return await fetchSefariaLeafText(`${reference} 1`);
-        } catch {
-          // Keep the original, more relevant error.
-        }
-      }
-      throw error;
-    }
-  }
-
-  async function fetchSefariaText(reference) {
-    try {
-      return await fetchSefariaLeafTextWithSegmentFallback(reference);
-    } catch (error) {
-      if (isSchemaNodeError(error)) {
-        const text = await fetchExpandedSchemaRef(reference);
-        if (text) {
-          return text;
-        }
-      }
-      throw error;
-    }
+    const indexUrl = `https://www.sefaria.org/api/index/${encodeURIComponent(normalizedTitle)}`;
+    return fetchJson(indexUrl, { signal });
   }
 
   function insertImportedText(text) {
@@ -583,26 +431,83 @@
     });
   }
 
-  async function importSefariaReference(reference) {
+  function renderImportedSource(result) {
+    sefariaImportSource.textContent = "";
+    if (!result) {
+      return;
+    }
+    const details = [result.ref, result.versionTitle, result.license].filter(Boolean).join(" · ");
+    if (details) {
+      sefariaImportSource.append(document.createTextNode(`${details} · `));
+    }
+    const link = document.createElement("a");
+    link.href = result.sourceUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "View on Sefaria";
+    sefariaImportSource.appendChild(link);
+    const versionSource = safeExternalUrl(result.versionSource);
+    if (versionSource) {
+      sefariaImportSource.append(document.createTextNode(" · "));
+      const versionLink = document.createElement("a");
+      versionLink.href = versionSource;
+      versionLink.target = "_blank";
+      versionLink.rel = "noopener noreferrer";
+      versionLink.textContent = "Version source";
+      sefariaImportSource.appendChild(versionLink);
+    }
+  }
+
+  async function importSefariaReference(reference, preparedResult = null) {
     const trimmed = reference.trim();
     if (!trimmed) {
       setSefariaStatus("Enter a Sefaria reference or search term.");
       return;
     }
 
-    setSefariaBusy(true);
+    const controller = beginSefariaRequest();
     setSefariaStatus(`Importing ${trimmed}...`);
+    sefariaImportSource.textContent = "";
 
     try {
-      const text = await fetchSefariaText(trimmed);
-      insertImportedText(text);
-      setSefariaStatus(`Imported ${trimmed}.`);
+      let result = preparedResult;
+      if (!result?.text) {
+        const referenceInfo = await sefariaClient.inspectReference(trimmed, { signal: controller.signal });
+        if (!referenceInfo.valid) {
+          throw new window.HebrewTransliteratorSefariaClient.SefariaRequestError(
+            `Sefaria does not recognize “${trimmed}” as a text reference.`,
+            "invalid_ref"
+          );
+        }
+        if (referenceInfo.kind === "folder") {
+          setSefariaStatus("That reference is a collection of sections. Use Search to browse it, or enter a more specific reference.");
+          renderImportedSource(referenceInfo);
+          return;
+        }
+        const payload = await sefariaClient.loadText(referenceInfo.ref, { signal: controller.signal });
+        result = {
+          ...referenceInfo,
+          ...payload,
+          sourceUrl: referenceInfo.sourceUrl,
+          quality: window.HebrewTransliteratorSefariaClient.textQuality(payload.text)
+        };
+      }
+      insertImportedText(result.text);
+      const warning = result.quality?.status === "unvocalized"
+        ? " The source contains no vowel points, so transliteration will be limited."
+        : result.quality?.status === "partial"
+          ? " Some of the source appears only partially vocalized."
+          : "";
+      setSefariaStatus(`Imported ${result.ref || trimmed}.${warning}`);
+      renderImportedSource(result);
       recordUsageEvent("sefaria_import_succeeded");
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
-      recordUsageEvent("sefaria_import_failed");
+      if (error?.code !== "cancelled") {
+        recordUsageEvent("sefaria_import_failed");
+      }
     } finally {
-      setSefariaBusy(false);
+      finishSefariaRequest(controller);
     }
   }
 
@@ -613,7 +518,11 @@
 
   function getSearchHitCategories(hit) {
     const source = hit._source || hit.source || hit;
-    return source.categories || source.path || hit.categories || [];
+    const categories = source.categories || source.path || hit.categories || [];
+    if (Array.isArray(categories)) {
+      return categories;
+    }
+    return String(categories).split(/[>/]/).map((category) => category.trim()).filter(Boolean);
   }
 
   function extractSearchHits(data) {
@@ -663,7 +572,22 @@
   }
 
   function resultFromRef(ref, categories = [], source = "search", meta = {}) {
-    return { ref, categories, source, ...meta };
+    const normalizedCategories = Array.isArray(categories)
+      ? categories
+      : String(categories).split(/[>/]/).map((category) => category.trim()).filter(Boolean);
+    return { ref, categories: normalizedCategories, source, ...meta };
+  }
+
+  function safeExternalUrl(value) {
+    if (!value) {
+      return "";
+    }
+    try {
+      const url = new URL(value, "https://www.sefaria.org");
+      return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+    } catch {
+      return "";
+    }
   }
 
   function shortRefLabel(ref) {
@@ -671,13 +595,42 @@
     return parts[parts.length - 1] || ref;
   }
 
-  async function schemaChildResults(reference) {
+  async function validateSefariaResults(results, query, signal) {
+    const candidates = sefariaResultTools.prepareResults(results, query || "", 12);
+    const validated = new Array(candidates.length);
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < candidates.length) {
+        const index = cursor;
+        cursor += 1;
+        try {
+          validated[index] = await sefariaClient.validateResult(candidates[index], { signal });
+        } catch (error) {
+          if (error?.code === "cancelled") {
+            throw error;
+          }
+          validated[index] = { error, ref: candidates[index].ref };
+        }
+      }
+    }
+
+    await Promise.all(Array.from({ length: Math.min(4, candidates.length) }, worker));
+    const usable = validated.filter((result) => result && !result.error && result.valid !== false);
+    return {
+      results: usable.slice(0, 10),
+      failedCount: validated.length - usable.length,
+      candidateCount: candidates.length
+    };
+  }
+
+  async function schemaChildResults(reference, signal) {
     const pathParts = splitRefPath(reference);
     if (!pathParts.length) {
       return [];
     }
 
-    const indexData = await fetchSefariaIndex(pathParts[0]);
+    const indexData = await fetchSefariaIndex(pathParts[0], signal);
     const schemaNode = findSchemaNode(indexData.schema, pathParts);
     const children = childNodes(schemaNode);
     return children.map((child) => {
@@ -692,40 +645,47 @@
     });
   }
 
-  async function openSefariaResult(reference) {
-    const trimmed = reference.trim();
+  async function openSefariaResult(result) {
+    const trimmed = result.ref.trim();
     if (!trimmed) {
       return;
     }
 
-    setSefariaBusy(true);
+    const controller = beginSefariaRequest();
     setSefariaStatus(`Opening ${trimmed}...`);
 
     try {
-      const childResults = await schemaChildResults(trimmed);
+      const childResults = await schemaChildResults(trimmed, controller.signal);
       if (childResults.length) {
+        setSefariaStatus(`Checking sections in ${trimmed}...`);
+        const validated = await validateSefariaResults(childResults, "", controller.signal);
         if (currentSefariaResults) {
           sefariaNavigationStack.push(currentSefariaResults);
         }
-        renderRefResults(childResults, { parentRef: trimmed });
+        renderRefResults(validated.results, {
+          parentRef: trimmed,
+          alreadyValidated: true,
+          failedCount: validated.failedCount
+        });
         return;
       }
-    } catch {
-      // If a ref has no index schema, treat it as a normal importable ref.
+      setSefariaStatus("This is a collection rather than a directly importable text. Use “View on Sefaria” to browse all of its sections.");
+      renderImportedSource(result);
+    } catch (error) {
+      setSefariaStatus(sefariaErrorMessage(error));
     } finally {
-      setSefariaBusy(false);
+      finishSefariaRequest(controller);
     }
-
-    importSefariaReference(trimmed);
   }
 
   function handleSefariaResultClick(result) {
-    if (result.hasChildren === false || result.source === "schemaLeaf") {
-      importSefariaReference(result.ref);
+    if (result.availability === "import" && result.text) {
+      importSefariaReference(result.ref, result);
       return;
     }
-
-    openSefariaResult(result.ref);
+    if (result.availability === "browse") {
+      openSefariaResult(result);
+    }
   }
 
   function goBackSefariaResults() {
@@ -770,47 +730,126 @@
     currentSefariaResults = { results, options };
     renderSefariaNavigation(options);
 
-    const uniqueResults = sefariaResultTools.prepareResults(results, options.query || "", 10);
+    const uniqueResults = options.alreadyValidated
+      ? results.slice(0, 10)
+      : sefariaResultTools.prepareResults(results, options.query || "", 10);
 
     if (!uniqueResults.length) {
-      const hiddenCount = results.length;
-      const hiddenText = hiddenCount > 0 ? " Some Sefaria hits were hidden because they were duplicates or were not importable Tanakh or liturgy texts." : "";
-      setSefariaStatus(`No importable Tanakh or liturgy results found. Try a prayer name, or Import an exact reference like Genesis 1:1.${hiddenText}`);
+      const checkedText = options.failedCount
+        ? " Sefaria returned possible matches, but none could be verified as usable Hebrew texts."
+        : "";
+      const partialText = options.partialMessage ? ` ${options.partialMessage}` : "";
+      setSefariaStatus(`No importable Tanakh or liturgy results found. Try a prayer name, or Import an exact reference like Genesis 1:1.${checkedText}${partialText}`);
       return 0;
     }
 
     for (const result of uniqueResults) {
-      const button = document.createElement("button");
-      button.className = result.hasChildren ? "result-button folder-button" : "result-button";
-      button.type = "button";
-      const suffix = result.source === "alias" ? " · suggested" : result.hasChildren ? " ›" : "";
+      const card = document.createElement("article");
+      card.className = "result-card";
+
       const label = options.parentRef ? shortRefLabel(result.ref) : result.ref;
-      button.textContent = `${label}${suffix}`;
-      button.addEventListener("click", () => {
-        handleSefariaResultClick(result);
-      });
-      sefariaResults.appendChild(button);
+      const title = document.createElement("h3");
+      title.className = "result-card-title";
+      title.textContent = result.source === "alias" ? `${label} · suggested` : label;
+      card.appendChild(title);
+
+      if (result.heRef) {
+        const hebrewTitle = document.createElement("p");
+        hebrewTitle.className = "result-card-hebrew";
+        hebrewTitle.dir = "rtl";
+        hebrewTitle.textContent = result.heRef;
+        card.appendChild(hebrewTitle);
+      }
+
+      if (result.excerpt) {
+        const excerpt = document.createElement("p");
+        excerpt.className = "result-card-excerpt";
+        excerpt.dir = "rtl";
+        excerpt.textContent = result.excerpt;
+        card.appendChild(excerpt);
+      }
+
+      const metaParts = [
+        result.categories?.join(" › "),
+        result.versionTitle,
+        result.license
+      ].filter(Boolean);
+      if (metaParts.length) {
+        const meta = document.createElement("p");
+        meta.className = "result-card-meta";
+        meta.textContent = metaParts.join(" · ");
+        card.appendChild(meta);
+      }
+
+      if (result.availability === "browse") {
+        const note = document.createElement("p");
+        note.className = "result-card-warning";
+        note.textContent = "Collection of sections — browse to choose a specific text.";
+        card.appendChild(note);
+      } else if (result.availability === "unavailable") {
+        const note = document.createElement("p");
+        note.className = "result-card-warning";
+        note.textContent = "Hebrew is available, but it has no vowel points and is not suitable for automatic transliteration.";
+        card.appendChild(note);
+      } else if (result.quality?.status === "partial") {
+        const note = document.createElement("p");
+        note.className = "result-card-warning";
+        note.textContent = "This source appears partially vocalized; review the transliteration carefully.";
+        card.appendChild(note);
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "result-card-actions";
+      if (result.availability === "import" || result.availability === "browse") {
+        const button = document.createElement("button");
+        button.className = result.availability === "browse" ? "result-button folder-button" : "result-button";
+        button.type = "button";
+        button.textContent = result.availability === "browse" ? "Browse sections" : "Import Hebrew";
+        button.addEventListener("click", () => handleSefariaResultClick(result));
+        actions.appendChild(button);
+      }
+
+      const link = document.createElement("a");
+      link.className = "sefaria-source-link";
+      link.href = result.sourceUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "View on Sefaria";
+      actions.appendChild(link);
+      const versionSource = safeExternalUrl(result.versionSource);
+      if (versionSource) {
+        const versionLink = document.createElement("a");
+        versionLink.className = "sefaria-source-link";
+        versionLink.href = versionSource;
+        versionLink.target = "_blank";
+        versionLink.rel = "noopener noreferrer";
+        versionLink.textContent = "Version source";
+        actions.appendChild(versionLink);
+      }
+      card.appendChild(actions);
+      sefariaResults.appendChild(card);
     }
 
+    const partialText = options.failedCount
+      ? ` ${options.failedCount} additional result${options.failedCount === 1 ? " could" : "s could"} not be verified and ${options.failedCount === 1 ? "was" : "were"} hidden.`
+      : "";
+    const sourceWarning = options.partialMessage ? ` ${options.partialMessage}` : "";
     if (options.parentRef) {
-      setSefariaStatus(`Showing ${uniqueResults.length} section${uniqueResults.length === 1 ? "" : "s"}. Click a section to open it or import it.`);
+      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
     } else {
-      setSefariaStatus(`Found ${uniqueResults.length} result${uniqueResults.length === 1 ? "" : "s"}. Click a result to open it or import it.`);
+      setSefariaStatus(`Found ${uniqueResults.length} verified result${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
     }
 
     return uniqueResults.length;
   }
 
-  function renderSefariaResults(hits) {
-    renderRefResults(hits.map((hit) => resultFromRef(getSearchHitRef(hit), getSearchHitCategories(hit))));
-  }
-
-  async function searchWrapper(query, size = 12) {
+  async function searchWrapper(query, size = 12, signal) {
     const data = await fetchJson("https://www.sefaria.org/api/search-wrapper", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
+      signal,
       body: JSON.stringify({
         query,
         type: "text",
@@ -823,9 +862,9 @@
     return extractSearchHits(data).map((hit) => resultFromRef(getSearchHitRef(hit), getSearchHitCategories(hit)));
   }
 
-  async function nameSearch(query) {
+  async function nameSearch(query, signal) {
     const nameUrl = `https://www.sefaria.org/api/name/${encodeURIComponent(query)}?limit=12&type=ref`;
-    const nameData = await fetchJson(nameUrl);
+    const nameData = await fetchJson(nameUrl, { signal });
     return extractNameResults(nameData).map((ref) => resultFromRef(ref, [], "name"));
   }
 
@@ -836,8 +875,9 @@
       return;
     }
 
-    setSefariaBusy(true);
+    const controller = beginSefariaRequest();
     setSefariaStatus(`Searching Sefaria for ${trimmed}...`);
+    sefariaImportSource.textContent = "";
     sefariaResults.textContent = "";
     sefariaNavigationStack = [];
     currentSefariaResults = null;
@@ -850,19 +890,14 @@
       const exactResults = /\d/.test(trimmed)
         ? [resultFromRef(trimmed, [], "exact")]
         : [];
-      let displayedResultCount = 0;
-      if (aliasResults.length || exactResults.length) {
-        displayedResultCount = renderRefResults([...exactResults, ...aliasResults], { query: trimmed });
-      }
-
       const queryTerms = [
         trimmed,
         ...aliasMatches.map((alias) => alias.hebrewQuery).filter(Boolean)
       ];
 
       const searches = [
-        nameSearch(trimmed),
-        ...queryTerms.map((term) => searchWrapper(term))
+        nameSearch(trimmed, controller.signal),
+        ...queryTerms.map((term) => searchWrapper(term, 12, controller.signal))
       ];
       const settledSearches = await Promise.allSettled(searches);
       const searchErrors = settledSearches.filter((result) => result.status === "rejected");
@@ -875,13 +910,21 @@
         throw searchErrors[0].reason;
       }
 
-      if (remoteResults.length || (!aliasResults.length && !exactResults.length)) {
-        displayedResultCount = renderRefResults([
-          ...exactResults,
-          ...aliasResults,
-          ...remoteResults
-        ], { query: trimmed });
-      }
+      setSefariaStatus(`Checking ${trimmed} results for usable Hebrew...`);
+      const validated = await validateSefariaResults([
+        ...exactResults,
+        ...aliasResults,
+        ...remoteResults
+      ], trimmed, controller.signal);
+      const partialMessage = searchErrors.length
+        ? `${searchErrors.length} Sefaria search source${searchErrors.length === 1 ? " was" : "s were"} unavailable.`
+        : "";
+      const displayedResultCount = renderRefResults(validated.results, {
+        query: trimmed,
+        alreadyValidated: true,
+        failedCount: validated.failedCount,
+        partialMessage
+      });
       recordUsageEvent(displayedResultCount > 0 ? "sefaria_search_succeeded" : "sefaria_search_zero_results");
       recordSefariaSearch(
         trimmed,
@@ -890,10 +933,12 @@
       );
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
-      recordUsageEvent("sefaria_search_failed");
-      recordSefariaSearch(trimmed, "failed");
+      if (error?.code !== "cancelled") {
+        recordUsageEvent("sefaria_search_failed");
+        recordSefariaSearch(trimmed, "failed");
+      }
     } finally {
-      setSefariaBusy(false);
+      finishSefariaRequest(controller);
     }
   }
 
@@ -926,10 +971,20 @@
     searchSefaria(sefariaQuery.value);
   });
 
+  sefariaCancelButton.addEventListener("click", () => {
+    activeSefariaController?.abort();
+  });
+
   sefariaQuery.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
       searchSefaria(sefariaQuery.value);
+    }
+  });
+
+  window.addEventListener("offline", () => {
+    if (!activeSefariaController) {
+      setSefariaStatus("You are offline. Paste Hebrew directly to keep transliterating.");
     }
   });
 

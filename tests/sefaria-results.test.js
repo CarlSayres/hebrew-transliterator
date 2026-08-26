@@ -17,6 +17,7 @@ test("normalizes equivalent Sefaria references for deduplication", () => {
 test("keeps Tanakh and liturgy while excluding commentary and unrelated texts", () => {
   assert.equal(isImportableSearchResult({ ref: "Genesis 1:1", categories: ["Tanakh"] }), true);
   assert.equal(isImportableSearchResult({ ref: "Siddur Ashkenaz, Weekday", categories: ["Liturgy"] }), true);
+  assert.equal(isImportableSearchResult({ ref: "A Prayer Collection", categories: "Liturgy" }), true);
   assert.equal(isImportableSearchResult({ ref: "Rashi on Genesis 1:1", categories: ["Commentary"] }), false);
   assert.equal(isImportableSearchResult({ ref: "Mishnah Berakhot 1:1", categories: ["Mishnah"] }), false);
   assert.equal(isImportableSearchResult({ ref: "Piskei HaSiddur, Bedtime Shema", categories: ["Halakhah"] }), false);
