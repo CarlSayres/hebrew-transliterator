@@ -44,7 +44,7 @@
       return false;
     }
 
-    if (source === "alias" || source === "schema" || source === "schemaLeaf") {
+    if (source === "alias" || source === "catalog" || source === "schema" || source === "schemaLeaf") {
       return true;
     }
 
@@ -59,7 +59,7 @@
     if (normalizedQuery && normalizedRef === normalizedQuery) {
       return 0;
     }
-    if (result?.source === "alias") {
+    if (result?.source === "alias" || result?.source === "catalog") {
       return 1;
     }
     if (normalizedQuery && normalizedRef.startsWith(normalizedQuery)) {

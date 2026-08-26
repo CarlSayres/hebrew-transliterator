@@ -19,6 +19,7 @@
   const sefariaImportSource = document.getElementById("sefariaImportSource");
   const sefariaResults = document.getElementById("sefariaResults");
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
+  const sefariaCatalog = window.HebrewTransliteratorSefariaCatalog;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({ timeoutMs: 9000 });
 
   const usageEventNames = new Set([
@@ -910,6 +911,8 @@
     currentSefariaResults = null;
 
     try {
+      const catalogResults = sefariaCatalog.resultsForQuery(trimmed);
+      const useCatalog = catalogResults.length > 0;
       const aliasMatches = liturgyAliasesFor(trimmed);
       const aliasResults = aliasMatches.flatMap((alias) =>
         alias.refs.map((ref) => resultFromRef(ref, ["Liturgy"], "alias"))
@@ -922,10 +925,12 @@
         ...aliasMatches.map((alias) => alias.hebrewQuery).filter(Boolean)
       ];
 
-      const searches = [
-        nameSearch(trimmed, controller.signal),
-        ...queryTerms.map((term) => searchWrapper(term, 12, controller.signal))
-      ];
+      const searches = useCatalog
+        ? []
+        : [
+          nameSearch(trimmed, controller.signal),
+          ...queryTerms.map((term) => searchWrapper(term, 12, controller.signal))
+        ];
       const settledSearches = await Promise.allSettled(searches);
       const searchErrors = settledSearches.filter((result) => result.status === "rejected");
       const successfulSearchCount = settledSearches.length - searchErrors.length;
@@ -933,12 +938,13 @@
         result.status === "fulfilled" ? result.value : []
       );
 
-      if (!exactResults.length && !aliasResults.length && !remoteResults.length && successfulSearchCount === 0) {
+      if (!catalogResults.length && !exactResults.length && !aliasResults.length && !remoteResults.length && successfulSearchCount === 0) {
         throw searchErrors[0].reason;
       }
 
       setSefariaStatus(`Checking ${trimmed} results for usable Hebrew...`);
       const validated = await validateSefariaResults([
+        ...catalogResults,
         ...exactResults,
         ...aliasResults,
         ...remoteResults

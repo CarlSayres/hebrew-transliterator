@@ -223,8 +223,9 @@
 
       if (referenceInfo.kind === "folder") {
         let quality;
-        if (referenceInfo.firstAvailableSectionRef) {
-          const sample = await this.loadText(referenceInfo.firstAvailableSectionRef, options);
+        const sampleRef = base.sampleRef || referenceInfo.firstAvailableSectionRef;
+        if (sampleRef) {
+          const sample = await this.loadText(sampleRef, options);
           quality = textQuality(sample.text);
           if (quality.status === "missing" || quality.status === "unvocalized") {
             return {

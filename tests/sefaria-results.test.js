@@ -21,6 +21,7 @@ test("keeps Tanakh and liturgy while excluding commentary and unrelated texts", 
   assert.equal(isImportableSearchResult({ ref: "Rashi on Genesis 1:1", categories: ["Commentary"] }), false);
   assert.equal(isImportableSearchResult({ ref: "Mishnah Berakhot 1:1", categories: ["Mishnah"] }), false);
   assert.equal(isImportableSearchResult({ ref: "Piskei HaSiddur, Bedtime Shema", categories: ["Halakhah"] }), false);
+  assert.equal(isImportableSearchResult({ ref: "Weekday Siddur Chabad", source: "catalog" }), true);
 });
 
 test("ranks exact references and curated aliases before broad search hits", () => {
