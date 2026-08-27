@@ -3,6 +3,7 @@
   "name": "hebrew-transliterator",
   "compatibility_date": "2026-08-25",
   "main": "./worker/index.mjs",
+  "keep_vars": true,
   "assets": {
     "directory": "./site",
     "binding": "ASSETS",
