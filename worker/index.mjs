@@ -150,7 +150,12 @@ export async function handleFeedback(request, env) {
   }
 
   if (!env.FEEDBACK_RATE_LIMITER || !env.RESEND_API_KEY || !env.FEEDBACK_RECIPIENT) {
-    console.error(JSON.stringify({ category: "feedback_failed", reason: "configuration" }));
+    const missing = [
+      !env.FEEDBACK_RATE_LIMITER && "FEEDBACK_RATE_LIMITER",
+      !env.RESEND_API_KEY && "RESEND_API_KEY",
+      !env.FEEDBACK_RECIPIENT && "FEEDBACK_RECIPIENT",
+    ].filter(Boolean);
+    console.error(JSON.stringify({ category: "feedback_failed", reason: "configuration", missing }));
     return feedbackResponse(503);
   }
 
