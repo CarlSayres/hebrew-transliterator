@@ -194,8 +194,9 @@
   }
 
   function setLineNumberAvailability(result) {
-    lineNumbersToggle.checked = false;
-    lineNumbersControl.hidden = !supportsLineNumbers(result);
+    const supported = supportsLineNumbers(result);
+    lineNumbersToggle.checked = supported;
+    lineNumbersControl.hidden = !supported;
   }
 
   function updateTransliterationNotice() {
@@ -637,7 +638,7 @@
         };
       }
       setLineNumberAvailability(result);
-      insertImportedText(result.text);
+      insertImportedText(lineNumbersToggle.checked ? addLineNumbers(result.text) : result.text);
       lastImportedSefariaContext = {
         ref: result.ref || trimmed,
         versionTitle: result.versionTitle || "",

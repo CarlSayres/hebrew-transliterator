@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hebrew Transliterator</title>
     <link rel="icon" href="icon.svg?v=3" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=8">
     <script src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin"></script>
   </head>
   <body>
@@ -110,10 +110,6 @@
               <input id="verboseResultsToggle" type="checkbox">
               <span>Verbose search results</span>
             </label>
-            <label id="lineNumbersControl" class="verbose-results-toggle line-numbers-toggle" for="lineNumbersToggle" hidden>
-              <input id="lineNumbersToggle" type="checkbox">
-              <span>Line numbers</span>
-            </label>
           </div>
           <div id="sefariaStatus" class="sefaria-status" role="status" aria-live="polite"></div>
           <div id="sefariaImportSource" class="sefaria-import-source"></div>
@@ -121,15 +117,21 @@
         </section>
 
         <div class="editor-grid">
-          <label class="panel" for="hebrewInput">
-            <span class="panel-label">Vocalized Hebrew</span>
+          <section class="panel" aria-labelledby="hebrewInputLabel">
+            <div class="output-header">
+              <label id="hebrewInputLabel" class="panel-label" for="hebrewInput">Vocalized Hebrew</label>
+              <label id="lineNumbersControl" class="verbose-results-toggle line-numbers-toggle" for="lineNumbersToggle" hidden>
+                <input id="lineNumbersToggle" type="checkbox">
+                <span>Line numbers</span>
+              </label>
+            </div>
             <textarea
               id="hebrewInput"
               dir="rtl"
               spellcheck="false"
               placeholder="הקלד עברית מנוקדת כאן"
             ></textarea>
-          </label>
+          </section>
 
           <section class="panel" aria-labelledby="outputLabel">
             <div class="output-header">
@@ -193,6 +195,6 @@
     <script src="sefaria-results.js?v=4"></script>
     <script src="sefaria-catalog.js?v=3"></script>
     <script src="sefaria-client.js?v=6"></script>
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=16"></script>
   </body>
 </html>

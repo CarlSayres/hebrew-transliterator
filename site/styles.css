@@ -368,6 +368,7 @@ h1 {
 
 .line-numbers-toggle {
   margin-left: auto;
+  margin-right: 14px;
 }
 
 .line-numbers-toggle[hidden] {
