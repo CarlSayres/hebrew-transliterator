@@ -58,7 +58,7 @@
   const BEGAD_KEFAT = new Set(["ב", "ג", "ד", "כ", "ך", "פ", "ף", "ת"]);
 
   function normalize(text) {
-    return text.normalize("NFD");
+    return text.normalize("NFD").replace(/\u034f/g, "");
   }
 
   function hasHebrew(value) {

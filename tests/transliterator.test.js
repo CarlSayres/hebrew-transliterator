@@ -438,7 +438,9 @@ const unicodeNormalizationCases = [
   ["שָׁלוֹם", "Shalom"],
   ["בָּרוּךְ", "Barukh"],
   // The same applies when a vowel and meteg are reversed on one letter.
-  ["הָאֵֽלֶּה", "Ha·eleh"]
+  ["הָאֵֽלֶּה", "Ha·eleh"],
+  // Sefaria occasionally includes an invisible combining grapheme joiner.
+  ["יִשְׂרָאֵ֑͏ֽל", "Yisra·el"]
 ];
 
 for (const [input, expected] of unicodeNormalizationCases) {

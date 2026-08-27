@@ -1090,7 +1090,8 @@
     if (options.chapterStrip) {
       resultHost = document.createElement("div");
       resultHost.className = "chapter-number-strip";
-      resultHost.setAttribute("aria-label", `Chapters in ${options.parentRef}`);
+      const chapterCollection = options.parentRef || options.chapterLabel || "this text";
+      resultHost.setAttribute("aria-label", `Chapters in ${chapterCollection}`);
       sefariaResults.appendChild(resultHost);
     }
 
@@ -1281,6 +1282,7 @@
         alreadyValidated: true,
         showAll: true,
         chapterStrip: isChapterCollection,
+        chapterLabel: isChapterCollection ? label : "",
         statusMessage: isChapterCollection
           ? `Choose a chapter from ${label}.`
           : `Choose a book from ${label}.`
