@@ -432,6 +432,22 @@ for (const [input, expected] of stressMarkCases) {
   }
 }
 
+const unicodeNormalizationCases = [
+  // Canonical ordering permits vowel and consonant-dot marks to arrive in
+  // either order. Both forms must produce identical transliteration.
+  ["שָׁלוֹם", "Shalom"],
+  ["בָּרוּךְ", "Barukh"],
+  // The same applies when a vowel and meteg are reversed on one letter.
+  ["הָאֵֽלֶּה", "Ha·eleh"]
+];
+
+for (const [input, expected] of unicodeNormalizationCases) {
+  const actual = transliterator.transliterate(input);
+  if (actual !== expected) {
+    failures.push({ feature: "unicodeNormalization", input, expected, actual });
+  }
+}
+
 const tzereEiRuleset = JSON.parse(JSON.stringify(context.window.HebrewRulesets.modernSefardi));
 tzereEiRuleset.vowels.tzere = "ei";
 const tzereEiTransliterator = new context.window.HebrewTransliterator.Transliterator(tzereEiRuleset);
@@ -501,4 +517,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length} transliteration tests passed.`);
+console.log(`${cases.length + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length} transliteration tests passed.`);
