@@ -666,19 +666,56 @@
       const childResults = await schemaChildResults(trimmed, controller.signal);
       if (childResults.length) {
         setSefariaStatus(`Checking sections in ${trimmed}...`);
-        const validated = await validateSefariaResults(childResults, "", controller.signal);
+        const pageSize = 10;
+        const validated = await validateSefariaResults(childResults.slice(0, pageSize), "", controller.signal);
         if (currentSefariaResults) {
           sefariaNavigationStack.push(currentSefariaResults);
         }
         renderRefResults(validated.results, {
           parentRef: trimmed,
           alreadyValidated: true,
-          failedCount: validated.failedCount
+          failedCount: validated.failedCount,
+          pagination: {
+            allResults: childResults,
+            page: 0,
+            pageSize,
+            total: childResults.length
+          }
         });
         return;
       }
       setSefariaStatus("This is a collection rather than a directly importable text. Use “View on Sefaria” to browse all of its sections.");
       renderImportedSource(result);
+    } catch (error) {
+      setSefariaStatus(sefariaErrorMessage(error));
+    } finally {
+      finishSefariaRequest(controller);
+    }
+  }
+
+  async function showSefariaSectionPage(options, page) {
+    const pagination = options.pagination;
+    if (!pagination) {
+      return;
+    }
+
+    const pageCount = Math.ceil(pagination.total / pagination.pageSize);
+    const nextPage = Math.max(0, Math.min(page, pageCount - 1));
+    const start = nextPage * pagination.pageSize;
+    const pageResults = pagination.allResults.slice(start, start + pagination.pageSize);
+    const controller = beginSefariaRequest();
+    setSefariaStatus(`Checking sections ${start + 1}–${Math.min(start + pagination.pageSize, pagination.total)} of ${pagination.total}...`);
+
+    try {
+      const validated = await validateSefariaResults(pageResults, "", controller.signal);
+      renderRefResults(validated.results, {
+        ...options,
+        failedCount: validated.failedCount,
+        pagination: {
+          ...pagination,
+          page: nextPage
+        }
+      }, { preserveStack: true });
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
     } finally {
@@ -748,6 +785,36 @@
       trail.className = "sefaria-breadcrumb";
       trail.textContent = splitRefPath(options.parentRef).map(shortRefLabel).join(" / ");
       nav.appendChild(trail);
+    }
+
+    if (options.pagination) {
+      const { page, pageSize, total } = options.pagination;
+      const start = page * pageSize + 1;
+      const end = Math.min(start + pageSize - 1, total);
+      const pager = document.createElement("div");
+      pager.className = "sefaria-pagination";
+
+      const previousButton = document.createElement("button");
+      previousButton.className = "result-button";
+      previousButton.type = "button";
+      previousButton.textContent = "Previous";
+      previousButton.disabled = page === 0;
+      previousButton.addEventListener("click", () => showSefariaSectionPage(options, page - 1));
+      pager.appendChild(previousButton);
+
+      const range = document.createElement("span");
+      range.textContent = `${start}–${end} of ${total}`;
+      pager.appendChild(range);
+
+      const nextButton = document.createElement("button");
+      nextButton.className = "result-button";
+      nextButton.type = "button";
+      nextButton.textContent = "Next";
+      nextButton.disabled = end >= total;
+      nextButton.addEventListener("click", () => showSefariaSectionPage(options, page + 1));
+      pager.appendChild(nextButton);
+
+      nav.appendChild(pager);
     }
 
     sefariaResults.appendChild(nav);
@@ -901,6 +968,10 @@
     const sourceWarning = options.partialMessage ? ` ${options.partialMessage}` : "";
     if (options.statusMessage) {
       setSefariaStatus(options.statusMessage);
+    } else if (options.pagination) {
+      const start = options.pagination.page * options.pagination.pageSize + 1;
+      const end = Math.min(start + options.pagination.pageSize - 1, options.pagination.total);
+      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"} (${start}–${end} of ${options.pagination.total}).${partialText}${sourceWarning}`);
     } else if (options.parentRef) {
       setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
     } else {
