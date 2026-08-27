@@ -442,9 +442,46 @@ h1 {
 }
 
 .sefaria-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
   color: var(--muted);
   font-size: 0.86rem;
   line-height: 1.35;
+}
+
+.sefaria-breadcrumb-button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #ffffff;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.sefaria-breadcrumb-button:hover {
+  border-color: var(--accent);
+  background: var(--surface-warm);
+}
+
+.sefaria-breadcrumb-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.sefaria-breadcrumb-button[aria-current="location"] {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: var(--surface-warm);
+  color: var(--text);
+  opacity: 1;
+}
+
+.sefaria-breadcrumb-separator {
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .sefaria-pagination {

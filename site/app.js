@@ -765,6 +765,24 @@
     }
   }
 
+  function findSefariaBreadcrumbStateIndex(targetRef) {
+    const target = normalizeRefPart(targetRef);
+    return sefariaNavigationStack.findLastIndex(
+      (state) => normalizeRefPart(state.options?.parentRef) === target
+    );
+  }
+
+  function goToSefariaBreadcrumb(targetRef) {
+    const stateIndex = findSefariaBreadcrumbStateIndex(targetRef);
+    if (stateIndex < 0) {
+      return;
+    }
+
+    const targetState = sefariaNavigationStack[stateIndex];
+    sefariaNavigationStack = sefariaNavigationStack.slice(0, stateIndex);
+    renderRefResults(targetState.results, targetState.options, { preserveStack: true });
+  }
+
   function renderSefariaNavigation(options) {
     if (!options.parentRef && !sefariaNavigationStack.length) {
       return;
@@ -783,9 +801,39 @@
     }
 
     if (options.parentRef) {
-      const trail = document.createElement("span");
+      const trail = document.createElement("div");
       trail.className = "sefaria-breadcrumb";
-      trail.textContent = splitRefPath(options.parentRef).map(shortRefLabel).join(" / ");
+      trail.setAttribute("aria-label", "Sefaria location");
+
+      const pathParts = splitRefPath(options.parentRef);
+      pathParts.forEach((part, index) => {
+        if (index > 0) {
+          const separator = document.createElement("span");
+          separator.className = "sefaria-breadcrumb-separator";
+          separator.textContent = "/";
+          separator.setAttribute("aria-hidden", "true");
+          trail.appendChild(separator);
+        }
+
+        const targetRef = pathParts.slice(0, index + 1).join(", ");
+        const isCurrent = index === pathParts.length - 1;
+        const stateIndex = findSefariaBreadcrumbStateIndex(targetRef);
+        const breadcrumbButton = document.createElement("button");
+        breadcrumbButton.className = "sefaria-breadcrumb-button";
+        breadcrumbButton.type = "button";
+        breadcrumbButton.textContent = shortRefLabel(part);
+
+        if (isCurrent) {
+          breadcrumbButton.disabled = true;
+          breadcrumbButton.setAttribute("aria-current", "location");
+        } else if (stateIndex >= 0) {
+          breadcrumbButton.addEventListener("click", () => goToSefariaBreadcrumb(targetRef));
+        } else {
+          breadcrumbButton.disabled = true;
+        }
+
+        trail.appendChild(breadcrumbButton);
+      });
       nav.appendChild(trail);
     }
 
