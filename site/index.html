@@ -5,27 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hebrew Transliterator</title>
     <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=10">
+    <link rel="stylesheet" href="styles.css?v=11">
     <script src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin"></script>
   </head>
   <body>
     <main class="app-shell">
       <section class="workspace" aria-labelledby="app-title">
         <header class="masthead">
-          <div>
-            <nav class="site-nav" aria-label="Site navigation">
-              <a class="site-icon-link" href="index.html" aria-label="Hebrew Transliterator home" aria-current="page">
-                <img src="icon.svg?v=4" alt="" width="34" height="34">
-              </a>
-              <a class="site-nav-link" href="about.html">About</a>
-              <a class="site-nav-link" href="privacy.html">Privacy</a>
-              <button id="feedbackOpenButton" class="site-nav-link site-nav-button" type="button">Feedback</button>
-            </nav>
-            <div class="site-title-row">
+          <div class="masthead-primary">
+            <div class="site-heading-block">
+              <nav class="site-nav" aria-label="Site navigation">
+                <a class="site-icon-link" href="index.html" aria-label="Hebrew Transliterator home" aria-current="page">
+                  <img src="icon.svg?v=4" alt="" width="34" height="34">
+                </a>
+                <a class="site-nav-link" href="about.html">About</a>
+                <a class="site-nav-link" href="privacy.html">Privacy</a>
+                <button id="feedbackOpenButton" class="site-nav-link site-nav-button" type="button">Feedback</button>
+                <a class="powered-by-sefaria" href="https://www.sefaria.org/" target="_blank" rel="noopener noreferrer" aria-label="Powered by Sefaria (opens in a new tab)">
+                  <img src="powered-by-sefaria.png?v=2" alt="Powered by Sefaria" width="110" height="57">
+                </a>
+              </nav>
               <h1 id="app-title">Hebrew Transliterator</h1>
-              <a class="powered-by-sefaria" href="https://www.sefaria.org/" target="_blank" rel="noopener noreferrer" aria-label="Powered by Sefaria (opens in a new tab)">
-                <img src="powered-by-sefaria.png?v=2" alt="Powered by Sefaria" width="110" height="57">
-              </a>
             </div>
             <p class="intro-text">
               Paste any vocalized Hebrew into the box below, or search for a biblical or liturgical text using Sefaria and import it for transliteration. Created by Cantor Carl Sayres.
@@ -101,7 +101,7 @@
               class="sefaria-input"
               type="search"
               autocomplete="off"
-              placeholder="Genesis 1:1, Deut 6:4-9, Baruch Sheamar, Mi Chamocha, Aleinu, Siddur, Haggadah"
+              placeholder="Genesis 1:1, Deut 6:4-9, Baruch Sheamar, Mi Chamocha, Aleinu"
             >
             <button id="sefariaImportButton" class="secondary-button" type="button">Import exact ref</button>
             <button id="sefariaSearchButton" class="secondary-button quiet-button" type="button">Search name/phrase</button>

@@ -67,6 +67,24 @@ select {
   flex-wrap: wrap;
 }
 
+.masthead-primary {
+  flex: 1 1 680px;
+  min-width: 0;
+}
+
+.site-heading-block {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.site-heading-block .site-nav {
+  width: 100%;
+}
+
+.site-heading-block .powered-by-sefaria {
+  margin-left: auto;
+}
+
 .site-icon-link {
   display: inline-flex;
   border-radius: 9px;
@@ -113,13 +131,6 @@ h1 {
   font-size: clamp(2rem, 5vw, 4.25rem);
   line-height: 1;
   font-weight: 750;
-}
-
-.site-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: clamp(18px, 3vw, 42px);
 }
 
 .intro-text {
@@ -957,10 +968,6 @@ textarea:focus {
   .masthead-actions {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .site-title-row {
-    flex-wrap: wrap;
   }
 
   .powered-by-sefaria img {
