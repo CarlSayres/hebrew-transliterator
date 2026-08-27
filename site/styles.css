@@ -366,6 +366,14 @@ h1 {
   white-space: nowrap;
 }
 
+.line-numbers-toggle {
+  margin-left: auto;
+}
+
+.line-numbers-toggle[hidden] {
+  display: none;
+}
+
 .verbose-results-toggle input {
   width: 16px;
   height: 16px;
@@ -812,6 +820,11 @@ textarea:focus {
 .feedback-form textarea {
   resize: vertical;
   min-height: 124px;
+  direction: ltr;
+  text-align: left;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .feedback-form select:focus,

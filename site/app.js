@@ -16,6 +16,8 @@
   const sefariaCancelButton = document.getElementById("sefariaCancelButton");
   const sefariaStartButtons = Array.from(document.querySelectorAll("[data-sefaria-start]"));
   const verboseResultsToggle = document.getElementById("verboseResultsToggle");
+  const lineNumbersControl = document.getElementById("lineNumbersControl");
+  const lineNumbersToggle = document.getElementById("lineNumbersToggle");
   const sefariaStatus = document.getElementById("sefariaStatus");
   const sefariaImportSource = document.getElementById("sefariaImportSource");
   const sefariaResults = document.getElementById("sefariaResults");
@@ -169,6 +171,31 @@
       output.textContent = transliterator.transliterate(input.value);
     }
     updateTransliterationNotice();
+  }
+
+  function addLineNumbers(text) {
+    return String(text || "")
+      .split("\n")
+      .map((line, index) => `${index + 1}. ${line}`)
+      .join("\n");
+  }
+
+  function removeLineNumbers(text) {
+    return String(text || "")
+      .split("\n")
+      .map((line, index) => line.replace(new RegExp(`^\\s*${index + 1}\\.\\s?`), ""))
+      .join("\n");
+  }
+
+  function supportsLineNumbers(result) {
+    const categories = Array.isArray(result?.categories) ? result.categories : [];
+    return categories.some((category) => String(category).toLowerCase() === "tanakh") ||
+      /^Pirkei Avot(?:\s|,|$)/i.test(String(result?.ref || ""));
+  }
+
+  function setLineNumberAvailability(result) {
+    lineNumbersToggle.checked = false;
+    lineNumbersControl.hidden = !supportsLineNumbers(result);
   }
 
   function updateTransliterationNotice() {
@@ -609,6 +636,7 @@
           quality: window.HebrewTransliteratorSefariaClient.textQuality(payload.text)
         };
       }
+      setLineNumberAvailability(result);
       insertImportedText(result.text);
       lastImportedSefariaContext = {
         ref: result.ref || trimmed,
@@ -1287,6 +1315,7 @@
 
   sampleButton.addEventListener("click", () => {
     lastImportedSefariaContext = null;
+    setLineNumberAvailability(null);
     input.value = sampleText;
     updateOutput();
     input.focus();
@@ -1332,6 +1361,14 @@
         { preserveStack: true }
       );
     }
+  });
+
+  lineNumbersToggle.addEventListener("change", () => {
+    input.value = lineNumbersToggle.checked
+      ? addLineNumbers(input.value)
+      : removeLineNumbers(input.value);
+    updateOutput();
+    input.focus();
   });
 
   sefariaQuery.addEventListener("keydown", (event) => {
