@@ -667,7 +667,7 @@
       const childResults = await schemaChildResults(trimmed, controller.signal);
       if (childResults.length) {
         setSefariaStatus(`Checking sections in ${trimmed}...`);
-        const pageSize = 25;
+        const pageSize = 30;
         const validated = await validateSefariaResults(childResults.slice(0, pageSize), "", controller.signal, pageSize);
         if (currentSefariaResults) {
           sefariaNavigationStack.push(currentSefariaResults);
