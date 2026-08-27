@@ -58,6 +58,7 @@
     siddur: "Siddur",
     mahzor: "Mahzor",
     haggadah: "Haggadah",
+    pirkei_avot: "Pirkei Avot",
     torah: "Torah",
     neviim: "Neviim",
     ketuvim: "Ketuvim"
@@ -76,6 +77,7 @@
       siddur: ["siddur", "siddurim", "סידור", "סידורים"],
       mahzor: ["mahzor", "mahzorim", "machzor", "machzorim", "מחזור", "מחזורים"],
       haggadah: ["haggadah", "haggadot", "hagaddah", "hagadah", "הגדה", "הגדות"],
+      pirkei_avot: ["pirkei avot", "pirke avot", "pirkei abot", "פרקי אבות"],
       torah: ["torah", "תורה"],
       neviim: ["neviim", "נביאים"],
       ketuvim: ["ketuvim", "כתובים"]
@@ -107,6 +109,17 @@
     if (key === "siddur") return liturgyResults(siddurim, "Siddur");
     if (key === "mahzor") return liturgyResults(mahzorim, "High Holidays");
     if (key === "haggadah") return liturgyResults(haggadot, "Haggadah");
+    if (key === "pirkei_avot") {
+      return Array.from({ length: 6 }, (_value, index) => ({
+        ref: `Pirkei Avot ${index + 1}`,
+        displayLabel: String(index + 1),
+        categories: ["Mishnah", "Seder Nezikin"],
+        source: "chapter",
+        sourceUrl: `https://www.sefaria.org/Pirkei_Avot.${index + 1}`,
+        valid: true,
+        availability: "import-reference"
+      }));
+    }
     return tanakhResults(key);
   }
 

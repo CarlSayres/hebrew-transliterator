@@ -14,8 +14,19 @@ test("recognizes the generic English and Hebrew browse searches", () => {
   assert.equal(keyForQuery("Siddur"), "siddur");
   assert.equal(keyForQuery("machzorim"), "mahzor");
   assert.equal(keyForQuery("Hagaddah"), "haggadah");
+  assert.equal(keyForQuery("Pirkei Avot"), "pirkei_avot");
+  assert.equal(keyForQuery("פרקי אבות"), "pirkei_avot");
   assert.equal(keyForQuery("נביאים"), "neviim");
   assert.equal(keyForQuery("Siddur Ashkenaz"), "");
+});
+
+test("catalogs Pirkei Avot as six directly browsable chapters", () => {
+  const chapters = resultsForKey("pirkei_avot");
+  assert.equal(chapters.length, 6);
+  assert.deepEqual(chapters.map((entry) => entry.displayLabel), ["1", "2", "3", "4", "5", "6"]);
+  assert.equal(chapters[0].ref, "Pirkei Avot 1");
+  assert.equal(chapters[5].ref, "Pirkei Avot 6");
+  assert.equal(chapters.every((entry) => entry.availability === "import-reference"), true);
 });
 
 test("catalogs actual Mahzor and Haggadah roots without commentary", () => {

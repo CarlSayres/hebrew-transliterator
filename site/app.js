@@ -19,6 +19,19 @@
   const sefariaStatus = document.getElementById("sefariaStatus");
   const sefariaImportSource = document.getElementById("sefariaImportSource");
   const sefariaResults = document.getElementById("sefariaResults");
+  const feedbackOpenButton = document.getElementById("feedbackOpenButton");
+  const feedbackDialog = document.getElementById("feedbackDialog");
+  const feedbackForm = document.getElementById("feedbackForm");
+  const feedbackCloseButton = document.getElementById("feedbackCloseButton");
+  const feedbackCancelButton = document.getElementById("feedbackCancelButton");
+  const feedbackSubmitButton = document.getElementById("feedbackSubmitButton");
+  const feedbackType = document.getElementById("feedbackType");
+  const feedbackMessage = document.getElementById("feedbackMessage");
+  const feedbackWebsite = document.getElementById("feedbackWebsite");
+  const feedbackContextPanel = document.getElementById("feedbackContextPanel");
+  const feedbackIncludeContext = document.getElementById("feedbackIncludeContext");
+  const feedbackContextSummary = document.getElementById("feedbackContextSummary");
+  const feedbackStatus = document.getElementById("feedbackStatus");
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
   const sefariaCatalog = window.HebrewTransliteratorSefariaCatalog;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({ timeoutMs: 9000 });
@@ -30,6 +43,7 @@
     "sefaria_search_failed",
     "sefaria_import_succeeded",
     "sefaria_import_failed",
+    "feedback_sent",
     "style_selected"
   ]);
 
@@ -100,6 +114,8 @@
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
   let activeSefariaController = null;
+  let lastSefariaSearch = "";
+  let lastImportedSefariaContext = null;
 
   const liturgySearchAliases = [
     {
@@ -466,6 +482,99 @@
     }
   }
 
+  function currentFeedbackContext() {
+    const query = normalizedSefariaSearchTerm(sefariaQuery.value || lastSefariaSearch);
+    if (!query && !lastImportedSefariaContext) {
+      return null;
+    }
+    return {
+      query,
+      ref: lastImportedSefariaContext?.ref || "",
+      versionTitle: lastImportedSefariaContext?.versionTitle || "",
+      text: lastImportedSefariaContext?.text || ""
+    };
+  }
+
+  function appendFeedbackContextDetail(label, value) {
+    if (!value) {
+      return;
+    }
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const detail = document.createElement("dd");
+    detail.textContent = value;
+    detail.title = value;
+    feedbackContextSummary.append(term, detail);
+  }
+
+  function openFeedbackDialog() {
+    const context = currentFeedbackContext();
+    feedbackStatus.textContent = "";
+    feedbackStatus.classList.remove("error");
+    feedbackContextSummary.textContent = "";
+    feedbackContextPanel.hidden = !context;
+    feedbackIncludeContext.checked = Boolean(context);
+    if (context) {
+      appendFeedbackContextDetail("Search", context.query);
+      appendFeedbackContextDetail("Reference", context.ref);
+      appendFeedbackContextDetail("Edition", context.versionTitle);
+      if (context.text) {
+        appendFeedbackContextDetail("Imported text", `${context.text.length.toLocaleString()} characters`);
+      }
+    }
+    feedbackDialog.showModal();
+    feedbackMessage.focus();
+  }
+
+  function closeFeedbackDialog() {
+    if (feedbackDialog.open) {
+      feedbackDialog.close();
+    }
+  }
+
+  async function submitFeedback(event) {
+    event.preventDefault();
+    const message = feedbackMessage.value.trim();
+    if (!message) {
+      feedbackStatus.textContent = "Enter a feedback message.";
+      feedbackStatus.classList.add("error");
+      feedbackMessage.focus();
+      return;
+    }
+
+    feedbackSubmitButton.disabled = true;
+    feedbackStatus.textContent = "Sending feedback...";
+    feedbackStatus.classList.remove("error");
+    try {
+      const context = feedbackIncludeContext.checked ? currentFeedbackContext() : null;
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: feedbackType.value,
+          message,
+          website: feedbackWebsite.value,
+          context
+        })
+      });
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Too many feedback messages were sent recently. Please wait a minute and try again.");
+        }
+        throw new Error("Feedback could not be sent. Please try again shortly.");
+      }
+      feedbackForm.reset();
+      feedbackStatus.textContent = "Thank you—your feedback was sent.";
+      recordUsageEvent("feedback_sent");
+      window.setTimeout(closeFeedbackDialog, 1200);
+    } catch (error) {
+      feedbackStatus.textContent = error.message;
+      feedbackStatus.classList.add("error");
+    } finally {
+      feedbackSubmitButton.disabled = false;
+    }
+  }
+
   async function importSefariaReference(reference, preparedResult = null) {
     const trimmed = reference.trim();
     if (!trimmed) {
@@ -501,6 +610,11 @@
         };
       }
       insertImportedText(result.text);
+      lastImportedSefariaContext = {
+        ref: result.ref || trimmed,
+        versionTitle: result.versionTitle || "",
+        text: result.text.slice(0, 20000)
+      };
       const warning = result.quality?.status === "unvocalized"
         ? " The source contains no vowel points, so transliteration will be limited."
         : result.quality?.status === "partial"
@@ -1062,17 +1176,22 @@
       setSefariaStatus("Enter a prayer name, phrase, or exact reference.");
       return;
     }
+    lastSefariaSearch = trimmed;
 
     const catalogKey = sefariaCatalog.keyForQuery(trimmed);
     if (catalogKey && !sefariaCatalog.requiresValidation(catalogKey)) {
       sefariaImportSource.textContent = "";
       const catalogResults = sefariaCatalog.resultsForKey(catalogKey);
       const label = sefariaCatalog.collectionLabels[catalogKey];
+      const isChapterCollection = catalogKey === "pirkei_avot";
       sefariaQuery.value = label;
       const displayedResultCount = renderRefResults(catalogResults, {
         alreadyValidated: true,
         showAll: true,
-        statusMessage: `Choose a book from ${label}.`
+        chapterStrip: isChapterCollection,
+        statusMessage: isChapterCollection
+          ? `Choose a chapter from ${label}.`
+          : `Choose a book from ${label}.`
       });
       recordUsageEvent("sefaria_search_succeeded");
       recordSefariaSearch(label, "succeeded", displayedResultCount);
@@ -1167,13 +1286,25 @@
   khafOverride?.addEventListener("change", setOptions);
 
   sampleButton.addEventListener("click", () => {
+    lastImportedSefariaContext = null;
     input.value = sampleText;
     updateOutput();
     input.focus();
   });
 
   sefariaImportButton.addEventListener("click", () => {
+    lastSefariaSearch = normalizedSefariaSearchTerm(sefariaQuery.value);
     importSefariaReference(sefariaQuery.value);
+  });
+
+  feedbackOpenButton.addEventListener("click", openFeedbackDialog);
+  feedbackCloseButton.addEventListener("click", closeFeedbackDialog);
+  feedbackCancelButton.addEventListener("click", closeFeedbackDialog);
+  feedbackForm.addEventListener("submit", submitFeedback);
+  feedbackDialog.addEventListener("click", (event) => {
+    if (event.target === feedbackDialog) {
+      closeFeedbackDialog();
+    }
   });
 
   sefariaSearchButton.addEventListener("click", () => {
@@ -1242,4 +1373,7 @@
   syncTzereOverrideToStyle();
   syncConsonantOverridesToStyle();
   refreshTransliterator();
+  if (new URLSearchParams(location.search).get("feedback") === "1") {
+    window.requestAnimationFrame(openFeedbackDialog);
+  }
 })();

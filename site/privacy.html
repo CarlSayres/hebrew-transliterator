@@ -4,12 +4,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Privacy | Hebrew Transliterator</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css?v=6">
     <script src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin"></script>
   </head>
   <body>
-    <main class="privacy-page">
-      <p><a href="index.html">← Hebrew Transliterator</a></p>
+    <main class="content-page">
+      <nav class="site-nav" aria-label="Site navigation">
+        <a class="site-icon-link" href="index.html" aria-label="Hebrew Transliterator home">
+          <img src="icon.svg" alt="" width="34" height="34">
+        </a>
+        <a class="site-nav-link" href="about.html">About</a>
+        <a class="site-nav-link active" href="privacy.html" aria-current="page">Privacy</a>
+        <a class="site-nav-link" href="index.html?feedback=1">Feedback</a>
+      </nav>
       <h1>Privacy</h1>
       <p>Hebrew Transliterator works without an account. Optional Google Analytics measurement begins only after you consent to Analytics cookies.</p>
 
@@ -29,6 +37,10 @@
 
       <h2>Sefaria requests</h2>
       <p>When you use the Sefaria search or import controls, your browser sends that request directly to Sefaria. Sefaria handles those requests under its own privacy practices. If you have consented to Analytics, searches made with the “Search name/phrase” control are also reported to Google Analytics as described above; exact-reference imports are not.</p>
+
+      <h2>Feedback</h2>
+      <p>Feedback is optional. When you submit the feedback form, the site sends your selected feedback type and message to the site owner by email. If you leave “Include the current Sefaria context” selected, it also sends the current Sefaria search, imported reference and edition, and the original Hebrew text imported from Sefaria. The form does not attach unrelated Hebrew you pasted or the transliteration output.</p>
+      <p>Feedback messages and attached Sefaria context remain in the site owner’s mailbox for as long as reasonably needed to understand and address the report. Cloudflare processes the submission to validate it and limit automated abuse, and Resend processes it for email delivery.</p>
 
       <h2>Operational logs</h2>
       <p>Cloudflare may retain limited request and error metadata needed to operate and secure the site. Application logging is configured not to include Hebrew input, transliteration output, or Sefaria query text.</p>
