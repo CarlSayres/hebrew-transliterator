@@ -266,12 +266,38 @@ h1 {
   box-shadow: 0 10px 30px rgba(46, 39, 25, 0.06);
 }
 
+.sefaria-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .sefaria-label {
   display: block;
-  margin-bottom: 8px;
+  margin: 0;
   color: var(--muted);
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.powered-by-sefaria {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border-radius: 6px;
+}
+
+.powered-by-sefaria img {
+  display: block;
+  width: 96px;
+  height: auto;
+  border-radius: 6px;
+}
+
+.powered-by-sefaria:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 40%, transparent);
+  outline-offset: 2px;
 }
 
 .sefaria-start-row {

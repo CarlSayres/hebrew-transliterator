@@ -37,6 +37,8 @@
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
   const sefariaCatalog = window.HebrewTransliteratorSefariaCatalog;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({ timeoutMs: 9000 });
+  const preferencesCookieName = "ht_preferences";
+  const preferencesCookieMaxAge = 60 * 60 * 24 * 365;
 
   const usageEventNames = new Set([
     "transliteration_copied",
@@ -74,6 +76,67 @@
       }).catch(() => {});
     } catch {
       // Analytics must never interfere with transliteration.
+    }
+  }
+
+  function readPreferenceCookie() {
+    const prefix = `${preferencesCookieName}=`;
+    const cookie = document.cookie
+      .split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(prefix));
+    if (!cookie) {
+      return null;
+    }
+    try {
+      return JSON.parse(decodeURIComponent(cookie.slice(prefix.length)));
+    } catch {
+      return null;
+    }
+  }
+
+  function hasSelectValue(select, value) {
+    return Array.from(select?.options || []).some((option) => option.value === value);
+  }
+
+  function savePreferences() {
+    const preferences = {
+      version: 1,
+      style: styleSelect.value,
+      doubleDagesh: Boolean(doubleDageshToggle?.checked),
+      stressMarks: Boolean(stressMarkToggle?.checked),
+      tzere: tzereOverrideRadios.find((radio) => radio.checked)?.value || "e",
+      chet: chetOverride?.value || "",
+      khaf: khafOverride?.value || ""
+    };
+    const secure = location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${preferencesCookieName}=${encodeURIComponent(JSON.stringify(preferences))}; Max-Age=${preferencesCookieMaxAge}; Path=/; SameSite=Lax${secure}`;
+  }
+
+  function restorePreferences() {
+    const preferences = readPreferenceCookie();
+    if (preferences && rulesets.some((ruleset) => ruleset.id === preferences.style)) {
+      styleSelect.value = preferences.style;
+    }
+
+    syncTzereOverrideToStyle();
+    syncConsonantOverridesToStyle();
+    if (!preferences) {
+      return;
+    }
+
+    doubleDageshToggle.checked = Boolean(preferences.doubleDagesh);
+    stressMarkToggle.checked = Boolean(preferences.stressMarks);
+    if (["e", "ei"].includes(preferences.tzere)) {
+      for (const radio of tzereOverrideRadios) {
+        radio.checked = radio.value === preferences.tzere;
+      }
+    }
+    if (hasSelectValue(chetOverride, preferences.chet)) {
+      chetOverride.value = preferences.chet;
+    }
+    if (hasSelectValue(khafOverride, preferences.khaf)) {
+      khafOverride.value = preferences.khaf;
     }
   }
 
@@ -1303,16 +1366,32 @@
 
   styleSelect.addEventListener("change", () => {
     setStyle(styleSelect.value);
+    savePreferences();
     recordUsageEvent("style_selected");
   });
 
-  doubleDageshToggle?.addEventListener("change", setOptions);
-  stressMarkToggle?.addEventListener("change", updateOutput);
+  doubleDageshToggle?.addEventListener("change", () => {
+    setOptions();
+    savePreferences();
+  });
+  stressMarkToggle?.addEventListener("change", () => {
+    updateOutput();
+    savePreferences();
+  });
   for (const radio of tzereOverrideRadios) {
-    radio.addEventListener("change", setOptions);
+    radio.addEventListener("change", () => {
+      setOptions();
+      savePreferences();
+    });
   }
-  chetOverride?.addEventListener("change", setOptions);
-  khafOverride?.addEventListener("change", setOptions);
+  chetOverride?.addEventListener("change", () => {
+    setOptions();
+    savePreferences();
+  });
+  khafOverride?.addEventListener("change", () => {
+    setOptions();
+    savePreferences();
+  });
 
   sampleButton.addEventListener("click", () => {
     lastImportedSefariaContext = null;
@@ -1416,8 +1495,7 @@
   });
 
   populateStyleSelect();
-  syncTzereOverrideToStyle();
-  syncConsonantOverridesToStyle();
+  restorePreferences();
   refreshTransliterator();
   if (new URLSearchParams(location.search).get("feedback") === "1") {
     window.requestAnimationFrame(openFeedbackDialog);

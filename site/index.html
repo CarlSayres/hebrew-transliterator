@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hebrew Transliterator</title>
     <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=8">
+    <link rel="stylesheet" href="styles.css?v=9">
     <script src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin"></script>
   </head>
   <body>
@@ -79,7 +79,12 @@
         </header>
 
         <section class="sefaria-panel" aria-labelledby="sefariaLabel">
-          <label id="sefariaLabel" class="sefaria-label" for="sefariaQuery">Import from Sefaria</label>
+          <div class="sefaria-panel-heading">
+            <label id="sefariaLabel" class="sefaria-label" for="sefariaQuery">Import from Sefaria</label>
+            <a class="powered-by-sefaria" href="https://www.sefaria.org/" target="_blank" rel="noopener noreferrer" aria-label="Powered by Sefaria (opens in a new tab)">
+              <img src="powered-by-sefaria.png" alt="Powered by Sefaria" width="96" height="50">
+            </a>
+          </div>
           <div class="sefaria-start-row" aria-label="Browse Sefaria collections">
             <span>Browse:</span>
             <button class="sefaria-start-button" type="button" data-sefaria-start="siddur">Siddur</button>
@@ -195,6 +200,6 @@
     <script src="sefaria-results.js?v=4"></script>
     <script src="sefaria-catalog.js?v=3"></script>
     <script src="sefaria-client.js?v=6"></script>
-    <script src="app.js?v=17"></script>
+    <script src="app.js?v=18"></script>
   </body>
 </html>
