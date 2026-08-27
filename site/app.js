@@ -603,8 +603,9 @@
     return parts[parts.length - 1] || ref;
   }
 
-  async function validateSefariaResults(results, query, signal) {
-    const candidates = sefariaResultTools.prepareResults(results, query || "", 12);
+  async function validateSefariaResults(results, query, signal, resultLimit = 10) {
+    const candidateLimit = resultLimit === 10 ? 12 : resultLimit;
+    const candidates = sefariaResultTools.prepareResults(results, query || "", candidateLimit);
     const validated = new Array(candidates.length);
     let cursor = 0;
 
@@ -626,7 +627,7 @@
     await Promise.all(Array.from({ length: Math.min(4, candidates.length) }, worker));
     const usable = validated.filter((result) => result && !result.error && result.valid !== false);
     return {
-      results: usable.slice(0, 10),
+      results: usable.slice(0, resultLimit),
       failedCount: validated.length - usable.length,
       candidateCount: candidates.length
     };
@@ -666,8 +667,8 @@
       const childResults = await schemaChildResults(trimmed, controller.signal);
       if (childResults.length) {
         setSefariaStatus(`Checking sections in ${trimmed}...`);
-        const pageSize = 10;
-        const validated = await validateSefariaResults(childResults.slice(0, pageSize), "", controller.signal);
+        const pageSize = 25;
+        const validated = await validateSefariaResults(childResults.slice(0, pageSize), "", controller.signal, pageSize);
         if (currentSefariaResults) {
           sefariaNavigationStack.push(currentSefariaResults);
         }
@@ -675,6 +676,7 @@
           parentRef: trimmed,
           alreadyValidated: true,
           failedCount: validated.failedCount,
+          showAll: true,
           pagination: {
             allResults: childResults,
             page: 0,
@@ -707,7 +709,7 @@
     setSefariaStatus(`Checking sections ${start + 1}–${Math.min(start + pagination.pageSize, pagination.total)} of ${pagination.total}...`);
 
     try {
-      const validated = await validateSefariaResults(pageResults, "", controller.signal);
+      const validated = await validateSefariaResults(pageResults, "", controller.signal, pagination.pageSize);
       renderRefResults(validated.results, {
         ...options,
         failedCount: validated.failedCount,
