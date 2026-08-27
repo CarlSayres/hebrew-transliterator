@@ -1365,11 +1365,19 @@
   });
 
   lineNumbersToggle.addEventListener("change", () => {
+    const pageScroll = { left: window.scrollX, top: window.scrollY };
+    const inputScroll = { left: input.scrollLeft, top: input.scrollTop };
     input.value = lineNumbersToggle.checked
       ? addLineNumbers(input.value)
       : removeLineNumbers(input.value);
     updateOutput();
-    input.focus();
+    input.scrollLeft = inputScroll.left;
+    input.scrollTop = inputScroll.top;
+    window.requestAnimationFrame(() => {
+      input.scrollLeft = inputScroll.left;
+      input.scrollTop = inputScroll.top;
+      window.scrollTo(pageScroll);
+    });
   });
 
   sefariaQuery.addEventListener("keydown", (event) => {
