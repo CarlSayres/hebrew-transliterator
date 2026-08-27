@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title id="title">Hebrew Transliterator — Alef and A</title>
+  <title id="title">Hebrew Transliterator — Alef A monogram</title>
   <rect width="64" height="64" rx="14" fill="#146b63"/>
-  <path d="M13.5 50 31.7 13.8 50.5 50M21.2 36.8h21.4" fill="none" stroke="#fffefa" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="m18.5 18 27 29M45.5 17.5 36 29M18.5 46.5 28 35" fill="none" stroke="#e9c982" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="7" y="47" fill="#e9c982" font-family="Arial, 'Noto Sans Hebrew', sans-serif" font-size="42" font-weight="700">א</text>
+  <path d="M29 49 42 17l13 32M34 37h16" fill="none" stroke="#fffefa" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M27.5 32.5 34 37" fill="none" stroke="#e9c982" stroke-width="4.5" stroke-linecap="round"/>
 </svg>
