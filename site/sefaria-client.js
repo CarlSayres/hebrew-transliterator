@@ -24,7 +24,7 @@
   function cleanText(value) {
     return String(value || "")
       .replace(/<[^>]*>/g, "")
-      .replace(/&nbsp;|&#160;|&#xA0;/gi, " ")
+      .replace(/&(nbsp|thinsp|ensp|emsp|hairsp);|&#160;|&#xA0;/gi, " ")
       .replace(/&amp;/gi, "&")
       .replace(/&lt;/gi, "<")
       .replace(/&gt;/gi, ">")

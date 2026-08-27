@@ -207,5 +207,8 @@ test("makes fresh requests when the same result is validated again", async () =>
 });
 
 test("cleans encoded spacing and legacy markup from excerpts", () => {
-  assert.equal(cleanText("<b>מִי</b>&nbsp;&#160;כָמֹכָה &amp;"), "מִי  כָמֹכָה &");
+  assert.equal(
+    cleanText("<b>מִי</b>&nbsp;&#160;כָמֹכָה&thinsp;׀&ensp;טוֹב&emsp;מְאֹד&hairsp; &amp;"),
+    "מִי  כָמֹכָה ׀ טוֹב מְאֹד  &"
+  );
 });
