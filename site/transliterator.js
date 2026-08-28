@@ -1106,6 +1106,9 @@
     }
 
     if (cluster.base === "מ" && cluster.vowelName === "hiriq") {
+      if (clusters[index + 1]?.sheva === "silent") {
+        return "";
+      }
       return "mi";
     }
 

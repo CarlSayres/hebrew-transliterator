@@ -71,6 +71,7 @@ const cases = [
   ["מִשְׁנָיוֹת", "Mishnayot"],
   ["מִשְׁפָּט", "Mishpat"],
   ["מִלְחָמָה", "Milḥamah"],
+  ["מִלְחָמוֹת", "Milḥamot"],
   ["מִשְׁפַּחַת", "Mishpaḥat"],
   ["מִזְמוֹר", "Mizmor"],
   ["מִדְבָּר", "Midbar"],
@@ -343,6 +344,9 @@ const styleCases = [
       ["כְּכָל", "K'khol"],
       ["מִן", "Min"]
       ,
+      ["מִלְחָמָה", "Milḥamah"],
+      ["מִלְחָמוֹת", "Milḥamot"]
+      ,
       ["שָׁרְצוּ", "Shar'tzu"]
       ,
       ["תּוֹלְדֹת", "Tol'dot"],
@@ -384,6 +388,8 @@ const styleCases = [
       ["וּבְכָל", "Uv-chol"],
       ["כְּכָל", "K'chol"],
       ["מִן", "Min"],
+      ["מִלְחָמָה", "Milchamah"],
+      ["מִלְחָמוֹת", "Milchamot"],
       ["שָׁרְצוּ", "Shar'tzu"],
       ["תּוֹלְדֹת", "Tol'dot"],
       ["כְּכוֹכְבֵי", "K'choch'vei"],
