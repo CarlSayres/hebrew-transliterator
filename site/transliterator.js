@@ -659,6 +659,13 @@
         hasMark(previous, MARKS.SHEVA)
       );
       const followsLongVowel = followsLongVowelBeforeSheva(clusters, index);
+      const undageshedBegadKefatFollowsAmbiguousKamatz = Boolean(
+        previous &&
+        hasMark(previous, MARKS.QAMATS) &&
+        clusters[index + 1] &&
+        BEGAD_KEFAT.has(clusters[index + 1].base) &&
+        !hasMark(clusters[index + 1], MARKS.DAGESH)
+      );
       const firstOfIdenticalLetters = Boolean(
         clusters[index + 1] && clusters[index + 1].base === cluster.base
       );
@@ -669,6 +676,7 @@
         index === 0 ||
         isMiddleConsecutiveSheva ||
         followsLongVowel ||
+        undageshedBegadKefatFollowsAmbiguousKamatz ||
         hasMark(cluster, MARKS.DAGESH) ||
         firstOfIdenticalLetters
       ) {
