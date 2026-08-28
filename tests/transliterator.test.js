@@ -254,6 +254,7 @@ const cases = [
   ["שכָל", "Shkol"],
   ["וְכָּל", "Vekhol"],
   ["וְכָל", "Vekhol"],
+  ["שֶׁבְּ֒כָל", "Shebekhol"],
   ["יָבֹֽאוּ", "Yavo·u"],
   ["רְאוּבֵ֣ן", "Re·uven"],
   ["בִּמְאֹ֣ד", "Bim·od"],
@@ -394,6 +395,7 @@ const styleCases = [
       ,
       ["וּנְשַׁבֵּחֲךָ", "U-n'shabeḥakha"],
       ["וּבְכָל", "U-v'khol"],
+      ["שֶׁבְּ֒כָל", "She-b'khol"],
       ["וְלא", "Ve-lo"]
       ,
       ["כְּכָל", "K'khol"],
@@ -434,6 +436,7 @@ const styleCases = [
     "mishkanTefilah",
     [
       ["וּבְמֹפְתִֽים", "Uv-mof'tim"],
+      ["שֶׁבְּ֒כָל", "Sheb'chol"],
       ["חָכְמָה", "Chochmah"],
       ["בְּרֵאשִׁית", "B'reishit"],
       ["חֵי", "Chei"],

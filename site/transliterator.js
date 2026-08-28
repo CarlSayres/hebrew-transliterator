@@ -583,6 +583,19 @@
     );
   }
 
+  function isKolFamilyKamatz(clusters, index) {
+    if (
+      index !== clusters.length - 2 ||
+      clusters[index]?.base !== "כ" ||
+      clusters[index + 1]?.base !== "ל"
+    ) {
+      return false;
+    }
+
+    const allowedPrefixLetters = new Set(["ו", "ב", "כ", "ל", "מ", "ה", "ש"]);
+    return clusters.slice(0, index).every((cluster) => allowedPrefixLetters.has(cluster.base));
+  }
+
   function classifyVowels(clusters, ruleset) {
     clusters.forEach((cluster, index) => {
       const vowel = getVowelMark(cluster);
@@ -598,6 +611,7 @@
         const finalKha = cluster.base === "ך" && index === clusters.length - 1;
         const katan =
           vowel === MARKS.QAMATS_QATAN ||
+          isKolFamilyKamatz(clusters, index) ||
           (
             !finalKha &&
             !hasStressMarker(cluster) &&
