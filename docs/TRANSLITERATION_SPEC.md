@@ -20,7 +20,7 @@ The page offers selectable output styles:
 | Style | Main Differences |
 |---|---|
 | Modern Sephardi | Baseline style. Vocal sh'va is `e`; khaf is `kh`; vowel-vowel and selected consonant boundaries use `·`; mappiq heh is `ḣ`. |
-| Lev Shalem | Based on Modern Sephardi. Vocal sh'va is an apostrophe after the consonant; conjunctive shuruk is `u-`; prefixes `she-`, `ba-`, `la-`, `mi-`, and `ha-` use a dash; mappiq heh is plain `h`; vowel-vowel boundaries use `·`; selected consonant boundaries use apostrophe. |
+| Lev Shalem | Based on Modern Sephardi. Vocal sh'va is an apostrophe after the consonant; the conjunctive vav forms are `u-`, `ve-`, and `va-`; prefixes `she-`, `ba-`, `la-`, `mi-`, and `ha-` use a dash; mappiq heh is plain `h`; vowel-vowel boundaries use `·`; selected consonant boundaries use apostrophe. |
 | Mishkan Tefilah | Based on Modern Sephardi. Khaf and chet are `ch`; tzeire is `ei`; vocal sh'va is an apostrophe after the consonant; vowel-vowel boundaries and selected consonant boundaries use `-`. |
 
 Optional modifiers:
@@ -463,7 +463,7 @@ Examples:
 
 ## 12. Maqaf and Punctuation
 
-In Lev Shalem, initial conjunctive shuruk is `u-`, for example `וּמֹשֶׁה` -> `u-mosheh`.
+In Lev Shalem, the initial conjunctive vav is separated from the following word: `וּמֹשֶׁה` -> `u-mosheh`, `וְדָוִד` -> `ve-david`, and `וָבֶטַח` -> `va-vetaḥ`. Its sh'va is rendered as the conjunction vowel `e`, not as Lev Shalem's ordinary vocal-sh'va apostrophe. Lexical initial-vav words are excluded; for example, `וְלָד` remains `v'lad` and `וָו` remains `vav`.
 
 Maqaf always becomes an English hyphen.
 

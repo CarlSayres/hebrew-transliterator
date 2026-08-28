@@ -1093,6 +1093,26 @@
     }
 
     const cluster = clusters[index];
+    if (cluster.base === "ו") {
+      if (
+        cluster.vowelName === "kamatzGadol" ||
+        (
+          cluster.vowelName === "patach" &&
+          ["א", "ה", "ח", "ע"].includes(clusters[index + 1]?.base)
+        )
+      ) {
+        return "va";
+      }
+
+      if (
+        cluster.sheva === "vocal" ||
+        cluster.vowelName === "segol" ||
+        cluster.vowelName === "tzere"
+      ) {
+        return "ve";
+      }
+    }
+
     if (
       cluster.base === "ש" &&
       hasMark(cluster, MARKS.SHIN_DOT) &&
@@ -1396,11 +1416,17 @@
 
       add(vowelOut, clusterOutputStress);
 
-      if (options.dashedInitialPrefixes.includes(initialPrefixValue(clusters, index, consonant, vowelOut))) {
+      const prefixValue = initialPrefixValue(clusters, index, consonant, vowelOut);
+      const dashedPrefix = options.dashedInitialPrefixes.includes(prefixValue);
+      const renderedPrefixSheva = dashedPrefix && cluster.sheva === "vocal";
+      if (renderedPrefixSheva) {
+        add(ruleset.vowels.segol);
+      }
+      if (dashedPrefix) {
         add("-");
       }
 
-      if (cluster.sheva === "vocal") {
+      if (cluster.sheva === "vocal" && !renderedPrefixSheva) {
         add(ruleset.vowels.vocalSheva, clusterOutputStress);
       }
     });

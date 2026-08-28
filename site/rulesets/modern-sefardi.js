@@ -319,7 +319,7 @@
   levShalem.output.consonantSeparator = "'";
   levShalem.output.mappiqHeh = "h";
   levShalem.output.conjunctiveShuruk = "u-";
-  levShalem.output.dashedInitialPrefixes = ["she", "ba", "la", "mi", "ha"];
+  levShalem.output.dashedInitialPrefixes = ["ve", "va", "she", "ba", "la", "mi", "ha"];
   levShalem.exceptions.exactWords = normalizeLookup(mapValues(exactWords, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.niqqudless = normalizeLookup(mapValues(niqqudless, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.phraseCapitalization = normalizeLookup(mapValues(phraseCapitalization, (value) => replaceModernMarks(value, "·", "h")));
@@ -333,7 +333,15 @@
   levShalem.exceptions.exactWords["וּבְכָל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וּבְכׇּל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וּבְכׇל".normalize("NFD")] = "u-v'khol";
-  levShalem.exceptions.exactWords["וְלא".normalize("NFD")] = "v'lo";
+  levShalem.exceptions.exactWords["וְלא".normalize("NFD")] = "ve-lo";
+  levShalem.exceptions.exactWords["וְעָרְבָה".normalize("NFD")] = "ve-arvah";
+  levShalem.exceptions.exactWords["וְכָּל".normalize("NFD")] = "ve-khol";
+  levShalem.exceptions.exactWords["וְכָל".normalize("NFD")] = "ve-khol";
+  levShalem.exceptions.exactWords["וֵאלהֵי".normalize("NFD")] = "ve-Elohei";
+  // These are lexical vav words, not the conjunction.
+  levShalem.exceptions.exactWords["וְלָד".normalize("NFD")] = "v'lad";
+  levShalem.exceptions.exactWords["וָו".normalize("NFD")] = "vav";
+  levShalem.exceptions.exactWords["וֶרֶד".normalize("NFD")] = "vered";
   levShalem.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'khol";
   levShalem.exceptions.niqqudless["שיהוה"] = "she-Adonai";
 
