@@ -342,6 +342,7 @@
   levShalem.exceptions.exactWords["וְלָד".normalize("NFD")] = "v'lad";
   levShalem.exceptions.exactWords["וָו".normalize("NFD")] = "vav";
   levShalem.exceptions.exactWords["וֶרֶד".normalize("NFD")] = "vered";
+  levShalem.exceptions.exactWords["הָרָה".normalize("NFD")] = "harah";
   levShalem.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'khol";
   levShalem.exceptions.niqqudless["שיהוה"] = "she-Adonai";
 

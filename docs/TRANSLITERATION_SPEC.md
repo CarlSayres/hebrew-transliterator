@@ -469,6 +469,8 @@ Examples:
 
 In Lev Shalem, the initial conjunctive vav is separated from the following word: `וּמֹשֶׁה` -> `u-mosheh`, `וְדָוִד` -> `ve-david`, and `וָבֶטַח` -> `va-vetaḥ`. Its sh'va is rendered as the conjunction vowel `e`, not as Lev Shalem's ordinary vocal-sh'va apostrophe. Lexical initial-vav words are excluded; for example, `וְלָד` remains `v'lad` and `וָו` remains `vav`.
 
+Lev Shalem also separates the definite article when its ordinary patach has undergone compensatory lengthening to qamatz before א, ע, or ר. Thus `הָרָעָב` -> `ha-ra·av`, `הָעָם` -> `ha-am`, and `הָאָרֶץ` -> `ha-aretz`. Lexical initial-heh words are excluded from this formatting; for example, `הָרָה` remains `harah`.
+
 Maqaf always becomes an English hyphen.
 
 Words connected by maqaf are treated as one stress unit. Stress is assigned across the whole maqaf-connected sequence, while the output still preserves the hyphen.

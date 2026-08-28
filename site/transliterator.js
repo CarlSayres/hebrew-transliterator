@@ -1191,8 +1191,19 @@
       return "mi";
     }
 
-    if (cluster.base === "ה" && cluster.vowelName === "patach") {
-      return "ha";
+    if (cluster.base === "ה") {
+      if (cluster.vowelName === "patach") {
+        return "ha";
+      }
+
+      const following = clusters[index + 1];
+      if (
+        cluster.vowelName === "kamatzGadol" &&
+        ["א", "ע", "ר"].includes(following?.base) &&
+        ["kamatzGadol", "kamatzKatan"].includes(following?.vowelName)
+      ) {
+        return "ha";
+      }
     }
 
     return "";
