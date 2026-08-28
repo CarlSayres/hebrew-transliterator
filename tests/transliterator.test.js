@@ -11,6 +11,7 @@ vm.createContext(context);
 
 for (const file of [
   "site/rulesets/morphhb-silent-initial-mem-sheva.js",
+  "site/rulesets/wikidata-silent-initial-mem-sheva.js",
   "site/rulesets/modern-sefardi.js",
   "site/transliterator.js"
 ]) {
@@ -72,6 +73,8 @@ const cases = [
   ["מִשְׁפָּט", "Mishpat"],
   ["מִלְחָמָה", "Milḥamah"],
   ["מִלְחָמוֹת", "Milḥamot"],
+  ["מִסְעָדָה", "Mis·adah"],
+  ["מִכְנָסַיִם", "Mikhnasayim"],
   ["מִשְׁפַּחַת", "Mishpaḥat"],
   ["מִזְמוֹר", "Mizmor"],
   ["מִדְבָּר", "Midbar"],
@@ -347,6 +350,11 @@ const styleCases = [
       ["מִלְחָמָה", "Milḥamah"],
       ["מִלְחָמוֹת", "Milḥamot"]
       ,
+      ["מִסְעָדָה", "Mis·adah"],
+      ["מִכְנָסַיִם", "Mikhnasayim"],
+      ["מִפְּנֵי", "Mi-p'nei"],
+      ["מִמְּךָ", "Mi-m'kha"]
+      ,
       ["שָׁרְצוּ", "Shar'tzu"]
       ,
       ["תּוֹלְדֹת", "Tol'dot"],
@@ -390,6 +398,8 @@ const styleCases = [
       ["מִן", "Min"],
       ["מִלְחָמָה", "Milchamah"],
       ["מִלְחָמוֹת", "Milchamot"],
+      ["מִסְעָדָה", "Mis-adah"],
+      ["מִכְנָסַיִם", "Michnasayim"],
       ["שָׁרְצוּ", "Shar'tzu"],
       ["תּוֹלְדֹת", "Tol'dot"],
       ["כְּכוֹכְבֵי", "K'choch'vei"],

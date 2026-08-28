@@ -174,6 +174,7 @@
     "מִצְוֹת": true
   };
   Object.assign(silentInitialMemSheva, window.HebrewMorphhbSilentInitialMemSheva || {});
+  Object.assign(silentInitialMemSheva, window.HebrewWikidataSilentInitialMemSheva || {});
 
   // Some Sefaria Tanakh forms omit the meteg that would explicitly mark a
   // kamatz as gadol before a vocal sh'va. Keep this list narrow so genuine

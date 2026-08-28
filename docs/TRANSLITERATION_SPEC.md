@@ -89,6 +89,14 @@ The generated lexical lookup is rebuilt with:
 
 It writes `site/rulesets/morphhb-silent-initial-mem-sheva.js`. The generated list includes only forms with no MorphHB `m/` prefix evidence and no `מִן` lemma (`4480`), so true prefix forms such as `מִפְּנֵי` and `מִמְּךָ` are excluded.
 
+The Biblical list is supplemented by vocalized Hebrew lemmas and grammatical forms from Wikidata's CC0 lexicographical data. Rebuild that generated lookup with:
+
+```powershell
+node .\parser\scripts\build-wikidata-mi-sheva-list.js
+```
+
+It writes `site/rulesets/wikidata-silent-initial-mem-sheva.js`. Only single-word dictionary entries beginning with `מִ` whose next consonant carries sh'va are included. Because these are dictionary entries rather than arbitrary words found in running text, they prevent lexical words such as `מִלְחָמָה` from being mistaken for the productive `מִ־` (“from”) prefix. The general prefix rule remains active for forms absent from the lexical lookups.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
