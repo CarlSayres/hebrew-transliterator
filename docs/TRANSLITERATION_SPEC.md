@@ -255,7 +255,9 @@ Kamatz katan has three governing cases, all requiring that the kamatz syllable b
 2. The following letter has dagesh chazak; the doubled consonant closes the preceding unaccented syllable and makes its kamatz katan, as in the `o` of `ozi`. Dagesh kal does not double the consonant and does not close the preceding syllable.
 3. The following letter has chataf kamatz; the chataf kamatz behaves like sh'va for determining closure.
 
-If the kamatz has meteg or trope marking stress, it remains kamatz gadol.
+An ordinary kamatz (`ָ`, U+05B8) with meteg or a trope mark on the same letter is always accented and therefore always kamatz gadol. This invariant is evaluated before every inferred kamatz-katan test, including closure, a following dagesh chazak, and a following chataf kamatz. For example, unmarked `קָדְשִׁי` -> `kodshi`, while `קָֽדְשִׁי` and `קָ֣דְשִׁי` -> `kadeshi` because the marked kamatz is gadol and the following sh'va is na.
+
+Unicode's explicit qamatz-katan character (`ׇ`, U+05C7) remains qamatz katan even when the source also places meteg or trope on the letter. It is already an explicit vowel classification rather than an ambiguous ordinary kamatz. Thus `כׇֽל` remains `kol` and `אׇֽהֳלֹה` remains `oholoh`.
 
 Some Sefaria Tanakh forms omit an expected meteg before a vocal sh'va. For reviewed forms in the ruleset's missing-meteg list, the application treats the kamatz as gadol and the following sh'va as vocal, as though the meteg were present. Examples include `שָׁרְצוּ` -> `sharetzu`, `נָפְלוּ` -> `nafelu`, and `יָצְאוּ` -> `yatze·u`. This is a curated morphological override, not a general rule for every kamatz followed by sh'va; `חָכְמָה` -> `ḥokhmah` remains kamatz katan with a silent sh'va.
 

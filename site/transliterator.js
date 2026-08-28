@@ -588,11 +588,14 @@
         const next = clusters[index + 1];
         const finalKha = cluster.base === "ך" && index === clusters.length - 1;
         const katan =
-          !finalKha &&
-          !cluster.forceKamatzGadol &&
-          !isKamatzBeforeSilentAlef(clusters, index) &&
-          (vowel === MARKS.QAMATS_QATAN ||
-            isClosedUnstressedSyllable(clusters, index));
+          vowel === MARKS.QAMATS_QATAN ||
+          (
+            !finalKha &&
+            !hasStressMarker(cluster) &&
+            !cluster.forceKamatzGadol &&
+            !isKamatzBeforeSilentAlef(clusters, index) &&
+            isClosedUnstressedSyllable(clusters, index)
+          );
 
         cluster.vowelName = katan ? "kamatzKatan" : "kamatzGadol";
         cluster.vowelOut = katan ? ruleset.vowels.kamatzKatan : ruleset.vowels.kamatzGadol;
