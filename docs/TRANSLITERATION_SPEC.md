@@ -245,16 +245,17 @@ A one-letter syllable can never be closed.
 
 Plain final heh does not close a syllable for kamatz katan detection. Final heh with mappiq is consonantal and may close a syllable.
 
-A kamatz before a final silent alef is always treated as kamatz gadol, including Aramaic endings such as `עָלְ֒מַיָּא` -> `alemaya` and `לְעֵֽלָּא` -> `le·ela`.
+A kamatz before a silent alef is always treated as kamatz gadol because the alef does not close the syllable. This applies both inside a word, as in `לִקְרָאתוֹ` -> `likra·to` and `צַוָּארוֹ` -> `tzava·ro`, and in final or Aramaic patterns such as `עָלְ֒מַיָּא` -> `alemaya` and `לְעֵֽלָּא` -> `le·ela`.
 
 The `כָּל` family is always treated as kamatz katan when standalone or with the listed attached prefixes, whether the khaf has dagesh or not: `כָּל`, `כָּל`, `כָל`, `ככָּל`, `ככָל`, `לכָּל`, `לכָל`, `הכָּל`, `הכָל`, `מִכָּל`, `מִכָל`, `בכָּל`, `בכָל`, `בְּכָּל`, `בְּכָל`, `וּבְכָּל`, `וּבְכָל`, `שכָּל`, `שכָל`, `וְכָּל`, `וְכָל`.
 
-Two important special cases still follow the same closed-syllable principle:
+Kamatz katan has three governing cases, all requiring that the kamatz syllable be unaccented:
 
-1. If the following letter has dagesh chazak, the doubled consonant closes the kamatz syllable.
-2. If the following letter has chataf kamatz, the chataf kamatz behaves like sh'va for this purpose.
+1. The syllable is closed and unaccented.
+2. The following letter has dagesh chazak; the doubled consonant closes the preceding unaccented syllable and makes its kamatz katan, as in the `o` of `ozi`. Dagesh kal does not double the consonant and does not close the preceding syllable.
+3. The following letter has chataf kamatz; the chataf kamatz behaves like sh'va for determining closure.
 
-These special cases only make the kamatz katan when the kamatz syllable is unstressed. If the kamatz has meteg or trope marking stress, it remains kamatz gadol.
+If the kamatz has meteg or trope marking stress, it remains kamatz gadol.
 
 Some Sefaria Tanakh forms omit an expected meteg before a vocal sh'va. For reviewed forms in the ruleset's missing-meteg list, the application treats the kamatz as gadol and the following sh'va as vocal, as though the meteg were present. Examples include `שָׁרְצוּ` -> `sharetzu`, `נָפְלוּ` -> `nafelu`, and `יָצְאוּ` -> `yatze·u`. This is a curated morphological override, not a general rule for every kamatz followed by sh'va; `חָכְמָה` -> `ḥokhmah` remains kamatz katan with a silent sh'va.
 
@@ -323,23 +324,27 @@ Examples:
 | וַיְהִי | vayehi |
 | וּנְתָנָ֞ם | un·tanam |
 
-Sh'va is vocal when, in this order:
+The five governing sh'va-na rules are:
 
-0. It is not under the final letter of a word. A sh'va under the final letter is silent.
-1. It appears under the first letter of a word.
-2. It appears under the first letter after one of these pointed prefixes: `כַּ`, `מִ`, `שֶׁ`, `בַּ`, `לַ`, `הַ`.
-3. It appears in the final `תְךָ`, `תְכֶם`, or `תְכֶן` suffix pattern, as in `וֶ֝אֱמ֥וּנָתְךָ֗` -> `ve·emunatekha`.
-4. It appears in the final `בְךָ`, `בְכֶם`, or `בְכֶן` suffix pattern, as in `לְבָבְךָ` -> `levavekha`.
-5. It appears under yod in the initial `וַיְ` prefix pattern, as in `וַיְכֻלּ֛וּ` -> `vayekhulu`.
-6. It is the second of two consecutive sh'vas.
-7. It appears under a letter with dagesh.
-8. It has a meteg or trope mark.
-9. It follows a long vowel.
-10. It appears under the first of a double letter.
+1. **First letter:** Sh'va under the first letter of a word is always na.
+2. **Consecutive sh'vas:** When two sh'vas occur consecutively in the middle of a word, the first is silent and the second is na.
+3. **After a long vowel:** Sh'va immediately following a tenuah gedolah is na.
+4. **Dagesh:** Sh'va under a letter containing dagesh is always na.
+5. **Identical letters (ha-domot):** When two identical letters are adjacent and the first carries sh'va, that sh'va is na, as in *hininei*.
+
+Representative outputs are `תְּנוּ` -> `tenu` (first letter), `יִשְׁמְרוּ` -> `yishmeru` (second consecutive sh'va), `תּוֹלְדֹת` -> `toledot` (after a long vowel), `יִתְּנוּ` -> `yitenu` (dagesh), and `הִנְנִי` -> `hineni` (identical letters).
+
+A sh'va under the final letter of a word is silent. This boundary condition is evaluated before the five rules; for example, the final khaf in `בָּרוּךְ` remains `kh`, not `khe`, even though it follows shuruk.
+
+These five tests are decisive and run before suffix or source-repair heuristics. A heuristic may identify additional vocal sh'vas in a documented spelling pattern, but it may never turn a sh'va that meets one of these rules into sh'va nach.
+
+Additional documented spelling patterns include sh'va under the first letter after the pointed prefixes `כַּ`, `מִ`, `שֶׁ`, `בַּ`, `לַ`, and `הַ`; the final `תְךָ`, `תְכֶם`, `תְכֶן`, `בְךָ`, `בְכֶם`, and `בְכֶן` patterns; and yod in the initial `וַיְ` pattern. A meteg or trope mark directly on the sh'va-bearing letter is also treated as explicit evidence that the sh'va is vocal.
 
 Exception to rule 3: in the object marker forms `אֶתְךָ`, `אֶתְכֶם`, and `אֶתְכֶן`, the tav sh'va is silent because the tav closes `אֶת`.
 
-Exception to rules 8 and 9: a plain sh'va that closes the stem before common verb suffixes is silent, even when the preceding vowel is marked with meteg or trope. This applies before `נוּ` and before the tav suffixes `תִּי`, `תָּ`, `תְּ`, `תֶּם`, and `תֶּן`, as in `אֲנָֽחְנוּ` -> `anaḥnu`, `פָשָֽׁעְנוּ` -> `fashanu`, `גָּאָֽלְתָּ` -> `ga·alta`, and `יָדָֽעְתִּי` -> `yadati`. If a guttural has a sounded reduced vowel, the text will usually show a chataf vowel instead.
+Rules 1 and 4 take precedence over the verb-suffix heuristic. Thus the sh'va is vocal in `תְּנוּ` -> `tenu`, `יִתְּנוּ` -> `yitenu`, and `וַיִּתְּנוּ` -> `vayitenu` in Modern Sephardi; apostrophe styles render the same sh'va as `t'nu`, `yit'nu`, and `vayit'nu`.
+
+A plain sh'va that closes the stem before common verb suffixes is silent only when none of the five governing sh'va-na rules applies. This includes appropriate forms before `נוּ` and before the tav suffixes `תִּי`, `תָּ`, `תְּ`, `תֶּם`, and `תֶּן`. When Sefaria supplies a long kamatz before that sh'va, rule 3 remains decisive, as in `יָדָֽעְתִּי` -> `yadaeti`, `אֲנָֽחְנוּ` -> `anaḥenu`, `פָשָֽׁעְנוּ` -> `fashaenu`, and `גָּאָֽלְתָּ` -> `ga·aleta`. If a guttural has a sounded reduced vowel, the text will usually show a chataf vowel instead.
 
 Meteg is useful for identifying a sh'va following a stressed kamatz. Trope marks, when present, can also indicate stress.
 
@@ -349,7 +354,7 @@ If the letter after initial conjunctive shuruk is an attached prefix letter (`ב
 
 In Lev Shalem, initial conjunctive shuruk is output as `u-`.
 
-The long vowels that make a following sh'va vocal are kamatz gadol, tzeire, shuruk, holam malei, and hiriq gadol. Conjunctive shuruk is excluded from this long-vowel sh'va rule. For example, in `וּלְעֽוֹלְמֵי`, the second lamed follows `וֹ`, so the lamed sh'va is vocal: `ul·olemei`.
+The long vowels that make a following sh'va vocal are kamatz gadol, tzeire, shuruk, holam malei, and hiriq gadol. Conjunctive shuruk is excluded from this long-vowel sh'va rule. Examples include `תּוֹלְדֹת` -> `toledot`, `כְּכוֹכְבֵי` -> `kekhokhevei`, and `עוֹדְךָ` -> `odekha`. In `וּלְעֽוֹלְמֵי`, the second lamed follows `וֹ`, so the lamed sh'va is likewise vocal: `ul·olemei`.
 
 ## 9. Stress Marks, Meteg, and Trope
 

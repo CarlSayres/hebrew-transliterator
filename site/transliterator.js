@@ -564,12 +564,11 @@
     return false;
   }
 
-  function isKamatzAlefEnding(clusters, index) {
+  function isKamatzBeforeSilentAlef(clusters, index) {
     const next = clusters[index + 1];
     return Boolean(
       next &&
         next.base === "א" &&
-        next.wordFinal &&
         !getVowelMark(next) &&
         !hasMark(next, MARKS.SHEVA)
     );
@@ -591,7 +590,7 @@
         const katan =
           !finalKha &&
           !cluster.forceKamatzGadol &&
-          !isKamatzAlefEnding(clusters, index) &&
+          !isKamatzBeforeSilentAlef(clusters, index) &&
           (vowel === MARKS.QAMATS_QATAN ||
             isClosedUnstressedSyllable(clusters, index));
 
@@ -631,11 +630,6 @@
         return;
       }
 
-      if (cluster.forceVocalSheva) {
-        cluster.sheva = "vocal";
-        return;
-      }
-
       if (
         index === clusters.length - 1 ||
         (
@@ -649,6 +643,36 @@
         return;
       }
 
+      if (cluster.forceVocalSheva) {
+        cluster.sheva = "vocal";
+        return;
+      }
+
+      const previous = clusters[index - 1];
+      const isMiddleConsecutiveSheva = Boolean(
+        index > 0 &&
+        index < clusters.length - 1 &&
+        previous &&
+        hasMark(previous, MARKS.SHEVA)
+      );
+      const followsLongVowel = followsLongVowelBeforeSheva(clusters, index);
+      const firstOfIdenticalLetters = Boolean(
+        clusters[index + 1] && clusters[index + 1].base === cluster.base
+      );
+
+      // The five canonical sh'va-na rules are decisive for non-final sh'va.
+      // No suffix or other pronunciation heuristic below may override them.
+      if (
+        index === 0 ||
+        isMiddleConsecutiveSheva ||
+        followsLongVowel ||
+        hasMark(cluster, MARKS.DAGESH) ||
+        firstOfIdenticalLetters
+      ) {
+        cluster.sheva = "vocal";
+        return;
+      }
+
       if (precedesVerbSuffix(clusters, index)) {
         cluster.sheva = "silent";
         return;
@@ -659,8 +683,6 @@
         return;
       }
 
-      const previous = clusters[index - 1];
-      const isSecondConsecutive = previous && hasMark(previous, MARKS.SHEVA);
       const tavSecondPersonSuffix =
         cluster.base === "ת" &&
         (
@@ -695,19 +717,12 @@
         previous &&
         isIgnoredInitialPrefix(previous);
       const followsVavPatachYod = followsVavPatachYodPrefix(clusters, index);
-      const followsLongVowel = followsLongVowelBeforeSheva(clusters, index);
-      const firstOfDoubleLetter = clusters[index + 1] && clusters[index + 1].base === cluster.base;
       const vocal =
-        index === 0 ||
         tavSecondPersonSuffix ||
         bSecondPersonSuffix ||
         followsInitialPrefix ||
         followsVavPatachYod ||
-        isSecondConsecutive ||
-        hasMark(cluster, MARKS.DAGESH) ||
-        hasStressMarker(cluster) ||
-        followsLongVowel ||
-        firstOfDoubleLetter;
+        hasStressMarker(cluster);
 
       cluster.sheva = vocal ? "vocal" : "silent";
     });
