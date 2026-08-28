@@ -147,6 +147,8 @@
     "שכָל": "shkol",
     "וְכָּל": "vekhol",
     "וְכָל": "vekhol",
+    "כְּכָל": "kekhol",
+    "מִן": "min",
     "לָךְ": "lakh"
   };
 
@@ -315,6 +317,7 @@
   levShalem.exceptions.exactWords["וּבְכׇּל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וּבְכׇל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וְלא".normalize("NFD")] = "v'lo";
+  levShalem.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'khol";
   levShalem.exceptions.niqqudless["שיהוה"] = "she-Adonai";
 
   const mishkanTefilah = clone(modernSefardi);
@@ -338,6 +341,7 @@
   mishkanTefilah.exceptions.exactWords["וַיְהִי".normalize("NFD")] = "vay'hi";
   mishkanTefilah.exceptions.exactWords["הָיְתָה".normalize("NFD")] = "hay'tah";
   mishkanTefilah.exceptions.exactWords["וְלא".normalize("NFD")] = "v'lo";
+  mishkanTefilah.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'chol";
 
   window.HebrewRulesets.modernSefardi = modernSefardi;
   window.HebrewRulesets.levShalem = levShalem;

@@ -247,7 +247,7 @@ Plain final heh does not close a syllable for kamatz katan detection. Final heh 
 
 A kamatz before a silent alef is always treated as kamatz gadol because the alef does not close the syllable. This applies both inside a word, as in `לִקְרָאתוֹ` -> `likra·to` and `צַוָּארוֹ` -> `tzava·ro`, and in final or Aramaic patterns such as `עָלְ֒מַיָּא` -> `alemaya` and `לְעֵֽלָּא` -> `le·ela`.
 
-The `כָּל` family is always treated as kamatz katan when standalone or with the listed attached prefixes, whether the khaf has dagesh or not: `כָּל`, `כָּל`, `כָל`, `ככָּל`, `ככָל`, `לכָּל`, `לכָל`, `הכָּל`, `הכָל`, `מִכָּל`, `מִכָל`, `בכָּל`, `בכָל`, `בְּכָּל`, `בְּכָל`, `וּבְכָּל`, `וּבְכָל`, `שכָּל`, `שכָל`, `וְכָּל`, `וְכָל`.
+The `כָּל` family is always treated as kamatz katan when standalone or with the listed attached prefixes, whether the khaf has dagesh or not: `כָּל`, `כָּל`, `כָל`, `ככָּל`, `ככָל`, `כְּכָל`, `לכָּל`, `לכָל`, `הכָּל`, `הכָל`, `מִכָּל`, `מִכָל`, `בכָּל`, `בכָל`, `בְּכָּל`, `בְּכָל`, `וּבְכָּל`, `וּבְכָל`, `שכָּל`, `שכָל`, `וְכָּל`, `וְכָל`. Thus `כְּכָל` -> `kekhol` in Modern Sephardi.
 
 Kamatz katan has three governing cases, all requiring that the kamatz syllable be unaccented:
 
