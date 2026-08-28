@@ -389,6 +389,8 @@ In Lev Shalem, initial conjunctive shuruk is output as `u-`.
 
 Lev Shalem's `mi-` separator is used only for a genuine attached `מִ־` prefix. It is not inserted in lexical words whose following sh'va is silent, such as `מִלְחָמָה` -> `milḥamah` and `מִלְחָמוֹת` -> `milḥamot`.
 
+The interrogative `מִי` (“who”) ends in a mater yod and is a complete word, not the `מִ־` prefix. It therefore remains `mi` without an added dash. When the Hebrew supplies maqaf, as in `מִי־כָמֹכָה`, that maqaf alone produces `mi-khamokhah`; the spaced form `מִי כָּמֹכָה` produces `mi kamokhah`.
+
 The long vowels that make a following sh'va vocal are kamatz gadol, tzeire, shuruk, holam malei, and hiriq gadol. Conjunctive shuruk is excluded from this long-vowel sh'va rule. Examples include `תּוֹלְדֹת` -> `toledot`, `כְּכוֹכְבֵי` -> `kekhokhevei`, and `עוֹדְךָ` -> `odekha`. In `וּלְעֽוֹלְמֵי`, the second lamed follows `וֹ`, so the lamed sh'va is likewise vocal: `ul·olemei`.
 
 ## 9. Stress Marks, Meteg, and Trope

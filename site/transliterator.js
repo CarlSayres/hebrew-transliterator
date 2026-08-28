@@ -1143,7 +1143,14 @@
     }
 
     if (cluster.base === "מ" && cluster.vowelName === "hiriq") {
-      if (clusters[index + 1]?.sheva === "silent") {
+      const finalMaterYod = Boolean(
+        clusters.length === 2 &&
+        clusters[index + 1]?.base === "י" &&
+        clusters[index + 1]?.wordFinal &&
+        !getVowelMark(clusters[index + 1]) &&
+        !hasMark(clusters[index + 1], MARKS.SHEVA)
+      );
+      if (finalMaterYod || clusters[index + 1]?.sheva === "silent") {
         return "";
       }
       return "mi";

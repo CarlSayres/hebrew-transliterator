@@ -371,6 +371,7 @@ const styleCases = [
       ["לַעֲשׂוֹת בָּאָרֶץ", "La-asot ba-aretz"],
       ["לַבְרָכָה", "La-v'rakhah"],
       ["מִבְרָכָה", "Mi-v'rakhah"],
+      ["מִֽי־כָמֹ֤כָה בָּֽאֵלִם֙ יְהֹוָ֔ה        מִ֥י כָּמֹ֖כָה נֶאְדָּ֣ר בַּקֹּ֑דֶשׁ", "Mi-khamokhah ba-elim Adonai        mi kamokhah nedar ba-kodesh"],
       ["בְּעָלְמָא", "B'alma"],
       ["וּלְעָלְמֵי", "U-l·almei"],
       ["וּלְעֽוֹלְמֵי", "U-l·ol'mei"],
