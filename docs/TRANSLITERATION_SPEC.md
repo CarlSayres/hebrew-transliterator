@@ -271,7 +271,7 @@ A kamatz before a silent alef is always treated as kamatz gadol because the alef
 
 In the sequence `ָיְ`, yod completes the `ay` diphthong. The yod's sh'va is silent, but it does not close an `o` syllable or make the preceding kamatz katan. Thus `מִצְרָיְמָה` -> `mitzraymah`, not `mitzroymah` or `mitzrayemah`.
 
-The `כָּל` family is always treated as kamatz katan when standalone or after one or more attached prefix letters, whether the khaf has dagesh or not. This includes forms such as `כְּכָל`, `מִכָּל`, `בְּכָל`, `וּבְכָל`, `וְכָל`, and the stacked-prefix form `שֶׁבְּכָל`. Thus Modern Sephardi produces `כְּכָל` -> `kekhol` and `שֶׁבְּכָל` -> `shebekhol`.
+The `כָּל` family is always treated as kamatz katan when standalone or after one or more attached prefix letters, whether the khaf has dagesh or not. This includes forms such as `כְּכָל`, `מִכָּל`, `בְּכָל`, `וּבְכָל`, `וְכָל`, `שֶׁכָּל`, and the stacked-prefix form `שֶׁבְּכָל`. Thus Modern Sephardi produces `כְּכָל` -> `kekhol`, `שֶׁכָּל` -> `shekol`, and `שֶׁבְּכָל` -> `shebekhol`.
 
 Kamatz katan has three governing cases, all requiring that the kamatz syllable be unaccented:
 
