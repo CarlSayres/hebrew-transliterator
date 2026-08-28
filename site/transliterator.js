@@ -574,6 +574,15 @@
     );
   }
 
+  function isKamatzBeforeYodSheva(clusters, index) {
+    const next = clusters[index + 1];
+    return Boolean(
+      next &&
+        next.base === "י" &&
+        hasMark(next, MARKS.SHEVA)
+    );
+  }
+
   function classifyVowels(clusters, ruleset) {
     clusters.forEach((cluster, index) => {
       const vowel = getVowelMark(cluster);
@@ -594,6 +603,7 @@
             !hasStressMarker(cluster) &&
             !cluster.forceKamatzGadol &&
             !isKamatzBeforeSilentAlef(clusters, index) &&
+            !isKamatzBeforeYodSheva(clusters, index) &&
             isClosedUnstressedSyllable(clusters, index)
           );
 
@@ -673,6 +683,17 @@
         firstOfIdenticalLetters
       ) {
         cluster.sheva = "vocal";
+        return;
+      }
+
+      // In the ָיְ sequence, yod completes the ay diphthong. Its sh'va is
+      // silent, but the yod does not turn the preceding kamatz into qatan.
+      if (
+        cluster.base === "י" &&
+        previous &&
+        hasMark(previous, MARKS.QAMATS)
+      ) {
+        cluster.sheva = "silent";
         return;
       }
 
