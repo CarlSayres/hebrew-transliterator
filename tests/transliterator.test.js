@@ -70,6 +70,7 @@ const cases = [
   ["מִצְרָיְמָה", "Mitzraymah"],
   ["מִצְרָֽיְמָה", "Mitzraymah"],
   ["חָיְתָה", "Ḥaytah"],
+  ["וּבְמֹפְתִֽים", "Uv·mofetim"],
   ["מִקְנֶה", "Mikneh"],
   ["מִקְנִים", "Miknim"],
   ["מִשְׁנָה", "Mishnah"],
@@ -357,6 +358,7 @@ const styleCases = [
     [
       ["בְּרֵאשִׁית", "B'reshit"],
       ["וּמֹשֶׁה", "U-mosheh"],
+      ["וּבְמֹפְתִֽים", "U-v'mof'tim"],
       ["וָבֶטַח", "Va-vetaḥ"],
       ["וְדָוִד", "Ve-david"],
       ["וֶאֱמוּנָה", "Ve-emunah"],
@@ -431,6 +433,7 @@ const styleCases = [
   [
     "mishkanTefilah",
     [
+      ["וּבְמֹפְתִֽים", "Uv-mof'tim"],
       ["חָכְמָה", "Chochmah"],
       ["בְּרֵאשִׁית", "B'reishit"],
       ["חֵי", "Chei"],
@@ -546,7 +549,7 @@ const stressMarkCases = [
   ["בִּשְׁבָחוֹת", "Bishvaḥot"],
   ["בִּשְׁבָחוֹת וּבִזְמִירוֹת", "Bishvaḥot uvizmirot"],
   ["יִתְר֛וֹ", "Yitro"],
-  ["חֹתְנ֖וֹ", "Ḥotno"],
+  ["חֹתְנ֖וֹ", "Ḥoteno"],
   ["מִתּ֣וֹךְ", "Mitokh"],
   ["אֶל־הַר", "El-har"],
   ["לַבַּת־אֵשׁ", "Labat-esh"],

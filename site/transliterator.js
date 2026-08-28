@@ -850,11 +850,11 @@
       return false;
     }
 
-    if (previous.vowelName === "kamatzGadol" || previous.vowelName === "tzere") {
-      return true;
-    }
-
-    if (previous.base === "ו" && previous.vowelName === "holam") {
+    if (
+      previous.vowelName === "kamatzGadol" ||
+      previous.vowelName === "tzere" ||
+      previous.vowelName === "holam"
+    ) {
       return true;
     }
 
