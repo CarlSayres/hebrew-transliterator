@@ -386,6 +386,11 @@ The long vowels that make a following sh'va vocal are kamatz gadol, tzeire, shur
 
 Meteg and trope marks do not appear in output.
 
+Sefaria text cleanup removes the Masora circle (`֯`, U+05AF), which is an
+annotation marker with no pronunciation. Accent segol (`֒`, U+0592) is retained:
+in some liturgical sources it supplies useful stress evidence, although it must
+not be assumed to be authoritative in every source.
+
 They should be retained during analysis because they can identify stressed syllables.
 
 All Hebrew words are treated as having either ultimate or penultimate primary stress.

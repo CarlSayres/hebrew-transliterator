@@ -319,3 +319,11 @@ test("cleans encoded spacing and legacy markup from excerpts", () => {
     "מִי  כָמֹכָה ׀ טוֹב מְאֹד  &"
   );
 });
+
+test("removes Masora circles from Sefaria text while preserving accent segol", () => {
+  assert.equal(
+    cleanText("בְּכָל֯־לְ֯בָבְ֒ךָ"),
+    "בְּכָל־לְבָבְ֒ךָ"
+  );
+  assert.equal(cleanText("כָל&#x5AF;"), "כָל");
+});

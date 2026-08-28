@@ -35,6 +35,7 @@
       .replace(/&#39;|&apos;/gi, "'")
       .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)))
       .replace(/&#x([0-9a-f]+);/gi, (_match, code) => String.fromCodePoint(parseInt(code, 16)))
+      .replace(/\u05af/g, "")
       .trim();
   }
 
