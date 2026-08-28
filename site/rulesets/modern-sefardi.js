@@ -152,7 +152,7 @@
     "לָךְ": "lakh"
   };
 
-  const silentInitialMemSheva = {
+  const silentInitialPrefixSheva = {
     "מִזְבֵּחַ": true,
     "מִזְבְּחוֹת": true,
     "מִנְחָה": true,
@@ -173,8 +173,9 @@
     "מִצְוָה": true,
     "מִצְוֹת": true
   };
-  Object.assign(silentInitialMemSheva, window.HebrewMorphhbSilentInitialMemSheva || {});
-  Object.assign(silentInitialMemSheva, window.HebrewWikidataSilentInitialMemSheva || {});
+  Object.assign(silentInitialPrefixSheva, window.HebrewMorphhbSilentInitialMemSheva || {});
+  Object.assign(silentInitialPrefixSheva, window.HebrewWikidataSilentInitialMemSheva || {});
+  Object.assign(silentInitialPrefixSheva, window.HebrewOtherPrefixSilentInitialSheva || {});
 
   // Some Sefaria Tanakh forms omit the meteg that would explicitly mark a
   // kamatz as gadol before a vocal sh'va. Keep this list narrow so genuine
@@ -223,7 +224,7 @@
   };
 
   normalizeLookup(exactWords);
-  normalizeLookup(silentInitialMemSheva);
+  normalizeLookup(silentInitialPrefixSheva);
   normalizeLookup(missingMetegKamatzSheva);
   normalizeLookup(phraseCapitalization);
   normalizeLookup(stressOverrides);
@@ -287,7 +288,7 @@
     exceptions: {
       exactWords,
       niqqudless,
-      silentInitialMemSheva,
+      silentInitialPrefixSheva,
       missingMetegKamatzSheva,
       phraseCapitalization,
       stressOverrides,

@@ -746,11 +746,11 @@
     });
   }
 
-  function forceSilentInitialMemSheva(clusters) {
+  function forceSilentInitialPrefixSheva(clusters) {
     if (
-      clusters[0]?.base === "מ" &&
-      hasMark(clusters[0], MARKS.HIRIQ) &&
-      hasMark(clusters[1], MARKS.SHEVA)
+      clusters[0] &&
+      hasMark(clusters[1], MARKS.SHEVA) &&
+      !hasMark(clusters[1], MARKS.DAGESH)
     ) {
       clusters[1].sheva = "silent";
     }
@@ -1072,6 +1072,12 @@
 
   function initialPrefixValue(clusters, index, consonant, vowelOut) {
     if (index !== 0 || clusters.length <= 1) {
+      return "";
+    }
+
+    // A lexical exception makes the following sh'va silent. In that case the
+    // opening syllable only resembles a prefix and must not receive a dash.
+    if (clusters[index + 1]?.sheva === "silent") {
       return "";
     }
 
@@ -1620,8 +1626,8 @@
       classifyShevas(wordClusters);
       classifyVowels(wordClusters, this.ruleset);
       classifyShevas(wordClusters);
-      if (this.ruleset.exceptions.silentInitialMemSheva?.[cleaned]) {
-        forceSilentInitialMemSheva(wordClusters);
+      if (this.ruleset.exceptions.silentInitialPrefixSheva?.[cleaned]) {
+        forceSilentInitialPrefixSheva(wordClusters);
       }
       if ((format === "stressMarks" || format === "stressMarksAll") && stressOverride?.vowelFromEnd) {
         return stressMarkedVowelGroup(transliterateClusters(wordClusters, this.ruleset), stressOverride);

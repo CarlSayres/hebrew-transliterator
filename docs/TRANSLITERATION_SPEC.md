@@ -97,6 +97,20 @@ node .\parser\scripts\build-wikidata-mi-sheva-list.js
 
 It writes `site/rulesets/wikidata-silent-initial-mem-sheva.js`. Only single-word dictionary entries beginning with `מִ` whose next consonant carries sh'va without dagesh are included. A sh'va on a letter with dagesh remains vocal under the governing sh'va-na rules and can never be made silent by this lookup. Because these are dictionary entries rather than arbitrary words found in running text, they prevent lexical words such as `מִלְחָמָה` from being mistaken for the productive `מִ־` (“from”) prefix. The general prefix rule remains active for forms absent from the lexical lookups.
 
+The same ambiguity is audited for the prefix-looking patterns `כַּ`, `בַּ`, `לַ`, `הַ`, and `שֶׁ`. Rebuild their derived lookup and the complete local review reports with:
+
+```powershell
+node .\parser\scripts\build-initial-prefix-sheva-lists.js
+```
+
+The application lookup is written to `site/rulesets/other-prefix-silent-initial-sheva.js`. The ignored local reports are:
+
+- `parser/reports/initial-prefix-sheva-all-considered.md`
+- `parser/reports/initial-prefix-sheva-lexical.md`
+- `parser/reports/initial-prefix-sheva-prefix-or-ambiguous.md`
+
+A form is included as lexical only when Wikidata or MorphHB supplies lexical evidence and MorphHB supplies no genuine-prefix evidence for the same pointed spelling. Spellings with both kinds of evidence are conservatively excluded because an exact-word lookup cannot distinguish their context. As with the mem lookup, forms whose sh'va-bearing consonant has dagesh are excluded before classification.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table

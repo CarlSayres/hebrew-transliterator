@@ -12,6 +12,7 @@ vm.createContext(context);
 for (const file of [
   "site/rulesets/morphhb-silent-initial-mem-sheva.js",
   "site/rulesets/wikidata-silent-initial-mem-sheva.js",
+  "site/rulesets/other-prefix-silent-initial-sheva.js",
   "site/rulesets/modern-sefardi.js",
   "site/transliterator.js"
 ]) {
@@ -76,6 +77,13 @@ const cases = [
   ["מִסְעָדָה", "Mis·adah"],
   ["מִכְנָסַיִם", "Mikhnasayim"],
   ["מִגְּנָה", "Migenah"],
+  ["כַּסְפִּית", "Kaspit"],
+  ["כַּלְכָּלָה", "Kalkalah"],
+  ["בַּרְזֶל", "Barzel"],
+  ["בַּקְבּוּק", "Bakbuk"],
+  ["לַחְמָנִיָּה", "Laḥmaniyah"],
+  ["הַבְדָּלָה", "Havdalah"],
+  ["שֶׁנְהָב", "Shenhav"],
   ["מִשְׁפַּחַת", "Mishpaḥat"],
   ["מִזְמוֹר", "Mizmor"],
   ["מִדְבָּר", "Midbar"],
@@ -358,6 +366,14 @@ const styleCases = [
       ,
       ["מִגְּנָה", "Mi-g'nah"]
       ,
+      ["כַּסְפִּית", "Kaspit"],
+      ["כַּלְכָּלָה", "Kalkalah"],
+      ["בַּרְזֶל", "Barzel"],
+      ["בַּקְבּוּק", "Bakbuk"],
+      ["לַחְמָנִיָּה", "Laḥmaniyah"],
+      ["הַבְדָּלָה", "Havdalah"],
+      ["שֶׁנְהָב", "Shenhav"]
+      ,
       ["שָׁרְצוּ", "Shar'tzu"]
       ,
       ["תּוֹלְדֹת", "Tol'dot"],
@@ -403,6 +419,13 @@ const styleCases = [
       ["מִלְחָמוֹת", "Milchamot"],
       ["מִסְעָדָה", "Mis-adah"],
       ["מִכְנָסַיִם", "Michnasayim"],
+      ["כַּסְפִּית", "Kaspit"],
+      ["כַּלְכָּלָה", "Kalkalah"],
+      ["בַּרְזֶל", "Barzel"],
+      ["בַּקְבּוּק", "Bakbuk"],
+      ["לַחְמָנִיָּה", "Lachmaniyah"],
+      ["הַבְדָּלָה", "Havdalah"],
+      ["שֶׁנְהָב", "Shenhav"],
       ["שָׁרְצוּ", "Shar'tzu"],
       ["תּוֹלְדֹת", "Tol'dot"],
       ["כְּכוֹכְבֵי", "K'choch'vei"],
