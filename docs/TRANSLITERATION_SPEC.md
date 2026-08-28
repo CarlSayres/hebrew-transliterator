@@ -95,7 +95,7 @@ The Biblical list is supplemented by vocalized Hebrew lemmas and grammatical for
 node .\parser\scripts\build-wikidata-mi-sheva-list.js
 ```
 
-It writes `site/rulesets/wikidata-silent-initial-mem-sheva.js`. Only single-word dictionary entries beginning with `מִ` whose next consonant carries sh'va are included. Because these are dictionary entries rather than arbitrary words found in running text, they prevent lexical words such as `מִלְחָמָה` from being mistaken for the productive `מִ־` (“from”) prefix. The general prefix rule remains active for forms absent from the lexical lookups.
+It writes `site/rulesets/wikidata-silent-initial-mem-sheva.js`. Only single-word dictionary entries beginning with `מִ` whose next consonant carries sh'va without dagesh are included. A sh'va on a letter with dagesh remains vocal under the governing sh'va-na rules and can never be made silent by this lookup. Because these are dictionary entries rather than arbitrary words found in running text, they prevent lexical words such as `מִלְחָמָה` from being mistaken for the productive `מִ־` (“from”) prefix. The general prefix rule remains active for forms absent from the lexical lookups.
 
 ## 4. Consonants
 

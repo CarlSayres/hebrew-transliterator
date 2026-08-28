@@ -75,6 +75,7 @@ const cases = [
   ["מִלְחָמוֹת", "Milḥamot"],
   ["מִסְעָדָה", "Mis·adah"],
   ["מִכְנָסַיִם", "Mikhnasayim"],
+  ["מִגְּנָה", "Migenah"],
   ["מִשְׁפַּחַת", "Mishpaḥat"],
   ["מִזְמוֹר", "Mizmor"],
   ["מִדְבָּר", "Midbar"],
@@ -354,6 +355,8 @@ const styleCases = [
       ["מִכְנָסַיִם", "Mikhnasayim"],
       ["מִפְּנֵי", "Mi-p'nei"],
       ["מִמְּךָ", "Mi-m'kha"]
+      ,
+      ["מִגְּנָה", "Mi-g'nah"]
       ,
       ["שָׁרְצוּ", "Shar'tzu"]
       ,
