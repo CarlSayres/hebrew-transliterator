@@ -192,7 +192,26 @@ test("falls back to the legacy text API when Texts v3 fails", async () => {
   assert.equal(requests.length, 3);
 });
 
-test("makes fresh requests when the same result is validated again", async () => {
+test("does not retry a throttled Texts v3 request through the legacy API", async () => {
+  const requests = [];
+  const client = new SefariaClient({
+    fetchImpl: async (url) => {
+      requests.push(url);
+      if (url.includes("/api/ref/")) {
+        return jsonResponse(refPayload());
+      }
+      if (url.includes("/api/v3/texts/")) {
+        return jsonResponse({ error: "too many requests" }, 429);
+      }
+      return jsonResponse({ he: "This fallback should not be requested." });
+    }
+  });
+
+  await assert.rejects(client.validateResult({ ref: "Genesis 1:1" }), { status: 429 });
+  assert.equal(requests.length, 2);
+});
+
+test("reuses successful responses during the page session", async () => {
   let requestCount = 0;
   const client = new SefariaClient({
     fetchImpl: async (url) => {
@@ -203,7 +222,95 @@ test("makes fresh requests when the same result is validated again", async () =>
 
   await client.validateResult({ ref: "Genesis 1:1" });
   await client.validateResult({ ref: "Genesis 1:1" });
-  assert.equal(requestCount, 4);
+  assert.equal(requestCount, 2);
+});
+
+test("expires cached responses after the configured lifetime", async () => {
+  let requestCount = 0;
+  let now = 1000;
+  const client = new SefariaClient({
+    cacheTtlMs: 100,
+    now: () => now,
+    fetchImpl: async () => {
+      requestCount += 1;
+      return jsonResponse({ requestCount });
+    }
+  });
+
+  assert.equal((await client.requestJson("https://www.sefaria.org/api/test")).requestCount, 1);
+  now += 50;
+  assert.equal((await client.requestJson("https://www.sefaria.org/api/test")).requestCount, 1);
+  now += 51;
+  assert.equal((await client.requestJson("https://www.sefaria.org/api/test")).requestCount, 2);
+});
+
+test("can clear the page-session cache explicitly", async () => {
+  let requestCount = 0;
+  const client = new SefariaClient({
+    fetchImpl: async () => jsonResponse({ requestCount: ++requestCount })
+  });
+
+  assert.equal((await client.requestJson("https://www.sefaria.org/api/test")).requestCount, 1);
+  client.clearSessionCache();
+  assert.equal((await client.requestJson("https://www.sefaria.org/api/test")).requestCount, 2);
+});
+
+test("deduplicates identical requests already in progress", async () => {
+  let requestCount = 0;
+  let resolveRequest;
+  const client = new SefariaClient({
+    fetchImpl: async () => {
+      requestCount += 1;
+      await new Promise((resolve) => { resolveRequest = resolve; });
+      return jsonResponse({ ok: true });
+    }
+  });
+
+  const first = client.requestJson("https://www.sefaria.org/api/test");
+  const second = client.requestJson("https://www.sefaria.org/api/test");
+  assert.equal(requestCount, 1);
+  resolveRequest();
+  assert.deepEqual(await first, { ok: true });
+  assert.deepEqual(await second, { ok: true });
+});
+
+test("does not cache errors", async () => {
+  let requestCount = 0;
+  const client = new SefariaClient({
+    fetchImpl: async () => {
+      requestCount += 1;
+      return requestCount === 1
+        ? jsonResponse({ error: true }, 503)
+        : jsonResponse({ ok: true });
+    }
+  });
+
+  await assert.rejects(client.requestJson("https://www.sefaria.org/api/test"), { status: 503 });
+  assert.deepEqual(await client.requestJson("https://www.sefaria.org/api/test"), { ok: true });
+  assert.equal(requestCount, 2);
+});
+
+test("reports slow requests and request errors", async () => {
+  const slowEvents = [];
+  const errorEvents = [];
+  const slowClient = new SefariaClient({
+    slowRequestMs: 5,
+    timeoutMs: 50,
+    onSlow: (event) => slowEvents.push(event),
+    fetchImpl: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return jsonResponse({ ok: true });
+    }
+  });
+  await slowClient.requestJson("https://www.sefaria.org/api/slow");
+  assert.equal(slowEvents.length, 1);
+
+  const errorClient = new SefariaClient({
+    onError: (error) => errorEvents.push(error),
+    fetchImpl: async () => jsonResponse({ error: true }, 500)
+  });
+  await assert.rejects(errorClient.requestJson("https://www.sefaria.org/api/error"), { status: 500 });
+  assert.equal(errorEvents.length, 1);
 });
 
 test("cleans encoded spacing and legacy markup from excerpts", () => {

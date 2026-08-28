@@ -36,7 +36,14 @@
   const feedbackStatus = document.getElementById("feedbackStatus");
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
   const sefariaCatalog = window.HebrewTransliteratorSefariaCatalog;
-  const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({ timeoutMs: 9000 });
+  const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({
+    timeoutMs: 9000,
+    slowRequestMs: 5000,
+    cacheTtlMs: 10 * 60 * 1000,
+    cacheMaxEntries: 200,
+    onSlow: () => noteSlowSefariaRequest(),
+    onError: (error) => noteSefariaRequestError(error)
+  });
   const preferencesCookieName = "ht_preferences";
   const preferencesCookieMaxAge = 60 * 60 * 24 * 365;
 
@@ -179,6 +186,7 @@
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
   let activeSefariaController = null;
+  let sefariaProblemDuringRequest = false;
   let lastSefariaSearch = "";
   let lastImportedSefariaContext = null;
 
@@ -419,6 +427,7 @@
   function beginSefariaRequest() {
     activeSefariaController?.abort();
     activeSefariaController = new AbortController();
+    sefariaProblemDuringRequest = false;
     setSefariaBusy(true);
     return activeSefariaController;
   }
@@ -456,15 +465,38 @@
       return "Sefaria request cancelled.";
     }
     if (error?.code === "timeout") {
-      return "Sefaria took too long to respond. Please try again.";
+      return "Sefaria is having trouble responding. Please try again in a few minutes.";
     }
     if (error?.code === "no_text") {
       return error.message;
     }
     if (error?.status === 429) {
-      return "Sefaria is receiving too many requests right now. Please wait briefly and try again.";
+      return "Sefaria is receiving too many requests right now. Please try again in a few minutes.";
     }
-    return error?.message || "Sefaria could not be reached. You can still paste Hebrew directly into the editor.";
+    return error?.message
+      ? `${error.message} Sefaria may be having a problem; please try again in a few minutes.`
+      : "Sefaria appears to be having a problem. Please try again in a few minutes. You can still paste Hebrew directly into the editor.";
+  }
+
+  function noteSlowSefariaRequest() {
+    if (!activeSefariaController) {
+      return;
+    }
+    setSefariaStatus("Sefaria is taking longer than usual to respond. Please wait; if this does not finish, try again in a few minutes.");
+  }
+
+  function noteSefariaRequestError(error) {
+    if (!activeSefariaController || error?.code === "cancelled") {
+      return;
+    }
+    sefariaProblemDuringRequest = true;
+    setSefariaStatus(sefariaErrorMessage(error));
+  }
+
+  function sefariaProblemWarning() {
+    return activeSefariaController && sefariaProblemDuringRequest
+      ? " Sefaria had trouble responding, so some results may be missing. Please try again in a few minutes."
+      : "";
   }
 
   async function fetchJson(url, options) {
@@ -712,7 +744,7 @@
         : result.quality?.status === "partial"
           ? " Some of the source appears only partially vocalized."
           : "";
-      setSefariaStatus(`Imported ${result.ref || trimmed}.${warning}`);
+      setSefariaStatus(`Imported ${result.ref || trimmed}.${warning}${sefariaProblemWarning()}`);
       renderImportedSource(result);
       recordUsageEvent("sefaria_import_succeeded");
     } catch (error) {
@@ -892,7 +924,7 @@
         });
         return;
       }
-      setSefariaStatus("This is a collection rather than a directly importable text. Use “View on Sefaria” to browse all of its sections.");
+      setSefariaStatus(`This is a collection rather than a directly importable text. Use “View on Sefaria” to browse all of its sections.${sefariaProblemWarning()}`);
       renderImportedSource(result);
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
@@ -1223,16 +1255,17 @@
       ? ` ${options.failedCount} additional result${options.failedCount === 1 ? " could" : "s could"} not be verified and ${options.failedCount === 1 ? "was" : "were"} hidden.`
       : "";
     const sourceWarning = options.partialMessage ? ` ${options.partialMessage}` : "";
+    const serviceWarning = sefariaProblemWarning();
     if (options.statusMessage) {
-      setSefariaStatus(options.statusMessage);
+      setSefariaStatus(`${options.statusMessage}${serviceWarning}`);
     } else if (options.pagination) {
       const start = options.pagination.page * options.pagination.pageSize + 1;
       const end = Math.min(start + options.pagination.pageSize - 1, options.pagination.total);
-      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"} (${start}–${end} of ${options.pagination.total}).${partialText}${sourceWarning}`);
+      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"} (${start}–${end} of ${options.pagination.total}).${partialText}${sourceWarning}${serviceWarning}`);
     } else if (options.parentRef) {
-      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
+      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}${serviceWarning}`);
     } else {
-      setSefariaStatus(`Found ${uniqueResults.length} verified result${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}`);
+      setSefariaStatus(`Found ${uniqueResults.length} verified result${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}${serviceWarning}`);
     }
     return uniqueResults.length;
   }

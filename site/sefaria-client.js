@@ -8,6 +8,9 @@
   }
 })(typeof window !== "undefined" ? window : globalThis, function () {
   const DEFAULT_TIMEOUT_MS = 9000;
+  const DEFAULT_SLOW_REQUEST_MS = 5000;
+  const DEFAULT_CACHE_TTL_MS = 10 * 60 * 1000;
+  const DEFAULT_CACHE_MAX_ENTRIES = 200;
   const HEBREW_LETTER_RE = /[\u05d0-\u05ea]/g;
   const HEBREW_VOWEL_RE = /[\u05b0-\u05bb\u05c7]/g;
 
@@ -111,12 +114,99 @@
     constructor(options = {}) {
       this.fetchImpl = options.fetchImpl || ((...args) => fetch(...args));
       this.timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
+      this.slowRequestMs = options.slowRequestMs || DEFAULT_SLOW_REQUEST_MS;
+      this.cacheTtlMs = options.cacheTtlMs || DEFAULT_CACHE_TTL_MS;
+      this.cacheMaxEntries = options.cacheMaxEntries || DEFAULT_CACHE_MAX_ENTRIES;
+      this.onSlow = typeof options.onSlow === "function" ? options.onSlow : () => {};
+      this.onError = typeof options.onError === "function" ? options.onError : () => {};
+      this.now = typeof options.now === "function" ? options.now : () => Date.now();
+      this.responseCache = new Map();
+      this.pendingRequests = new Map();
     }
 
-    async requestJson(url, options = {}) {
+    cacheKey(url, options = {}) {
+      const method = String(options.method || "GET").toUpperCase();
+      const body = typeof options.body === "string" ? options.body : "";
+      return `${method} ${url}\n${body}`;
+    }
+
+    cachedResponse(key) {
+      const cached = this.responseCache.get(key);
+      if (!cached) {
+        return undefined;
+      }
+      if (cached.expiresAt <= this.now()) {
+        this.responseCache.delete(key);
+        return undefined;
+      }
+      // Touch the entry so Map insertion order acts as a small LRU cache.
+      this.responseCache.delete(key);
+      this.responseCache.set(key, cached);
+      return cached.data;
+    }
+
+    storeResponse(key, data) {
+      this.responseCache.delete(key);
+      this.responseCache.set(key, {
+        data,
+        expiresAt: this.now() + this.cacheTtlMs
+      });
+      while (this.responseCache.size > this.cacheMaxEntries) {
+        this.responseCache.delete(this.responseCache.keys().next().value);
+      }
+    }
+
+    clearSessionCache() {
+      this.responseCache.clear();
+    }
+
+    notifyError(error, context) {
+      try {
+        this.onError(error, context);
+      } catch {
+        // Status reporting must never change request behavior.
+      }
+    }
+
+    requestJson(url, options = {}) {
+      const parentSignal = options.signal;
+      if (parentSignal?.aborted) {
+        return Promise.reject(new SefariaRequestError("The Sefaria request was cancelled.", "cancelled"));
+      }
+
+      const key = this.cacheKey(url, options);
+      const cached = options.useCache === false ? undefined : this.cachedResponse(key);
+      if (cached !== undefined) {
+        return Promise.resolve(cached);
+      }
+      if (options.useCache !== false && this.pendingRequests.has(key)) {
+        return this.pendingRequests.get(key);
+      }
+
+      const request = this.performRequestJson(url, options)
+        .then((data) => {
+          if (options.useCache !== false) {
+            this.storeResponse(key, data);
+          }
+          return data;
+        })
+        .finally(() => {
+          if (this.pendingRequests.get(key) === request) {
+            this.pendingRequests.delete(key);
+          }
+        });
+
+      if (options.useCache !== false) {
+        this.pendingRequests.set(key, request);
+      }
+      return request;
+    }
+
+    async performRequestJson(url, options = {}) {
       const controller = new AbortController();
       const parentSignal = options.signal;
       let timedOut = false;
+      let slowNotified = false;
       const abortFromParent = () => controller.abort(parentSignal?.reason);
       if (parentSignal?.aborted) {
         throw new SefariaRequestError("The Sefaria request was cancelled.", "cancelled");
@@ -126,10 +216,24 @@
         timedOut = true;
         controller.abort();
       }, options.timeoutMs || this.timeoutMs);
+      const slowTimer = setTimeout(() => {
+        slowNotified = true;
+        try {
+          this.onSlow({ url, method: String(options.method || "GET").toUpperCase() });
+        } catch {
+          // Status reporting must never change request behavior.
+        }
+      }, options.slowRequestMs || this.slowRequestMs);
 
       try {
+        const {
+          useCache: _useCache,
+          slowRequestMs: _slowRequestMs,
+          timeoutMs: _timeoutMs,
+          ...fetchOptions
+        } = options;
         const response = await this.fetchImpl(url, {
-          ...options,
+          ...fetchOptions,
           signal: controller.signal
         });
         if (!response.ok) {
@@ -140,17 +244,25 @@
         return await response.json();
       } catch (error) {
         if (error instanceof SefariaRequestError) {
+          if (error.code !== "cancelled") {
+            this.notifyError(error, { url, slowNotified });
+          }
           throw error;
         }
         if (timedOut) {
-          throw new SefariaRequestError("Sefaria took too long to respond.", "timeout", { cause: error });
+          const requestError = new SefariaRequestError("Sefaria took too long to respond.", "timeout", { cause: error });
+          this.notifyError(requestError, { url, slowNotified });
+          throw requestError;
         }
         if (parentSignal?.aborted || error?.name === "AbortError") {
           throw new SefariaRequestError("The Sefaria request was cancelled.", "cancelled", { cause: error });
         }
-        throw new SefariaRequestError("Sefaria could not be reached.", "network", { cause: error });
+        const requestError = new SefariaRequestError("Sefaria could not be reached.", "network", { cause: error });
+        this.notifyError(requestError, { url, slowNotified });
+        throw requestError;
       } finally {
         clearTimeout(timer);
+        clearTimeout(slowTimer);
         parentSignal?.removeEventListener("abort", abortFromParent);
       }
     }
@@ -190,7 +302,7 @@
           return payload;
         }
       } catch (error) {
-        if (error.code === "cancelled" || error.code === "timeout") {
+        if (error.code === "cancelled" || error.code === "timeout" || error.status === 429) {
           throw error;
         }
         v3Error = error;

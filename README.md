@@ -16,8 +16,17 @@ server-side entry point used for privacy-safe anonymous event counts.
 
 Sefaria search, reference validation, and text retrieval run directly in the
 visitor's browser. The application does not proxy Sefaria text through the
-Worker and deliberately does not cache Sefaria results locally, so each search
-and exact-reference import uses a fresh response from Sefaria.
+Worker. Successful Sefaria responses are kept in a small in-memory cache for up
+to 10 minutes (maximum 200 entries) and identical requests already in progress
+are shared. The cache is cleared whenever the page is reloaded or closed; it is
+not stored in cookies, browser storage, or on the server. Failed requests are
+never cached.
+
+If a Sefaria request takes more than five seconds, the busy message tells the
+visitor that Sefaria is responding slowly. Requests still use the existing
+nine-second timeout, after which the visitor is told to try again in a few
+minutes. Other Sefaria errors, including request throttling, produce the same
+clear retry guidance.
 
 ## Run the Public Application Locally
 
