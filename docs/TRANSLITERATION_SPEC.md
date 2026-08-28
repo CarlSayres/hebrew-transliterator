@@ -283,6 +283,8 @@ Unicode's explicit qamatz-katan character (`ׇ`, U+05C7) remains qamatz katan ev
 
 Some Sefaria Tanakh forms omit an expected meteg before a vocal sh'va. For reviewed forms in the ruleset's missing-meteg list, the application treats the kamatz as gadol and the following sh'va as vocal, as though the meteg were present. Examples include `שָׁרְצוּ` -> `sharetzu`, `נָפְלוּ` -> `nafelu`, and `יָצְאוּ` -> `yatze·u`. This is a curated morphological override, not a general rule for every kamatz followed by sh'va; `חָכְמָה` -> `ḥokhmah` remains kamatz katan with a silent sh'va.
 
+The missing-meteg list is checked with a whole-Tanakh audit rather than expanded from isolated examples. The audit compares each MAM occurrence used by Sefaria with the matching WLC occurrence, records explicit qamatz katan separately, and recommends a word-level exception only when every occurrence of that exact pointed form has consistent evidence. A meteg found merely in a parallel form is retained for human review but is not sufficient by itself to change the transliteration.
+
 An undageshed בגדכפת letter immediately after a sh'va provides independent
 orthographic evidence that the sh'va is vocal. When that sh'va follows an
 ordinary ambiguous kamatz, the application therefore treats the sh'va as na
