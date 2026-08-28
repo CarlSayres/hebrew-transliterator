@@ -369,15 +369,15 @@ Representative outputs are `תְּנוּ` -> `tenu` (first letter), `יִשְׁ�
 
 A sh'va under the final letter of a word is silent. This boundary condition is evaluated before the five rules; for example, the final khaf in `בָּרוּךְ` remains `kh`, not `khe`, even though it follows shuruk.
 
-These five tests are decisive and run before suffix or source-repair heuristics. A heuristic may identify additional vocal sh'vas in a documented spelling pattern, but it may never turn a sh'va that meets one of these rules into sh'va nach.
+The intrinsic tests—a sh'va at the beginning of a word, the second of two consecutive sh'vas, a sh'va on a letter with dagesh, and a sh'va on the first of two identical letters—are decisive. A heuristic may identify additional vocal sh'vas in a documented spelling pattern, but it may never turn a sh'va that meets one of these intrinsic rules into sh'va nach. The long-vowel rule is subject to the grammatical suffix rule below.
 
 Additional documented spelling patterns include sh'va under the first letter after the pointed prefixes `כַּ`, `מִ`, `שֶׁ`, `בַּ`, `לַ`, and `הַ`; the final `תְךָ`, `תְכֶם`, `תְכֶן`, `בְךָ`, `בְכֶם`, and `בְכֶן` patterns; and yod in the initial `וַיְ` pattern. A meteg or trope mark directly on the sh'va-bearing letter is also treated as explicit evidence that the sh'va is vocal.
 
 Exception to rule 3: in the object marker forms `אֶתְךָ`, `אֶתְכֶם`, and `אֶתְכֶן`, the tav sh'va is silent because the tav closes `אֶת`.
 
-Rules 1 and 4 take precedence over the verb-suffix heuristic. Thus the sh'va is vocal in `תְּנוּ` -> `tenu`, `יִתְּנוּ` -> `yitenu`, and `וַיִּתְּנוּ` -> `vayitenu` in Modern Sephardi; apostrophe styles render the same sh'va as `t'nu`, `yit'nu`, and `vayit'nu`.
+The intrinsic rules take precedence over the verb-suffix heuristic. Thus the sh'va is vocal in `תְּנוּ` -> `tenu`, `יִתְּנוּ` -> `yitenu`, and `וַיִּתְּנוּ` -> `vayitenu` in Modern Sephardi; apostrophe styles render the same sh'va as `t'nu`, `yit'nu`, and `vayit'nu`.
 
-A plain sh'va that closes the stem before common verb suffixes is silent only when none of the five governing sh'va-na rules applies. This includes appropriate forms before `נוּ` and before the tav suffixes `תִּי`, `תָּ`, `תְּ`, `תֶּם`, and `תֶּן`. When Sefaria supplies a long kamatz before that sh'va, rule 3 remains decisive, as in `יָדָֽעְתִּי` -> `yadaeti`, `אֲנָֽחְנוּ` -> `anaḥenu`, `פָשָֽׁעְנוּ` -> `fashaenu`, and `גָּאָֽלְתָּ` -> `ga·aleta`. If a guttural has a sounded reduced vowel, the text will usually show a chataf vowel instead.
+A plain sh'va that closes the stem before common perfect-tense suffixes is silent unless one of the intrinsic sh'va-na rules applies. This includes forms before `נוּ` and before the tav suffixes `תִּי`, `תָּ`, `תְּ`, `תֶּם`, and `תֶּן`. The suffix closes the stem even when Sefaria supplies meteg or trope on the preceding long vowel, as in `יָדָֽעְתִּי` -> `yadati`, `אֲנָֽחְנוּ` -> `anaḥnu`, `פָשָֽׁעְנוּ` -> `fashanu`, and `גָּאָֽלְתָּ` -> `ga·alta`. If a guttural has a sounded reduced vowel, the text will usually show a chataf vowel instead.
 
 Meteg is useful for identifying a sh'va following a stressed kamatz. Trope marks, when present, can also indicate stress.
 

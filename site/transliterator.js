@@ -646,11 +646,6 @@
         return;
       }
 
-      if (cluster.forceVocalSheva) {
-        cluster.sheva = "vocal";
-        return;
-      }
-
       const previous = clusters[index - 1];
       const isMiddleConsecutiveSheva = Boolean(
         index > 0 &&
@@ -670,13 +665,10 @@
         clusters[index + 1] && clusters[index + 1].base === cluster.base
       );
 
-      // The five canonical sh'va-na rules are decisive for non-final sh'va.
-      // No suffix or other pronunciation heuristic below may override them.
+      // Intrinsic evidence on the sh'va-bearing consonant remains decisive.
       if (
         index === 0 ||
         isMiddleConsecutiveSheva ||
-        followsLongVowel ||
-        undageshedBegadKefatFollowsAmbiguousKamatz ||
         hasMark(cluster, MARKS.DAGESH) ||
         firstOfIdenticalLetters
       ) {
@@ -684,8 +676,19 @@
         return;
       }
 
+      // Perfect-tense endings close the stem syllable. This remains true when
+      // a source places meteg or trope on the preceding long vowel.
       if (precedesVerbSuffix(clusters, index)) {
         cluster.sheva = "silent";
+        return;
+      }
+
+      if (
+        cluster.forceVocalSheva ||
+        followsLongVowel ||
+        undageshedBegadKefatFollowsAmbiguousKamatz
+      ) {
+        cluster.sheva = "vocal";
         return;
       }
 
