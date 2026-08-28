@@ -256,6 +256,8 @@ Two important special cases still follow the same closed-syllable principle:
 
 These special cases only make the kamatz katan when the kamatz syllable is unstressed. If the kamatz has meteg or trope marking stress, it remains kamatz gadol.
 
+Some Sefaria Tanakh forms omit an expected meteg before a vocal sh'va. For reviewed forms in the ruleset's missing-meteg list, the application treats the kamatz as gadol and the following sh'va as vocal, as though the meteg were present. Examples include `שָׁרְצוּ` -> `sharetzu`, `נָפְלוּ` -> `nafelu`, and `יָצְאוּ` -> `yatze·u`. This is a curated morphological override, not a general rule for every kamatz followed by sh'va; `חָכְמָה` -> `ḥokhmah` remains kamatz katan with a silent sh'va.
+
 Meteg and trope marks can indicate stress. They are used for analysis but do not appear in output.
 
 Examples:

@@ -590,6 +590,7 @@
         const finalKha = cluster.base === "ך" && index === clusters.length - 1;
         const katan =
           !finalKha &&
+          !cluster.forceKamatzGadol &&
           !isKamatzAlefEnding(clusters, index) &&
           (vowel === MARKS.QAMATS_QATAN ||
             isClosedUnstressedSyllable(clusters, index));
@@ -627,6 +628,11 @@
   function classifyShevas(clusters) {
     clusters.forEach((cluster, index) => {
       if (!hasMark(cluster, MARKS.SHEVA)) {
+        return;
+      }
+
+      if (cluster.forceVocalSheva) {
+        cluster.sheva = "vocal";
         return;
       }
 
@@ -704,6 +710,21 @@
         firstOfDoubleLetter;
 
       cluster.sheva = vocal ? "vocal" : "silent";
+    });
+  }
+
+  function applyMissingMetegKamatzSheva(clusters, word, ruleset) {
+    const cleaned = stripTropeAndMeteg(word);
+    if (!ruleset.exceptions.missingMetegKamatzSheva?.[cleaned]) {
+      return;
+    }
+
+    clusters.forEach((cluster, index) => {
+      const following = clusters[index + 1];
+      if (hasMark(cluster, MARKS.QAMATS) && following && hasMark(following, MARKS.SHEVA)) {
+        cluster.forceKamatzGadol = true;
+        following.forceVocalSheva = true;
+      }
     });
   }
 
@@ -1574,6 +1595,7 @@
       if (format === "stressMarks" || format === "stressMarksAll") {
         applyStressOverrideToClusters(wordClusters, stressOverride);
       }
+      applyMissingMetegKamatzSheva(wordClusters, word, this.ruleset);
       classifyShevas(wordClusters);
       classifyVowels(wordClusters, this.ruleset);
       classifyShevas(wordClusters);

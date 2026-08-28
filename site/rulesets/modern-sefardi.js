@@ -173,6 +173,36 @@
   };
   Object.assign(silentInitialMemSheva, window.HebrewMorphhbSilentInitialMemSheva || {});
 
+  // Some Sefaria Tanakh forms omit the meteg that would explicitly mark a
+  // kamatz as gadol before a vocal sh'va. Keep this list narrow so genuine
+  // kamatz-katan forms such as חָכְמָה continue to follow the general rule.
+  const missingMetegKamatzSheva = {
+    "שָׁרְצוּ": true,
+    "נָפְלוּ": true,
+    "גָּבְרוּ": true,
+    "יָצְאוּ": true,
+    "יָזְמוּ": true,
+    "וְאָמְרוּ": true,
+    "וְהָרְגוּ": true,
+    "הָרְגוּ": true,
+    "עָבְדוּ": true,
+    "יִמָּצְאוּן": true,
+    "גָּזְלוּ": true,
+    "וַיִּשָּׁבְעוּ": true,
+    "וְיָלְדוּ": true,
+    "וַיִּוָּלְדוּ": true,
+    "מָלְאוּ": true,
+    "מָלְכוּ": true,
+    "נָסְעוּ": true,
+    "מָכְרוּ": true,
+    "לָקְחוּ": true,
+    "כָּבְדוּ": true,
+    "יִקָּרְאוּ": true,
+    "הִקָּבְצוּ": true,
+    "קָבְרוּ": true,
+    "עָזְבוּ": true
+  };
+
   const phraseCapitalization = {
     "אַתָּה": "Atah",
     "אַתָּה": "Atah"
@@ -191,6 +221,7 @@
 
   normalizeLookup(exactWords);
   normalizeLookup(silentInitialMemSheva);
+  normalizeLookup(missingMetegKamatzSheva);
   normalizeLookup(phraseCapitalization);
   normalizeLookup(stressOverrides);
   normalizeLookup(stressRuleWords);
@@ -254,6 +285,7 @@
       exactWords,
       niqqudless,
       silentInitialMemSheva,
+      missingMetegKamatzSheva,
       phraseCapitalization,
       stressOverrides,
       stressRuleWords
