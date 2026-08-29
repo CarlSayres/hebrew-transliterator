@@ -1,6 +1,6 @@
 # Lev Shalem Transliteration Style Guide
 
-Status: evidence-based draft for review. This guide describes the intended Lev Shalem profile; it is not yet a claim that every rule below has been implemented.
+Status: approved and implemented as the governing guide for the Lev Shalem profile.
 
 ## 1. Evidence Base
 
@@ -72,9 +72,11 @@ Final mappiq heh is rendered with ordinary `h`. Furtive patah precedes the final
 
 Mater letters do not add a second vowel. Adjacent vowel sounds separated by silent alef or ayin receive a centered dot when the boundary would otherwise be unclear: `ya·akov`, `ko·aḥ`, `po·el`, `ba·al`.
 
+When tzere appears on a consonantal yod, the yod retains its consonantal value and the vowel is rendered `e`, as in `kayem`; it does not become the sequence `yei`.
+
 ## 5. Sh'va and the Apostrophe
 
-A vocal sh'va is represented by an apostrophe immediately after its consonant. It is not written as `e`:
+A vocal sh'va is represented by an apostrophe immediately after its consonant. Lev Shalem also uses the apostrophe at certain written sh'va boundaries after a separated prefix, as in `u-m'kayem`; the mark should therefore be read as a reduced-vowel boundary rather than as a complete phonetic analysis. It is not written as `e`:
 
 | Hebrew | Lev Shalem pattern |
 |---|---|
@@ -97,11 +99,11 @@ Attested patterns include:
 |---|---|
 | Definite article | `ha-olam`, `ha-aretz`, `ha-shabbat`, `ha-n'shamah` |
 | Shin prefix | `she-asani`, `she-bara` |
-| Bet prefix | `ba-aretz`, `be-emet` |
+| Bet prefix | `ba-aretz`, `be-emet`, `vi-g'vurotav` |
 | Lamed prefix | `la-adon`, `la-shemesh` |
 | Mem prefix | `mi-pinu`, `mei-et` |
 | Kaf prefix | `ka-katuv` |
-| Vav conjunction | `u-mosheh`, `va-ed`, `ve-emet`, `vi-g'vurotav` |
+| Vav conjunction | `u-mosheh`, `va-ed`, `ve-emet` |
 
 When the prefix itself carries vocal sh'va, the sh'va apostrophe is used instead of inventing a full vowel and hyphen: `b'khol`, `l'olam`, `v'al`, `k'vod`.
 
@@ -113,7 +115,6 @@ For conjunctive vav, follow the Hebrew point rather than assigning one spelling 
 | `וֶ־` / `וֵ־` | `ve-` (`ve-emet`) |
 | `וַ־` / `וָ־` | `va-` (`va-ed`) |
 | `וּ־` | `u-` (`u-mosheh`) |
-| contextual hiriq | `vi-` (`vi-g'vurotav`) |
 
 Stacked prefixes retain the appropriate marker at each boundary: `u-l'almei`, `u-v'khol`, `v'ha-g'vurah`.
 
@@ -140,7 +141,7 @@ Use it where adjoining roman consonants could be read as the wrong digraph or ob
 - `v'yit·halal`
 - `bit·ḥu`
 - `esh·taḥaveh`
-- `avakesh·kha`
+- `y'varekh·kha`
 
 The source PDFs contain both `·` and `∙`, apparently because of font or production differences. The application should normalize both to `·`.
 
@@ -152,6 +153,8 @@ Do not mechanically convert Hebrew maqaf into a roman hyphen in the Lev Shalem p
 - `b'tziltz'lei shama`, not `b'tziltz'lei-shama`
 
 Roman hyphens should therefore be produced by the attached-morpheme rule, not by copying Hebrew punctuation. Maqaf-connected words may still be treated as one stress unit internally.
+
+The fused lexical expression `הַלְלוּ־יָהּ` is the principal exception: it is rendered `Hal'luyah`, with neither a space nor a copied maqaf. A separately written `יָהּ`, as in `תְּהַלֵּל יָהּ`, remains the separate word `yah`.
 
 ## 9. Dagesh and Doubled Letters
 
@@ -188,6 +191,8 @@ The two excerpts are not perfectly uniform. Examples include:
 - `ba-agala` alongside `ba·agala`
 - two visually similar centered-dot code points
 
+Do not create lexical exceptions merely to reproduce each isolated inconsistency. Exceptions require a linguistic, morphological, or clearly recurring house-style reason.
+
 For deterministic application output, use the semantic rules above:
 
 - canonical `Hal'luyah`
@@ -195,9 +200,9 @@ For deterministic application output, use the semantic rules above:
 - a centered dot for hiatus or a clarity boundary
 - one canonical centered-dot character, `·`
 
-## 13. Differences from the Current Implementation
+## 13. Implementation Requirements
 
-The evidence identifies the following changes for the Lev Shalem profile:
+The Lev Shalem profile implements the following source-based requirements:
 
 1. Restore `Hal'lu`, `Hal'luhu`, and `Hal'luyah`; do not treat their opening heh as `ha-`.
 2. Use `·`, not apostrophe, for selected consonant boundaries.

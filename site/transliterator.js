@@ -257,7 +257,7 @@
     return hasMark(cluster, MARKS.SEGOL);
   }
 
-  function isIgnoredInitialPrefix(cluster) {
+  function isIgnoredInitialPrefix(cluster, ruleset) {
     if (!cluster) {
       return false;
     }
@@ -265,6 +265,12 @@
     return (
       (cluster.base === "כ" && hasMark(cluster, MARKS.DAGESH) && hasPatach(cluster)) ||
       (cluster.base === "מ" && hasHiriq(cluster)) ||
+      (
+        ruleset?.output?.undageshedBetHiriqPrefix &&
+        cluster.base === "ב" &&
+        !hasMark(cluster, MARKS.DAGESH) &&
+        hasHiriq(cluster)
+      ) ||
       (cluster.base === "ש" && hasMark(cluster, MARKS.SHIN_DOT) && hasSegol(cluster)) ||
       (cluster.base === "ב" && hasMark(cluster, MARKS.DAGESH) && hasPatach(cluster)) ||
       (cluster.base === "ל" && hasPatach(cluster)) ||
@@ -721,7 +727,7 @@
     });
   }
 
-  function classifyShevas(clusters) {
+  function classifyShevas(clusters, ruleset) {
     clusters.forEach((cluster, index) => {
       if (!hasMark(cluster, MARKS.SHEVA)) {
         return;
@@ -834,7 +840,7 @@
       const followsInitialPrefix =
         index === 1 &&
         previous &&
-        isIgnoredInitialPrefix(previous);
+        isIgnoredInitialPrefix(previous, ruleset);
       const followsVavPatachYod = followsVavPatachYodPrefix(clusters, index);
       const vocal =
         tavSecondPersonSuffix ||
@@ -1210,6 +1216,11 @@
       consonantSeparator: "·",
       mappiqHeh: "ḣ",
       conjunctiveShuruk: "u",
+      maqafSeparator: "-",
+      fusedMaqafWords: [],
+      tzereOnConsonantalYod: null,
+      clarityConsonantPairs: [],
+      undageshedBetHiriqPrefix: false,
       dashedInitialPrefixes: [],
       doubleDageshChazak: false,
       ...(ruleset.output || {})
@@ -1260,11 +1271,11 @@
         return "va";
       }
 
-      if (
-        cluster.sheva === "vocal" ||
-        cluster.vowelName === "segol" ||
-        cluster.vowelName === "tzere"
-      ) {
+      if (cluster.sheva === "vocal") {
+        return "vSheva";
+      }
+
+      if (cluster.vowelName === "segol" || cluster.vowelName === "tzere") {
         return "ve";
       }
     }
@@ -1282,25 +1293,69 @@
       return "";
     }
 
-    if (
-      cluster.base === "ב" &&
-      hasMark(cluster, MARKS.DAGESH) &&
-      cluster.vowelName === "patach"
-    ) {
-      return "ba";
+    if (cluster.base === "ב") {
+      const prefixConsonant = hasMark(cluster, MARKS.DAGESH) ? "b" : "v";
+      const following = clusters[index + 1];
+      const fullVowelBoundary = Boolean(
+        following?.sheva === "vocal" ||
+        hasMark(following, MARKS.DAGESH) ||
+        (["א", "ה", "ח", "ע"].includes(following?.base) && getVowelMark(following))
+      );
+
+      if (fullVowelBoundary) {
+        if (cluster.vowelName === "patach") {
+          return `${prefixConsonant}a`;
+        }
+        if (
+          cluster.vowelName === "kamatzGadol" &&
+          ["א", "ה", "ח", "ע"].includes(following?.base)
+        ) {
+          return `${prefixConsonant}a`;
+        }
+        if (["segol", "tzere"].includes(cluster.vowelName)) {
+          return `${prefixConsonant}e`;
+        }
+        if (cluster.vowelName === "hiriq") {
+          return `${prefixConsonant}i`;
+        }
+      }
     }
 
     if (
-      cluster.base === "ב" &&
-      hasMark(cluster, MARKS.DAGESH) &&
-      cluster.vowelName === "kamatzGadol" &&
-      clusters[index + 1]?.base === "א"
+      cluster.base === "ל" &&
+      (
+        cluster.vowelName === "patach" ||
+        (
+          cluster.vowelName === "kamatzGadol" &&
+          ["א", "ה", "ח", "ע"].includes(clusters[index + 1]?.base) &&
+          getVowelMark(clusters[index + 1])
+        )
+      )
     ) {
-      return "ba";
-    }
-
-    if (cluster.base === "ל" && cluster.vowelName === "patach") {
       return "la";
+    }
+
+    if (
+      cluster.base === "ל" &&
+      ["segol", "tzere", "hiriq"].includes(cluster.vowelName) &&
+      (
+        hasMark(clusters[index + 1], MARKS.DAGESH) ||
+        ["א", "ה", "ח", "ע"].includes(clusters[index + 1]?.base)
+      )
+    ) {
+      return cluster.vowelName === "hiriq" ? "li" : "le";
+    }
+
+    if (
+      cluster.base === "כ" &&
+      ["patach", "kamatzGadol", "hiriq"].includes(cluster.vowelName) &&
+      (
+        clusters[index + 1]?.sheva === "vocal" ||
+        hasMark(clusters[index + 1], MARKS.DAGESH) ||
+        ["א", "ה", "ח", "ע"].includes(clusters[index + 1]?.base)
+      )
+    ) {
+      return cluster.vowelName === "hiriq" ? "ki" : "ka";
     }
 
     if (cluster.base === "מ" && cluster.vowelName === "hiriq") {
@@ -1317,8 +1372,26 @@
       return "mi";
     }
 
+    if (
+      cluster.base === "מ" &&
+      cluster.vowelName === "tzere" &&
+      ["א", "ה", "ח", "ע", "ר"].includes(clusters[index + 1]?.base)
+    ) {
+      return "mei";
+    }
+
     if (cluster.base === "ה") {
       if (cluster.vowelName === "patach") {
+        const following = clusters[index + 1];
+        const lexicalRepeatedRoot = Boolean(
+          following?.sheva === "vocal" &&
+          !hasMark(following, MARKS.DAGESH) &&
+          clusters[index + 2]?.base === following.base &&
+          ["ל", "ר"].includes(following.base)
+        );
+        if (lexicalRepeatedRoot) {
+          return "";
+        }
         return "ha";
       }
 
@@ -1329,6 +1402,13 @@
         ["kamatzGadol", "kamatzKatan"].includes(following?.vowelName)
       ) {
         return "ha";
+      }
+
+      if (
+        cluster.vowelName === "segol" &&
+        ["א", "ה", "ח", "ע", "ר"].includes(following?.base)
+      ) {
+        return "he";
       }
     }
 
@@ -1554,7 +1634,7 @@
         }
 
         if (startsShurukAfterSilentGutturalAndClosedConsonant(clusters, index, output)) {
-          add(options.consonantSeparator);
+          add(options.vowelSeparator);
         } else if (
           clusters[index - 1] &&
           consonantOutput(clusters[index - 1], ruleset) === "" &&
@@ -1568,12 +1648,19 @@
       }
 
       const vowelOut = adjustedVowelOut(clusters, index);
+      const styledVowelOut = (
+        cluster.base === "י" &&
+        cluster.vowelName === "tzere" &&
+        options.tzereOnConsonantalYod !== null
+      )
+        ? options.tzereOnConsonantalYod
+        : vowelOut;
 
       if (
         options.vowelSeparator &&
         (
-          startsNewVowelAfterSilentGuttural(output, consonant, vowelOut) ||
-          startsVowelSyllableAfterClosedConsonant(clusters, index, output, consonant, vowelOut)
+          startsNewVowelAfterSilentGuttural(output, consonant, styledVowelOut) ||
+          startsVowelSyllableAfterClosedConsonant(clusters, index, output, consonant, styledVowelOut)
         )
       ) {
         add(options.vowelSeparator);
@@ -1582,11 +1669,27 @@
       if (
         options.consonantSeparator &&
         (
-          startsConsonantSyllableAfterClosedConsonant(clusters, index, consonant) ||
-          startsConsonantAfterSilentAlef(clusters, index, output, consonant)
+          startsConsonantSyllableAfterClosedConsonant(clusters, index, consonant)
         )
       ) {
         add(options.consonantSeparator);
+      }
+
+      if (
+        options.vowelSeparator &&
+        startsConsonantAfterSilentAlef(clusters, index, output, consonant)
+      ) {
+        add(options.vowelSeparator);
+      }
+
+      const previousConsonant = clusters[index - 1]
+        ? consonantOutput(clusters[index - 1], ruleset)
+        : "";
+      if (
+        clusters[index - 1]?.sheva === "silent" &&
+        options.clarityConsonantPairs.includes(`${previousConsonant}|${consonant}`)
+      ) {
+        add(options.vowelSeparator);
       }
 
       add(consonant, clusterOutputStress);
@@ -1595,7 +1698,7 @@
         add(options.mappiqHeh.slice(1), clusterOutputStress);
       }
 
-      add(vowelOut, clusterOutputStress);
+      add(styledVowelOut, clusterOutputStress);
 
       const prefixValue = initialPrefixValue(clusters, index, consonant, vowelOut);
       const dashedPrefix = options.dashedInitialPrefixes.includes(prefixValue);
@@ -1765,8 +1868,13 @@
     }
 
     transliterateMaqafGroup(words, format = "text") {
+      const options = outputOptions(this.ruleset);
       const clusterGroups = words.map((word) => parseClusters(word));
       const combinedClusters = clusterGroups.flat();
+      const normalizedGroup = words.map((word) => stripMarks(word)).join("־");
+      const separator = options.fusedMaqafWords.includes(normalizedGroup)
+        ? ""
+        : options.maqafSeparator;
       assignStress(combinedClusters);
       const wordFormat =
         format === "stressMarks" && shouldShowStressMarksForClusters(combinedClusters, null)
@@ -1775,12 +1883,12 @@
 
       return words
         .map((word, index) => this.transliterateWord(word, clusterGroups[index], true, wordFormat))
-        .join("-");
+        .join(separator);
     }
 
     transliterateToken(token, format = "text") {
       if (token.type === "maqaf") {
-        return "-";
+        return outputOptions(this.ruleset).maqafSeparator;
       }
 
       if (token.type === "psik") {
@@ -1850,9 +1958,9 @@
       }
       applyMissingMetegKamatzSheva(wordClusters, word, this.ruleset);
       applyForcedKamatzGadol(wordClusters, word, this.ruleset);
-      classifyShevas(wordClusters);
+      classifyShevas(wordClusters, this.ruleset);
       classifyVowels(wordClusters, this.ruleset);
-      classifyShevas(wordClusters);
+      classifyShevas(wordClusters, this.ruleset);
       if (this.ruleset.exceptions.silentInitialPrefixSheva?.[cleaned]) {
         forceSilentInitialPrefixSheva(wordClusters);
       }

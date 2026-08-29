@@ -687,7 +687,7 @@ Vowel-vowel separators are style-specific:
 | Style | Separator |
 |---|---|
 | Modern Sephardi | `·` |
-| Lev Shalem | `·` |
+| Lev Shalem | `'` after the closed consonant in forms such as `u-m'kayem`; `·` for the clarity pairs defined by the Lev Shalem guide |
 | Mishkan Tefilah | `-` |
 
 When an initial shuruk word begins with `וּ` followed by a consonant with silent sh'va, and the next consonant begins the next syllable, insert a consonant-boundary separator before that next consonant.
@@ -718,9 +718,9 @@ Style-specific examples:
 | בְּרֵאשִׁית | bereshit | b'reishit | b'reishit |
 | וּמֹשֶׁה | umosheh | u-mosheh | umosheh |
 | וּמְקַיֵּם | um·kayem | u-m'kayem | um-kayeim |
-| וּנְשַׁבֵּחֲךָ | un·shabeḥakha | u-n'shabeḥakha | un-shabeḥacha |
-| וַיְהִי | vayehi | vay'hi | vay'hi |
-| הָיְתָה | hayetah | hay'tah | hay'tah |
+| וּנְשַׁבֵּחֲךָ | un·shabeḥakha | u-n'shabeiḥakha | un-shabeḥacha |
+| וַיְהִי | vayehi | va-y'hi | vay'hi |
+| הָיְתָה | hayetah | haitah | hay'tah |
 | בְּעָלְמָא | be·alma | b'alma | b'alma |
 | וּלְעָלְמֵי | ul·almei | u-l'almei | ul-almei |
 | דְכָל | dekhol | d'khol | d'chol |

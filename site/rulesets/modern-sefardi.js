@@ -322,33 +322,42 @@
   const levShalem = clone(modernSefardi);
   levShalem.id = "levShalem";
   levShalem.name = "Lev Shalem";
+  levShalem.vowels.tzere = "ei";
   levShalem.vowels.vocalSheva = "'";
   levShalem.output.vowelSeparator = "·";
   levShalem.output.consonantSeparator = "'";
   levShalem.output.mappiqHeh = "h";
   levShalem.output.conjunctiveShuruk = "u-";
-  levShalem.output.dashedInitialPrefixes = ["ve", "va", "she", "ba", "la", "mi", "ha"];
+  levShalem.output.maqafSeparator = " ";
+  levShalem.output.fusedMaqafWords = ["הללו־יה"];
+  levShalem.output.tzereOnConsonantalYod = "e";
+  levShalem.output.undageshedBetHiriqPrefix = true;
+  levShalem.output.clarityConsonantPairs = ["t|h", "t|ḥ", "sh|t", "sh|kh", "kh|kh"];
+  levShalem.output.dashedInitialPrefixes = [
+    "ve", "va", "she", "ba", "be", "bi", "vi",
+    "la", "le", "li", "mi", "mei", "ha", "he", "ka", "ki"
+  ];
   levShalem.exceptions.exactWords = normalizeLookup(mapValues(exactWords, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.niqqudless = normalizeLookup(mapValues(niqqudless, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.phraseCapitalization = normalizeLookup(mapValues(phraseCapitalization, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.exactWords["שֶׁיְהֹוָה".normalize("NFD")] = "she-Adonai";
-  levShalem.exceptions.exactWords["מֵיְהֹוָה".normalize("NFD")] = "me-Adonai";
-  levShalem.exceptions.exactWords["מֵיְהוָה".normalize("NFD")] = "me-Adonai";
-  levShalem.exceptions.exactWords["וּמֵיְהֹוָה".normalize("NFD")] = "u-me-Adonai";
-  levShalem.exceptions.exactWords["וּמֵיְהוָה".normalize("NFD")] = "u-me-Adonai";
+  levShalem.exceptions.exactWords["מֵיְהֹוָה".normalize("NFD")] = "mei-Adonai";
+  levShalem.exceptions.exactWords["מֵיְהוָה".normalize("NFD")] = "mei-Adonai";
+  levShalem.exceptions.exactWords["וּמֵיְהֹוָה".normalize("NFD")] = "u-mei-Adonai";
+  levShalem.exceptions.exactWords["וּמֵיְהוָה".normalize("NFD")] = "u-mei-Adonai";
   levShalem.exceptions.exactWords["בְּעָלְמָא".normalize("NFD")] = "b'alma";
   levShalem.exceptions.exactWords["דְכָל".normalize("NFD")] = "d'khol";
-  levShalem.exceptions.exactWords["וַיְהִי".normalize("NFD")] = "vay'hi";
-  levShalem.exceptions.exactWords["הָיְתָה".normalize("NFD")] = "hay'tah";
-  levShalem.exceptions.exactWords["וּלְעָלְמֵי".normalize("NFD")] = "u-l·almei";
+  levShalem.exceptions.exactWords["וַיְהִי".normalize("NFD")] = "va-y'hi";
+  levShalem.exceptions.exactWords["הָיְתָה".normalize("NFD")] = "haitah";
+  levShalem.exceptions.exactWords["וּלְעָלְמֵי".normalize("NFD")] = "u-l'almei";
   levShalem.exceptions.exactWords["וּבְכָּל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וּבְכָל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וּבְכׇּל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וּבְכׇל".normalize("NFD")] = "u-v'khol";
-  levShalem.exceptions.exactWords["וְלא".normalize("NFD")] = "ve-lo";
-  levShalem.exceptions.exactWords["וְעָרְבָה".normalize("NFD")] = "ve-arvah";
-  levShalem.exceptions.exactWords["וְכָּל".normalize("NFD")] = "ve-khol";
-  levShalem.exceptions.exactWords["וְכָל".normalize("NFD")] = "ve-khol";
+  levShalem.exceptions.exactWords["וְלא".normalize("NFD")] = "v'lo";
+  levShalem.exceptions.exactWords["וְעָרְבָה".normalize("NFD")] = "v'arvah";
+  levShalem.exceptions.exactWords["וְכָּל".normalize("NFD")] = "v'khol";
+  levShalem.exceptions.exactWords["וְכָל".normalize("NFD")] = "v'khol";
   levShalem.exceptions.exactWords["וֵאלהֵי".normalize("NFD")] = "ve-Elohei";
   // These are lexical vav words, not the conjunction.
   levShalem.exceptions.exactWords["וְלָד".normalize("NFD")] = "v'lad";
@@ -356,8 +365,7 @@
   levShalem.exceptions.exactWords["וֶרֶד".normalize("NFD")] = "vered";
   levShalem.exceptions.exactWords["הָרָה".normalize("NFD")] = "harah";
   levShalem.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'khol";
-  // Lev Shalem prints Hallelu-yah with both the opening ha- and the yah division.
-  levShalem.exceptions.exactWords["הַלְלוּיָהּ".normalize("NFD")] = "ha-l'lu-yah";
+  levShalem.exceptions.exactWords["תְּהַלֵּל".normalize("NFD")] = "t'hallel";
   levShalem.exceptions.niqqudless["שיהוה"] = "she-Adonai";
 
   const mishkanTefilah = clone(modernSefardi);
