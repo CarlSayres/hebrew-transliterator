@@ -356,6 +356,8 @@
   levShalem.exceptions.exactWords["וֶרֶד".normalize("NFD")] = "vered";
   levShalem.exceptions.exactWords["הָרָה".normalize("NFD")] = "harah";
   levShalem.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'khol";
+  // Lev Shalem prints Hallelu-yah with both the opening ha- and the yah division.
+  levShalem.exceptions.exactWords["הַלְלוּיָהּ".normalize("NFD")] = "ha-l'lu-yah";
   levShalem.exceptions.niqqudless["שיהוה"] = "she-Adonai";
 
   const mishkanTefilah = clone(modernSefardi);
