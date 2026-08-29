@@ -152,6 +152,14 @@ node .\parser\scripts\dagesh-audit.js
 
 It classifies every MAM dagesh occurrence into shuruk, heh/mappiq, word-edge policy, internal non-begadkefat chazak, or a begadkefat kal/chazak context. It then transliterates every distinct pointed form with optional doubling both disabled and enabled in all three styles, checking the exact number of added consonant characters. Its ignored report is `parser/reports/dagesh-audit.md`. The current baseline covers 170,877 dagesh occurrences and 82,127 distinct contexts with no classification or rendering mismatches. This audit identified and now guards two earlier rendering defects: dageshed yod in `חַיָּו` must not be swallowed by the final `יו` shortcut (`Ḥayav` / doubled `Ḥayyav`), and the capitalization exception for `אַתָּה` must still allow optional doubling (`Attah`).
 
+The whole-Tanakh mater lectionis audit is rebuilt with:
+
+```powershell
+node .\parser\scripts\mater-lectionis-audit.js
+```
+
+It checks yod matres after hiriq, tzere, segol, and patah; holam-vav; shuruk; silent alef after tzere; the shared shin-dot holam convention; final `יו`; and negative controls for dageshed yod. Its ignored report is `parser/reports/mater-lectionis-audit.md`. The current baseline covers 313,214 MAM word occurrences and 61,312 unique structural checks with no mismatches. The audit also identified 34 super-plene holam-alef-vav spellings (74 occurrences), such as `שְׂמֹאול`, `לְמַלֹּאות`, and `חַטֹּאות`. In this pattern the unmarked vav belongs to the already-present holam and must not be repaired into or rendered as a second vowel.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
@@ -247,7 +255,7 @@ When a vowel-less consonant precedes shin with shin dot, the shin dot may also s
 
 When vav with holam follows a consonant with sh'va, the vav is consonantal and keeps its `v` sound.
 
-If a mostly vocalized source omits the holam mark from holam-vav, repair a plain unmarked vav as holam-vav only when the word has other vocalization and the previous letter does not have its own vowel. This covers Sefaria forms such as `אֲדון` -> `adon`, `רִאשׁון` -> `rishon`, and `גְדֻלָּתו` -> `gedulato`. Fully unvocalized words remain unchanged, and words such as `קָו` are not repaired because the previous letter already has a vowel.
+If a mostly vocalized source omits the holam mark from holam-vav, repair a plain unmarked vav as holam-vav only when the word has other vocalization and the previous letter does not have its own vowel. This covers Sefaria forms such as `אֲדון` -> `adon`, `רִאשׁון` -> `rishon`, and `גְדֻלָּתו` -> `gedulato`. Fully unvocalized words remain unchanged, and words such as `קָו` are not repaired because the previous letter already has a vowel. A super-plene sequence in which a holam is followed by silent alef and then unmarked vav is also excluded: the vav belongs to the existing holam and contributes no second vowel (`שְׂמֹאול` -> `semol`, not `semo·ol`).
 
 Some Sefaria liturgical texts omit holam marks or shin/sin dots in ways that cannot be inferred safely from the visible consonants. These are handled with targeted exceptions rather than a broad guessing rule. Examples include `גדֶל` -> `godel`, `שפָתַי` -> `sefatay`, `יַעֲקב` -> `yaakov`, and divine-name forms such as `אֲדנָי` -> `Adonai`.
 

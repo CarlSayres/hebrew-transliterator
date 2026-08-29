@@ -278,12 +278,27 @@
     );
   }
 
+  function isSuperPleneHolamAlefVav(clusters, index) {
+    const vav = clusters[index];
+    const alef = clusters[index - 1];
+    const holamCarrier = clusters[index - 2];
+    return Boolean(
+      isUnmarkedVav(vav) &&
+      alef?.base === "א" &&
+      !getVowelMark(alef) &&
+      !hasMark(alef, MARKS.SHEVA) &&
+      holamCarrier &&
+      (hasMark(holamCarrier, MARKS.HOLAM) || hasMark(holamCarrier, MARKS.HOLAM_HASER))
+    );
+  }
+
   function shouldRepairMissingHolamMalei(clusters, index) {
     const previous = clusters[index - 1];
     if (
       index === 0 ||
       !isUnmarkedVav(clusters[index]) ||
       !previous ||
+      isSuperPleneHolamAlefVav(clusters, index) ||
       !hasOtherWordVocalization(clusters, index) ||
       clusters[index - 1]?.base === "ו" ||
       clusters[index + 1]?.base === "ו" ||
@@ -989,6 +1004,10 @@
     const previous = clusters[index - 1];
     if (!previous) {
       return false;
+    }
+
+    if (isSuperPleneHolamAlefVav(clusters, index)) {
+      return true;
     }
 
     if (current.base === "י" && !getVowelMark(current) && !hasMark(current, MARKS.SHEVA)) {
@@ -1818,6 +1837,7 @@
     Transliterator,
     internals: {
       MARKS,
+      adjustedVowelOut,
       applyForcedKamatzGadol,
       applyMissingMetegKamatzSheva,
       assignStress,
@@ -1827,12 +1847,18 @@
       consonantOutput,
       followsDashedInitialPrefix,
       forceSilentInitialPrefixSheva,
+      hasShuruk,
       isDageshChazak,
+      isFinalYodVav,
+      isSuperPleneHolamAlefVav,
       outputOptions,
       parseClusters,
       repairMissingHolamMalei,
+      shouldRepairMissingHolamMalei,
+      shouldSkipMater,
       stripMarks,
-      stripTropeAndMeteg
+      stripTropeAndMeteg,
+      transliterateClusters
     }
   };
 })();
