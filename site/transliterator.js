@@ -1107,6 +1107,7 @@
     return (
       index === clusters.length - 2 &&
       clusters[index].base === "י" &&
+      !hasMark(clusters[index], MARKS.DAGESH) &&
       vav.base === "ו" &&
       !hasMark(vav, MARKS.DAGESH) &&
       !hasMark(vav, MARKS.HOLAM) &&
@@ -1758,7 +1759,7 @@
         return format === "stressMarks" ? markStress(niqqudless) : niqqudless;
       }
 
-      if (phrase) {
+      if (phrase && !this.ruleset.output?.doubleDageshChazak) {
         return format === "stressMarks" ? markStress(phrase) : phrase;
       }
 
@@ -1822,7 +1823,12 @@
       assignStress,
       classifyShevas,
       classifyVowels,
+      clusterLookupKey,
+      consonantOutput,
+      followsDashedInitialPrefix,
       forceSilentInitialPrefixSheva,
+      isDageshChazak,
+      outputOptions,
       parseClusters,
       repairMissingHolamMalei,
       stripMarks,

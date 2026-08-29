@@ -68,6 +68,8 @@ const cases = [
   ["הַרְרֵי", "Harerei"],
   ["אַתְּ", "At"],
   ["לָךְ", "Lakh"],
+  ["חַיָּו", "Ḥayav"],
+  ["בְחַיָּו", "Veḥayav"],
   ["נָתְנוּ", "Natnu"],
   ["וְיָדְעוּ", "Veyad·u"],
   ["שָׁמְעוּ", "Sham·u"],
@@ -436,6 +438,8 @@ const styleCases = [
     "levShalem",
     [
       ["בְּרֵאשִׁית", "B'reshit"],
+      ["חַיָּו", "Ḥayav"],
+      ["בְחַיָּו", "V'ḥayav"],
       ["הַלְלוּ", "Ha-l'lu"],
       ["הַֽלְלוּ", "Ha-l'lu"],
       ["הַלְלוּהוּ", "Ha-l'luhu"],
@@ -635,6 +639,9 @@ doubledDageshRuleset.output.doubleDageshChazak = true;
 const doubledDageshTransliterator = new context.window.HebrewTransliterator.Transliterator(doubledDageshRuleset);
 const doubledDageshCases = [
   ["בָּא", "Ba"],
+  ["אַתָּה", "Attah"],
+  ["חַיָּו", "Ḥayyav"],
+  ["בְחַיָּו", "Veḥayyav"],
   ["הַמֶּלֶךְ", "Hammelekh"],
   ["שַׁבַּת", "Shabbat"],
   ["שֶׁלָּהּ", "Shellaḣ"],
@@ -663,6 +670,9 @@ const levShalemDoubledDageshTransliterator = new context.window.HebrewTransliter
   levShalemDoubledDageshRuleset
 );
 const levShalemDoubledDageshCases = [
+  ["אַתָּה", "Attah"],
+  ["חַיָּו", "Ḥayyav"],
+  ["בְחַיָּו", "V'ḥayyav"],
   ["הַמֶּלֶךְ", "Ha-melekh"],
   ["שַׁבַּת", "Shabbat"],
   ["הַשַּׁבָּת", "Ha-shabbat"],

@@ -144,6 +144,14 @@ node .\parser\scripts\syllable-boundary-audit.js
 
 It scans the complete MAM source used by Sefaria and verifies three structural families in every output style: vowel hiatus at a silent guttural, a closed syllable followed by a vowel-bearing guttural, and a closed syllable followed by silent alef or ayin plus shuruk. The audit substitutes unique internal markers for vowel and consonant separators so that a prefix hyphen, vowel separator, and consonant separator can be distinguished. Its ignored report is `parser/reports/syllable-boundary-audit.md`. The current baseline covers 313,214 word occurrences and 15,088 stress-sensitive boundary records with no missing required separators.
 
+The whole-Tanakh dagesh audit is rebuilt with:
+
+```powershell
+node .\parser\scripts\dagesh-audit.js
+```
+
+It classifies every MAM dagesh occurrence into shuruk, heh/mappiq, word-edge policy, internal non-begadkefat chazak, or a begadkefat kal/chazak context. It then transliterates every distinct pointed form with optional doubling both disabled and enabled in all three styles, checking the exact number of added consonant characters. Its ignored report is `parser/reports/dagesh-audit.md`. The current baseline covers 170,877 dagesh occurrences and 82,127 distinct contexts with no classification or rendering mismatches. This audit identified and now guards two earlier rendering defects: dageshed yod in `חַיָּו` must not be swallowed by the final `יו` shortcut (`Ḥayav` / doubled `Ḥayyav`), and the capitalization exception for `אַתָּה` must still allow optional doubling (`Attah`).
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
