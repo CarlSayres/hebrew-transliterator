@@ -245,6 +245,7 @@ The app treats a dagesh as dagesh chazak only when it can reasonably identify a 
 - A begadkefat dagesh after a silent sh'va is dagesh kal, not chazak.
 - A begadkefat dagesh after an initial non-article proclitic boundary (`ו`, `ב`, `כ`, `ל`, or `ש`) is treated as dagesh kal.
 - A dagesh after the definite article, including contracted `בַ`, `כַ`, or `לַ`, may be chazak.
+- An initial shin suppresses doubling across a prefix boundary only when it is the actual `שֶׁ־` prefix. A lexical shin with another vowel does not create a prefix boundary; thus the bet doubles in `שַׁבַּת` -> `shabbat`.
 
 | Hebrew | Output |
 |---|---|

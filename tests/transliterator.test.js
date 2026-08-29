@@ -522,6 +522,8 @@ const doubledDageshTransliterator = new context.window.HebrewTransliterator.Tran
 const doubledDageshCases = [
   ["בָּא", "Ba"],
   ["הַמֶּלֶךְ", "Hammelekh"],
+  ["שַׁבַּת", "Shabbat"],
+  ["שֶׁבָּא", "Sheba"],
   ["וָדָּֽעַת", "Vada·at"],
   ["וַיֹּאמֶר", "Vayyomer"],
   ["בַּיּוֹם", "Bayyom"],
@@ -547,6 +549,9 @@ const levShalemDoubledDageshTransliterator = new context.window.HebrewTransliter
 );
 const levShalemDoubledDageshCases = [
   ["הַמֶּלֶךְ", "Ha-melekh"],
+  ["שַׁבַּת", "Shabbat"],
+  ["הַשַּׁבָּת", "Ha-shabbat"],
+  ["שֶׁבָּא", "She-ba"],
   ["בַּבְּרָכָה", "Ba-b'rakhah"],
   ["לַבְּרָכָה", "La-b'rakhah"]
 ];

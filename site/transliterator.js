@@ -478,7 +478,12 @@
       return false;
     }
 
-    return ["ו", "ב", "כ", "ל", "ש"].includes(clusters[0]?.base);
+    const prefix = clusters[0];
+    if (prefix?.base === "ש") {
+      return hasMark(prefix, MARKS.SHIN_DOT) && hasSegol(prefix);
+    }
+
+    return ["ו", "ב", "כ", "ל"].includes(prefix?.base);
   }
 
   function isDageshChazak(clusters, index) {
