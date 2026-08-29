@@ -149,6 +149,15 @@
     return clusters;
   }
 
+  function clusterLookupKey(clusters, startIndex = 0) {
+    return clusters.slice(startIndex).map((cluster) => (
+      cluster.base + cluster.marks.filter((mark) => {
+        const code = mark.codePointAt(0);
+        return code > 0x05af && mark !== MARKS.METEG;
+      }).join("")
+    )).join("").normalize("NFD");
+  }
+
   function hasMark(cluster, mark) {
     return cluster.marks.includes(mark);
   }
@@ -1115,14 +1124,24 @@
   }
 
   function followsDashedInitialPrefix(clusters, index, options) {
+    const prefixIndex = index - 1;
     return Boolean(
-      index === 1 &&
-        options.dashedInitialPrefixes?.includes(initialPrefixValue(clusters, 0))
+      prefixIndex >= 0 &&
+        options.dashedInitialPrefixes?.includes(initialPrefixValue(clusters, prefixIndex))
     );
   }
 
   function initialPrefixValue(clusters, index, consonant, vowelOut) {
-    if (index !== 0 || clusters.length <= 1) {
+    if (index < 0 || index >= clusters.length - 1) {
+      return "";
+    }
+
+    const stackedSheAfterShevaPrefix = Boolean(
+      index === 1 &&
+      ["ב", "כ", "ל", "ו"].includes(clusters[0]?.base) &&
+      clusters[0]?.sheva === "vocal"
+    );
+    if (index !== 0 && !stackedSheAfterShevaPrefix) {
       return "";
     }
 
@@ -1160,6 +1179,10 @@
       cluster.vowelName === "segol"
     ) {
       return "she";
+    }
+
+    if (index !== 0) {
+      return "";
     }
 
     if (
@@ -1711,10 +1734,12 @@
         return word;
       }
 
-      if (wordClusters[0]) {
-        wordClusters[0].lexicalInitialShe = Boolean(
-          this.ruleset.exceptions.lexicalInitialShe?.[cleaned]
-        );
+      for (let index = 0; index < wordClusters.length; index += 1) {
+        if (wordClusters[index].base === "ש") {
+          wordClusters[index].lexicalInitialShe = Boolean(
+            this.ruleset.exceptions.lexicalInitialShe?.[clusterLookupKey(wordClusters, index)]
+          );
+        }
       }
 
       repairMissingHolamMalei(wordClusters);

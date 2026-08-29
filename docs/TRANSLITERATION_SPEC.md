@@ -117,7 +117,7 @@ The broader `שֶׁ…` audit used by prefix formatting and dagesh doubling is r
 node .\parser\scripts\build-initial-she-prefix-list.js
 ```
 
-Unlike the earlier sh'va-specific audit, it examines every pointed initial `שֶׁ` form regardless of the following consonant's vowel or dagesh. It writes `site/rulesets/lexical-initial-she.js` plus three ignored review reports under `parser/reports/`. Only forms with lexical evidence and no MorphHB prefix evidence enter the application lookup. Prefix forms retain `she-` behavior; ambiguous spellings remain outside the lookup for manual review.
+Unlike the earlier sh'va-specific audit, it examines every pointed initial `שֶׁ` form regardless of the following consonant's vowel or dagesh. It writes `site/rulesets/lexical-initial-she.js` plus three ignored review reports under `parser/reports/`. Only forms with lexical evidence and no MorphHB prefix evidence enter the application lookup. Prefix forms retain `she-` behavior; conflicting spellings remain outside the lookup until manual review. The reviewed `שֶׁלִּי` is treated as prefix-derived (`שֶׁ־` + `לִי`).
 
 ## 4. Consonants
 
@@ -397,6 +397,8 @@ After conjunctive shuruk (`וּ`), the following sh'va is treated as sh'va nach 
 If the letter after initial conjunctive shuruk is an attached prefix letter (`ב`, `כ`, `ל`, or `מ`) with sh'va before another consonant, that sh'va remains silent even when the shuruk has meteg, as in `וּֽבְשׇׁכְבְּךָ֖` -> `uv·shokhbekha`.
 
 In Lev Shalem, initial conjunctive shuruk is output as `u-`.
+
+Lev Shalem also recognizes `שֶׁ־` as a second prefix after an attached vocal-sh'va prefix. Thus `בְשֶׁלִּי` becomes `v'she-li` (or `בְּשֶׁלִּי` -> `b'she-li`). The lexical lookup prevents false division in forms such as `בְשֶׁלֶג` -> `v'sheleg`. The distinct biblical word `בַּשֶּׁלִי` has contracted `בַּ־` followed by lexical `שֶׁלִי` and remains `ba-sheli`.
 
 Lev Shalem's `mi-` separator is used only for a genuine attached `מִ־` prefix. It is not inserted in lexical words whose following sh'va is silent, such as `מִלְחָמָה` -> `milḥamah` and `מִלְחָמוֹת` -> `milḥamot`.
 
