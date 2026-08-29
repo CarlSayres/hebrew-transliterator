@@ -136,6 +136,14 @@ node .\parser\scripts\mam-kamatz-sheva-two-axis-audit.js
 
 MAM encodes every kamatz katan explicitly as Unicode U+05C7. The audit therefore treats ordinary U+05B8 as positive evidence for kamatz gadol, but evaluates the adjacent sh'va independently. It writes the ignored review report `parser/reports/mam-kamatz-sheva-two-axis.md` and the public exact-form lookup `site/rulesets/mam-forced-kamatz-gadol.js`. Each lookup entry identifies only the kamatz positions that MAM establishes as gadol; it does not force the following sh'va to become vocal. This distinction is required for forms such as `נָתְנוּ` (`Natnu`), `שָׁמְעוּ` (`Sham·u`), and `אָמְרוּ` (`Amru`). A silent sh'va followed by an unvocalized alef or ayin and shuruk retains a visible syllable boundary: for example, Lev Shalem renders `וְיָדְעוּ` as `Ve-yad'u`.
 
+The whole-Tanakh syllable-boundary audit is rebuilt with:
+
+```powershell
+node .\parser\scripts\syllable-boundary-audit.js
+```
+
+It scans the complete MAM source used by Sefaria and verifies three structural families in every output style: vowel hiatus at a silent guttural, a closed syllable followed by a vowel-bearing guttural, and a closed syllable followed by silent alef or ayin plus shuruk. The audit substitutes unique internal markers for vowel and consonant separators so that a prefix hyphen, vowel separator, and consonant separator can be distinguished. Its ignored report is `parser/reports/syllable-boundary-audit.md`. The current baseline covers 313,214 word occurrences and 15,088 stress-sensitive boundary records with no missing required separators.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
