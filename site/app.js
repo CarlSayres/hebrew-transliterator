@@ -36,6 +36,7 @@
   const feedbackStatus = document.getElementById("feedbackStatus");
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
   const sefariaCatalog = window.HebrewTransliteratorSefariaCatalog;
+  const lineNumberTools = window.HebrewTransliteratorLineNumbers;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({
     timeoutMs: 9000,
     slowRequestMs: 5000,
@@ -189,6 +190,7 @@
   let sefariaProblemDuringRequest = false;
   let lastSefariaSearch = "";
   let lastImportedSefariaContext = null;
+  let lineNumberStart = 1;
 
   const liturgySearchAliases = [
     {
@@ -245,17 +247,11 @@
   }
 
   function addLineNumbers(text) {
-    return String(text || "")
-      .split("\n")
-      .map((line, index) => `${index + 1}. ${line}`)
-      .join("\n");
+    return lineNumberTools.add(text, lineNumberStart);
   }
 
   function removeLineNumbers(text) {
-    return String(text || "")
-      .split("\n")
-      .map((line, index) => line.replace(new RegExp(`^\\s*${index + 1}\\.\\s?`), ""))
-      .join("\n");
+    return lineNumberTools.remove(text, lineNumberStart);
   }
 
   function supportsLineNumbers(result) {
@@ -266,6 +262,7 @@
 
   function setLineNumberAvailability(result) {
     const supported = supportsLineNumbers(result);
+    lineNumberStart = supported ? lineNumberTools.startFromRef(result?.ref) : 1;
     lineNumbersToggle.checked = supported;
     lineNumbersControl.hidden = !supported;
   }
