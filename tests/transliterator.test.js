@@ -46,11 +46,6 @@ const cases = [
   ["או", "O"],
   ["הוד", "Hod"],
   ["אור", "Or"],
-  ["שְׂמֹאול", "Semol"],
-  ["חַטֹּאות", "Ḥatot"],
-  ["לְמַלֹּאות", "Lemalot"],
-  ["מְרֹאון", "Meron"],
-  ["צֹאונֵנוּ", "Tzonenu"],
   ["בְּרֵאשִׁית", "Bereshit"],
   ["וְדָוִד", "Vedavid"],
   ["וּמֹשֶׁה", "Umosheh"],
@@ -356,6 +351,50 @@ const cases = [
 ];
 
 const failures = [];
+
+const superPleneHolamCases = [
+  ["וּשְׂמֹאול", "Us·mol"],
+  ["חַטֹּאות", "Ḥatot"],
+  ["לְמַלֹּאות", "Lemalot"],
+  ["מִשְּׂמֹאול", "Misemol"],
+  ["שְׂמֹאול", "Semol"],
+  ["חַטֹּאותָם", "Ḥatotam"],
+  ["מֵחַטֹּאות", "Meḥatot"],
+  ["מֵהַשְּׂמֹאול", "Mehasemol"],
+  ["הַשְּׂמֹאול", "Hasemol"],
+  ["בְּחַטֹּאות", "Beḥatot"],
+  ["חַטֹּאותֶיךָ", "Ḥatotekha"],
+  ["וְחַטֹּאותֵיכֶם", "Veḥatoteikhem"],
+  ["שְׂמֹאולֵךְ", "Semolekh"],
+  ["פֹּרֹאות", "Porot"],
+  ["חַטֹּאותֵיכֶם", "Ḥatoteikhem"],
+  ["שְׂמֹאולֶךָ", "Semolekha"],
+  ["רִבֹּאות", "Ribot"],
+  ["וְחַטֹּאות", "Veḥatot"],
+  ["בְּחַטֹּאותֶיךָ", "Beḥatotekha"],
+  ["וְחַטֹּאותֵינוּ", "Veḥatoteinu"],
+  ["כִמְלֹאות", "Khimlot"],
+  ["יֹאושִׁיָּהוּ", "Yoshiyahu"],
+  ["בִּמְלֹאות", "Bimlot"],
+  ["מְרֹאון", "Meron"],
+  ["וּלְחַטֹּאותֵיכֶם", "Ul·ḥatoteikhem"],
+  ["נֹאוד", "Nod"],
+  ["שְׂמֹאולָם", "Semolam"],
+  ["קְרֹאות", "Kerot"],
+  ["וּבְחַטֹּאות", "Uv·ḥatot"],
+  ["בְּחַטֹּאותֵינוּ", "Beḥatoteinu"],
+  ["בִּשְׂמֹאולָהּ", "Bismolaḣ"],
+  ["חַטֹּאותָי", "Ḥatotay"],
+  ["צֹאונֵנוּ", "Tzonenu"],
+  ["שְׂמֹאולָהּ", "Semolaḣ"]
+];
+
+for (const [input, expected] of superPleneHolamCases) {
+  const actual = transliterator.transliterate(input);
+  if (actual !== expected) {
+    failures.push({ feature: "superPleneHolam", input, expected, actual });
+  }
+}
 
 const mamBaselineRuleset = JSON.parse(JSON.stringify(context.window.HebrewRulesets.modernSefardi));
 mamBaselineRuleset.exceptions.forcedKamatzGadol = {};
@@ -824,4 +863,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length} transliteration tests passed.`);
+console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length} transliteration tests passed.`);

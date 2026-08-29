@@ -158,7 +158,7 @@ The whole-Tanakh mater lectionis audit is rebuilt with:
 node .\parser\scripts\mater-lectionis-audit.js
 ```
 
-It checks yod matres after hiriq, tzere, segol, and patah; holam-vav; shuruk; silent alef after tzere; the shared shin-dot holam convention; final `יו`; and negative controls for dageshed yod. Its ignored report is `parser/reports/mater-lectionis-audit.md`. The current baseline covers 313,214 MAM word occurrences and 61,312 unique structural checks with no mismatches. The audit also identified 34 super-plene holam-alef-vav spellings (74 occurrences), such as `שְׂמֹאול`, `לְמַלֹּאות`, and `חַטֹּאות`. In this pattern the unmarked vav belongs to the already-present holam and must not be repaired into or rendered as a second vowel.
+It checks yod matres after hiriq, tzere, segol, and patah; holam-vav; shuruk; silent alef after tzere; the shared shin-dot holam convention; final `יו`; and negative controls for dageshed yod. Its ignored report is `parser/reports/mater-lectionis-audit.md`. The current baseline covers 313,214 MAM word occurrences and 61,312 unique structural checks with no mismatches. The audit also identified 34 super-plene holam-alef-vav spellings (74 occurrences), such as `שְׂמֹאול`, `לְמַלֹּאות`, and `חַטֹּאות`. In this pattern the unmarked vav belongs to the already-present holam and must not be repaired into or rendered as a second vowel. All 34 forms and the pronunciation evidence for their ten lexical groups are documented in [SUPER_PLENE_HOLAM_CROSS_CHECK.md](SUPER_PLENE_HOLAM_CROSS_CHECK.md).
 
 ## 4. Consonants
 
