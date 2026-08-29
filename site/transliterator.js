@@ -78,7 +78,7 @@
   }
 
   function stripTropeAndMeteg(value) {
-    return normalize(value).replace(/[\u0591-\u05af\u05bd]/g, "");
+    return normalize(value).replace(/[\u0591-\u05af\u05bd\u05bf]/g, "");
   }
 
   function knownUnvocalizedException(word, ruleset) {
@@ -677,14 +677,18 @@
         const finalKha = cluster.base === "ך" && index === clusters.length - 1;
         const katan =
           vowel === MARKS.QAMATS_QATAN ||
-          isKolFamilyKamatz(clusters, index) ||
           (
-            !finalKha &&
-            !hasStressMarker(cluster) &&
             !cluster.forceKamatzGadol &&
-            !isKamatzBeforeSilentAlef(clusters, index) &&
-            !isKamatzBeforeYodSheva(clusters, index) &&
-            isClosedUnstressedSyllable(clusters, index)
+            (
+              isKolFamilyKamatz(clusters, index) ||
+              (
+                !finalKha &&
+                !hasStressMarker(cluster) &&
+                !isKamatzBeforeSilentAlef(clusters, index) &&
+                !isKamatzBeforeYodSheva(clusters, index) &&
+                isClosedUnstressedSyllable(clusters, index)
+              )
+            )
           );
 
         cluster.vowelName = katan ? "kamatzKatan" : "kamatzGadol";

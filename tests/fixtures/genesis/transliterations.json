@@ -1,6 +1,6 @@
 {
   "title": "Genesis transliteration snapshots",
-  "generatedAt": "2026-08-29T13:30:17.544Z",
+  "generatedAt": "2026-08-29T17:29:34.142Z",
   "sourceDownloadedAt": "2026-05-24T00:28:54.640Z",
   "rows": [
     {
@@ -7599,9 +7599,9 @@
       "verse": 32,
       "hebrew": "וַיֹּ֣אמֶר עֵשָׂ֔ו הִנֵּ֛ה אָנֹכִ֥י הוֹלֵ֖ךְ לָמ֑וּת וְלָמָּה־זֶּ֥ה לִ֖י בְּכֹרָֽה׃",
       "outputs": {
-        "modernSefardi": "Vayomer esav hineh anokhi holekh lamut velomah-zeh li bekhorah:",
-        "levShalem": "Vayomer esav hineh anokhi holekh lamut ve-lomah-zeh li b'khorah:",
-        "mishkanTefilah": "Vayomer eisav hineih anochi holeich lamut v'lomah-zeh li b'chorah:"
+        "modernSefardi": "Vayomer esav hineh anokhi holekh lamut velamah-zeh li bekhorah:",
+        "levShalem": "Vayomer esav hineh anokhi holekh lamut ve-lamah-zeh li b'khorah:",
+        "mishkanTefilah": "Vayomer eisav hineih anochi holeich lamut v'lamah-zeh li b'chorah:"
       }
     },
     {
@@ -15893,9 +15893,9 @@
       "verse": 24,
       "hebrew": "וְהָיָה֙ בַּתְּבוּאֹ֔ת וּנְתַתֶּ֥ם חֲמִישִׁ֖ית לְפַרְעֹ֑ה וְאַרְבַּ֣ע הַיָּדֹ֡ת יִהְיֶ֣ה לָכֶם֩ לְזֶ֨רַע הַשָּׂדֶ֧ה וּֽלְאׇכְלְכֶ֛ם וְלַאֲשֶׁ֥ר בְּבָתֵּיכֶ֖ם וְלֶאֱכֹ֥ל לְטַפְּכֶֽם׃",
       "outputs": {
-        "modernSefardi": "Vehayah batevu·ot un·tatem ḥamishit lefar·oh ve·arba hayadot yihyeh lakhem lezera hasadeh ul·okhlekhem vela·asher bevoteikhem vele·ekhol letapekhem:",
-        "levShalem": "Ve-hayah ba-t'vu·ot u-n'tatem ḥamishit l'far·oh ve-arba ha-yadot yihyeh lakhem l'zera ha-sadeh u-l·okhl'khem ve-la·asher b'voteikhem ve-le·ekhol l'tap'khem:",
-        "mishkanTefilah": "V'hayah bat'vu-ot un-tatem chamishit l'far-oh v'arba hayadot yihyeh lachem l'zera hasadeh ul-ochl'chem v'la-asher b'voteichem v'le-echol l'tap'chem:"
+        "modernSefardi": "Vehayah batevu·ot un·tatem ḥamishit lefar·oh ve·arba hayadot yihyeh lakhem lezera hasadeh ul·okhlekhem vela·asher bevateikhem vele·ekhol letapekhem:",
+        "levShalem": "Ve-hayah ba-t'vu·ot u-n'tatem ḥamishit l'far·oh ve-arba ha-yadot yihyeh lakhem l'zera ha-sadeh u-l·okhl'khem ve-la·asher b'vateikhem ve-le·ekhol l'tap'khem:",
+        "mishkanTefilah": "V'hayah bat'vu-ot un-tatem chamishit l'far-oh v'arba hayadot yihyeh lachem l'zera hasadeh ul-ochl'chem v'la-asher b'vateichem v'le-echol l'tap'chem:"
       }
     },
     {

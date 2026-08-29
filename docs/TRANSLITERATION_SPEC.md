@@ -176,6 +176,14 @@ node .\parser\scripts\stress-trope-audit.js
 
 It scans all trope and meteg occurrences, independently maps marks to syllables, verifies that every analyzable word receives exactly one primary stress, checks words with a single non-positional accent, and checks explicit helpers for positional accents. Its ignored report is `parser/reports/stress-trope-audit.md`. The current baseline covers 313,214 MAM word occurrences, including 240,066 words with trope, 37,757 with meteg, 205,782 single reliable-accent checks, and 5,268 explicit positional-helper checks, with no mismatches. The audit generalized the earlier repeated-pashta rule to segol, pashta, telisha gedola, telisha qetana, dehi, and zinor. This corrects stress in forms such as `וַיֹּ֩אמֶר֩`, `מִצְרַ֒יִם֒`, and `הַמֶּ֒לֶךְ֒`, and preserves the explicitly helped antepenultimate stress in `הָאֹ֙הֱלָה֙`.
 
+The whole-Tanakh vowel audit is rebuilt with:
+
+```powershell
+node .\parser\scripts\vowel-audit.js
+```
+
+It independently classifies every encoded vowel point, inventories shuruk and vocal sh'va, and checks adjusted vowel-letter output in all three application styles. Unique diagnostic markers also verify whole-word emission without depending on any style's spelling. Its ignored report is `parser/reports/vowel-audit.md`. The current baseline covers 313,214 MAM word occurrences, 627,672 pointed vowels, 37,110 shuruk occurrences, 85,791 vocal sh'vas, and 111,324 distinct whole-word renderings with no classification, omission, duplication, or output mismatches. Because MAM explicitly distinguishes U+05B8 ordinary kamatz from U+05C7 kamatz katan, the audit also expands `site/rulesets/mam-forced-kamatz-gadol.js` whenever the general closed-syllable heuristic contradicts a MAM ordinary kamatz. The lookup now contains 478 exact forms and corrects examples such as `אָדָם`, `רָשָׁע`, `לָמָּה`, `בָּתִּים`, `חָכָם`, and `זָהָב` without weakening the general kamatz-katan rules.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
