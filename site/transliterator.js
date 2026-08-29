@@ -806,6 +806,22 @@
     });
   }
 
+  function applyForcedKamatzGadol(clusters, word, ruleset) {
+    const cleaned = stripTropeAndMeteg(word);
+    const indices = ruleset.exceptions.forcedKamatzGadol?.[cleaned];
+    if (!Array.isArray(indices)) {
+      return;
+    }
+
+    for (const index of indices) {
+      const cluster = clusters[index];
+      if (cluster && hasMark(cluster, MARKS.QAMATS)) {
+        cluster.forceKamatzGadol = true;
+        cluster.forceKamatzGadolFromMam = true;
+      }
+    }
+  }
+
   function forceSilentInitialPrefixSheva(clusters) {
     if (
       clusters[0] &&
@@ -880,7 +896,7 @@
     }
 
     if (
-      previous.vowelName === "kamatzGadol" ||
+      (previous.vowelName === "kamatzGadol" && !previous.forceKamatzGadolFromMam) ||
       previous.vowelName === "tzere" ||
       previous.vowelName === "holam"
     ) {
@@ -1755,6 +1771,7 @@
         applyStressOverrideToClusters(wordClusters, stressOverride);
       }
       applyMissingMetegKamatzSheva(wordClusters, word, this.ruleset);
+      applyForcedKamatzGadol(wordClusters, word, this.ruleset);
       classifyShevas(wordClusters);
       classifyVowels(wordClusters, this.ruleset);
       classifyShevas(wordClusters);
@@ -1784,6 +1801,7 @@
     Transliterator,
     internals: {
       MARKS,
+      applyForcedKamatzGadol,
       applyMissingMetegKamatzSheva,
       assignStress,
       classifyShevas,

@@ -146,7 +146,15 @@ function loadTransliterator() {
   const context = { window: {} };
   vm.createContext(context);
 
-  for (const file of ["site/rulesets/modern-sefardi.js", "site/transliterator.js"]) {
+  for (const file of [
+    "site/rulesets/morphhb-silent-initial-mem-sheva.js",
+    "site/rulesets/wikidata-silent-initial-mem-sheva.js",
+    "site/rulesets/other-prefix-silent-initial-sheva.js",
+    "site/rulesets/lexical-initial-she.js",
+    "site/rulesets/mam-forced-kamatz-gadol.js",
+    "site/rulesets/modern-sefardi.js",
+    "site/transliterator.js"
+  ]) {
     const source = fs.readFileSync(path.join(ROOT, file), "utf8");
     vm.runInContext(source, context, { filename: file });
   }

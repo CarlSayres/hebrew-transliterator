@@ -14,6 +14,7 @@ for (const file of [
   "site/rulesets/wikidata-silent-initial-mem-sheva.js",
   "site/rulesets/other-prefix-silent-initial-sheva.js",
   "site/rulesets/lexical-initial-she.js",
+  "site/rulesets/mam-forced-kamatz-gadol.js",
   "site/rulesets/modern-sefardi.js",
   "site/transliterator.js"
 ]) {
@@ -61,7 +62,19 @@ const cases = [
   ["וַיְכֻלּ֛וּ", "Vayekhulu"],
   ["שֶׁנִּצְטַוּוּ", "Shenitztavu"],
   ["הַלְלוּ", "Halelu"],
+  ["הַֽלְלוּ", "Halelu"],
+  ["הַלְלוּהוּ", "Haleluhu"],
+  ["הַלְלִי", "Haleli"],
   ["הַרְרֵי", "Harerei"],
+  ["אַתְּ", "At"],
+  ["לָךְ", "Lakh"],
+  ["נָתְנוּ", "Natnu"],
+  ["שָׁמְעוּ", "Shamu"],
+  ["וְיָדְעוּ", "Veyadu"],
+  ["אָמְרוּ", "Amru"],
+  ["עָבְרוּ", "Avru"],
+  ["תְּרָצְּחוּ", "Teratzeḥu"],
+  ["חָכְמָה", "Ḥokhmah"],
   ["נָתָתָּ", "Natata"],
   ["מִשְׁנֶ֔ה", "Mishneh"],
   ["מִשְׂגָּב", "Misgav"],
@@ -336,6 +349,64 @@ const cases = [
 
 const failures = [];
 
+const mamBaselineRuleset = JSON.parse(JSON.stringify(context.window.HebrewRulesets.modernSefardi));
+mamBaselineRuleset.exceptions.forcedKamatzGadol = {};
+let mamForcedKamatzGadolIntegrityCount = 0;
+
+function analyzeKamatzSheva(word, ruleset, applyMamEvidence) {
+  const internals = context.window.HebrewTransliterator.internals;
+  const clusters = internals.parseClusters(word);
+  internals.repairMissingHolamMalei(clusters);
+  internals.assignStress(clusters);
+  internals.applyMissingMetegKamatzSheva(clusters, word, ruleset);
+  if (applyMamEvidence) internals.applyForcedKamatzGadol(clusters, word, ruleset);
+  internals.classifyShevas(clusters);
+  internals.classifyVowels(clusters, ruleset);
+  internals.classifyShevas(clusters);
+  return clusters;
+}
+
+for (const [word, indices] of Object.entries(context.window.HebrewMamForcedKamatzGadol)) {
+  const baseline = analyzeKamatzSheva(word, mamBaselineRuleset, false);
+  const corrected = analyzeKamatzSheva(word, context.window.HebrewRulesets.modernSefardi, true);
+  for (const index of indices) {
+    mamForcedKamatzGadolIntegrityCount += 1;
+    const actual = {
+      vowelName: corrected[index]?.vowelName,
+      followingSheva: corrected[index + 1]?.sheva
+    };
+    const expected = {
+      vowelName: "kamatzGadol",
+      followingSheva: baseline[index + 1]?.sheva
+    };
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      failures.push({ feature: "mamForcedKamatzGadol", word, index, expected, actual });
+    }
+  }
+}
+
+const lexicalInitialSheCases = [
+  ["שֶׁלֶג", true],
+  ["שֶׁכֶם", true],
+  ["שֶׁלִּי", false],
+  ["שֶׁלָּהּ", false],
+  ["שֶׁלָּהֶם", false],
+  ["שֶׁלָּהֶן", false],
+  ["שֶׁלּוֹ", false],
+  ["שֶׁלְּךָ", false],
+  ["שֶׁלָּךְ", false],
+  ["שֶׁלָּכֶם", false],
+  ["שֶׁלָּכֶן", false],
+  ["שֶׁלָּנוּ", false]
+];
+
+for (const [word, expected] of lexicalInitialSheCases) {
+  const actual = Boolean(context.window.HebrewLexicalInitialShe[word.normalize("NFD")]);
+  if (actual !== expected) {
+    failures.push({ feature: "lexicalInitialShe", word, expected, actual });
+  }
+}
+
 for (const [input, expected] of cases) {
   const actual = transliterator.transliterate(input);
   if (actual !== expected) {
@@ -365,6 +436,9 @@ const styleCases = [
     [
       ["בְּרֵאשִׁית", "B'reshit"],
       ["הַלְלוּ", "Ha-l'lu"],
+      ["הַֽלְלוּ", "Ha-l'lu"],
+      ["הַלְלוּהוּ", "Ha-l'luhu"],
+      ["הַלְלִי", "Ha-l'li"],
       ["הַרְרֵי", "Ha-r'rei"],
       ["וּמֹשֶׁה", "U-mosheh"],
       ["וּבְמֹפְתִֽים", "U-v'mof'tim"],
@@ -442,9 +516,30 @@ const styleCases = [
       ["בַּשֶּׁ֑לִי", "Ba-sheli"],
       ["בְשֶׁלֶג", "V'sheleg"],
       ["שֶׁלָּהּ", "She-lah"],
+      ["שֶׁלָּהֶם", "She-lahem"],
+      ["שֶׁלָּהֶן", "She-lahen"],
+      ["שֶׁלּוֹ", "She-lo"],
+      ["שֶׁלְּךָ", "She-l'kha"],
+      ["שֶׁלָּךְ", "She-lakh"],
+      ["שֶׁלָּכֶם", "She-lakhem"],
+      ["שֶׁלָּכֶן", "She-lakhen"],
       ["שֶׁלָּנוּ", "She-lanu"],
       ["מִשֶּׁלָּנוּ", "Mi-she-lanu"],
-      ["מִשֶׁתִּדּוֹר", "Mi-she-tidor"]
+      ["מִשֶׁתִּדּוֹר", "Mi-she-tidor"],
+      ["וְשֶׁבָּא", "Ve-she-ba"],
+      ["כְּשֶׁבָּא", "K'she-ba"],
+      ["לְשֶׁבָּא", "L'she-ba"],
+      ["בְשֶׁבָּא", "V'she-ba"],
+      ["וְשֶׁלֶג", "Ve-sheleg"],
+      ["כְּשֶׁלֶג", "K'sheleg"]
+      ,
+      ["נָתְנוּ", "Natnu"],
+      ["שָׁמְעוּ", "Shamu"],
+      ["וְיָדְעוּ", "Ve-yadu"],
+      ["אָמְרוּ", "Amru"],
+      ["עָבְרוּ", "Avru"],
+      ["תְּרָצְּחוּ", "T'ratz'ḥu"],
+      ["חָכְמָה", "Ḥokhmah"]
       ,
       ["שָׁרְצוּ", "Shar'tzu"]
       ,
@@ -712,4 +807,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length} transliteration tests passed.`);
+console.log(`${cases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length} transliteration tests passed.`);

@@ -181,6 +181,7 @@
   Object.assign(silentInitialPrefixSheva, window.HebrewWikidataSilentInitialMemSheva || {});
   Object.assign(silentInitialPrefixSheva, window.HebrewOtherPrefixSilentInitialSheva || {});
   const lexicalInitialShe = normalizeLookup(window.HebrewLexicalInitialShe || {});
+  const forcedKamatzGadol = normalizeLookup(window.HebrewMamForcedKamatzGadol || {});
 
   // Some Sefaria Tanakh forms omit the meteg that would explicitly mark a
   // kamatz as gadol before a vocal sh'va. Keep this list narrow so genuine
@@ -310,6 +311,7 @@
       niqqudless,
       silentInitialPrefixSheva,
       lexicalInitialShe,
+      forcedKamatzGadol,
       missingMetegKamatzSheva,
       phraseCapitalization,
       stressOverrides,

@@ -128,6 +128,14 @@ node .\parser\scripts\all-sheva-audit.js
 
 The ignored reports `parser/reports/stacked-prefix-audit.md` and `parser/reports/all-sheva-audit.md` catalog MorphHB prefix chains and every sh'va classification respectively. They distinguish automatically provable rule violations from structural exceptions such as final sh'va and qamatz-yod.
 
+The MAM kamatz–sh'va audit is rebuilt with:
+
+```powershell
+node .\parser\scripts\mam-kamatz-sheva-two-axis-audit.js
+```
+
+MAM encodes every kamatz katan explicitly as Unicode U+05C7. The audit therefore treats ordinary U+05B8 as positive evidence for kamatz gadol, but evaluates the adjacent sh'va independently. It writes the ignored review report `parser/reports/mam-kamatz-sheva-two-axis.md` and the public exact-form lookup `site/rulesets/mam-forced-kamatz-gadol.js`. Each lookup entry identifies only the kamatz positions that MAM establishes as gadol; it does not force the following sh'va to become vocal. This distinction is required for forms such as `נָתְנוּ` (`Natnu`), `שָׁמְעוּ` (`Shamu`), and `אָמְרוּ` (`Amru`).
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
