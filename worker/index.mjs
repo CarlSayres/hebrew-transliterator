@@ -3,6 +3,8 @@ const SUPPORTED_CLIENT_SCHEMA_VERSIONS = new Set([1, 2]);
 
 const ALLOWED_EVENTS = new Set([
   "transliteration_copied",
+  "hebrew_copied",
+  "speech_started",
   "sefaria_search_succeeded",
   "sefaria_search_zero_results",
   "sefaria_search_failed",

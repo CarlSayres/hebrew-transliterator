@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Hebrew Transliterator</title>
     <link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="styles.css?v=12">
     <script src="/cdn-cgi/zaraz/i.js" referrerpolicy="origin"></script>
   </head>
   <body>
@@ -125,10 +125,15 @@
           <section class="panel" aria-labelledby="hebrewInputLabel">
             <div class="output-header">
               <label id="hebrewInputLabel" class="panel-label" for="hebrewInput">Vocalized Hebrew</label>
-              <label id="lineNumbersControl" class="verbose-results-toggle line-numbers-toggle" for="lineNumbersToggle" hidden>
-                <input id="lineNumbersToggle" type="checkbox">
-                <span>Line numbers</span>
-              </label>
+              <div class="output-actions">
+                <label id="lineNumbersControl" class="verbose-results-toggle line-numbers-toggle" for="lineNumbersToggle" hidden>
+                  <input id="lineNumbersToggle" type="checkbox">
+                  <span>Line numbers</span>
+                </label>
+                <button id="hebrewCopyButton" class="icon-button" type="button" aria-label="Copy vocalized Hebrew" title="Copy Hebrew">
+                  <span aria-hidden="true">Copy</span>
+                </button>
+              </div>
             </div>
             <div class="hebrew-editor">
               <div id="hebrewHighlightMirror" class="hebrew-highlight-mirror" aria-hidden="true"></div>
@@ -144,9 +149,14 @@
           <section class="panel" aria-labelledby="outputLabel">
             <div class="output-header">
               <span id="outputLabel" class="panel-label">Transliteration</span>
-              <button id="copyButton" class="icon-button" type="button" aria-label="Copy transliteration" title="Copy">
-                <span aria-hidden="true">Copy</span>
-              </button>
+              <div class="output-actions">
+                <button id="speechButton" class="icon-button" type="button" aria-label="Read transliteration aloud" title="Read the selected transliteration, or all text if nothing is selected">
+                  <span aria-hidden="true">Read</span>
+                </button>
+                <button id="copyButton" class="icon-button" type="button" aria-label="Copy transliteration" title="Copy transliteration">
+                  <span aria-hidden="true">Copy</span>
+                </button>
+              </div>
             </div>
             <output id="transliterationOutput" class="output" aria-live="polite" tabindex="0"></output>
             <div id="transliterationNotice" class="output-notice" role="status" aria-live="polite"></div>
@@ -209,6 +219,7 @@
     <script src="sefaria-client.js?v=8"></script>
     <script src="line-numbers.js?v=1"></script>
     <script src="selection-alignment.js?v=1"></script>
-    <script src="app.js?v=22"></script>
+    <script src="speech.js?v=1"></script>
+    <script src="app.js?v=23"></script>
   </body>
 </html>

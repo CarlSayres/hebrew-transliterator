@@ -804,6 +804,21 @@ textarea:focus {
   border-bottom: 1px solid var(--line);
 }
 
+.output-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 12px;
+}
+
+.output-actions .icon-button {
+  margin-right: 0;
+}
+
+.output-actions .line-numbers-toggle {
+  margin: 0;
+}
+
 .secondary-button,
 .icon-button {
   border: 1px solid var(--accent);
@@ -1004,6 +1019,11 @@ textarea:focus {
   margin-right: 12px;
   padding: 7px 10px;
   font-size: 0.82rem;
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .secondary-button:hover,

@@ -10,7 +10,9 @@
   const chetOverride = document.getElementById("chetOverride");
   const khafOverride = document.getElementById("khafOverride");
   const sampleButton = document.getElementById("sampleButton");
+  const hebrewCopyButton = document.getElementById("hebrewCopyButton");
   const copyButton = document.getElementById("copyButton");
+  const speechButton = document.getElementById("speechButton");
   const sefariaQuery = document.getElementById("sefariaQuery");
   const sefariaImportButton = document.getElementById("sefariaImportButton");
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
@@ -39,6 +41,7 @@
   const sefariaCatalog = window.HebrewTransliteratorSefariaCatalog;
   const lineNumberTools = window.HebrewTransliteratorLineNumbers;
   const selectionAlignmentTools = window.HebrewTransliteratorSelectionAlignment;
+  const speechTools = window.HebrewTransliteratorSpeech;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({
     timeoutMs: 9000,
     slowRequestMs: 5000,
@@ -52,6 +55,8 @@
 
   const usageEventNames = new Set([
     "transliteration_copied",
+    "hebrew_copied",
+    "speech_started",
     "sefaria_search_succeeded",
     "sefaria_search_zero_results",
     "sefaria_search_failed",
@@ -195,6 +200,9 @@
   let lineNumberStart = 1;
   let currentAlignment = { text: "", segments: [] };
   let outputAlignmentSpans = [];
+  let speechSession = 0;
+  let speechSpeaking = false;
+  let speechSelectionSnapshot = "";
 
   const liturgySearchAliases = [
     {
@@ -242,6 +250,9 @@
   const sampleText = "בָּרוּךְ שֶׁאָמַר וְהָיָה הָעוֹלָם, בָּרוּךְ הוּא, בָּרוּךְ עֹשֶׂה בְרֵאשִׁית, בָּרוּךְ אוֹמֵר וְעוֹשֶׂה, בָּרוּךְ גּוֹזֵר וּמְקַיֵּם, בָּרוּךְ מְרַחֵם עַל הָאָֽרֶץ, בָּרוּךְ מְרַחֵם עַל הַבְּרִיּוֹת, בָּרוּךְ מְשַׁלֵּם שָׂכָר טוֹב לִירֵאָיו, בָּרוּךְ חַי לָעַד וְקַיָּם לָנֶֽצַח, בָּרוּךְ פּוֹדֶה וּמַצִּיל, בָּרוּךְ שְׁמוֹ: בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵֽינוּ מֶֽלֶךְ הָעוֹלָם הָאֵל הָאָב הָרַחֲמָן הַמְּהֻלָּל בְּפִי עַמּוֹ מְשֻׁבָּח וּמְפֹאָר בִּלְשׁוֹן חֲסִידָיו וַעֲבָדָיו וּבְשִׁירֵי דָוִד עַבְדֶּֽךָ, נְהַלֶּלְךָ יְהֹוָה אֱלֹהֵֽינוּ בִּשְׁבָחוֹת וּבִזְמִירוֹת נְגַדֶּלְךָ וּנְשַׁבֵּחֲךָ וּנְפָאֶרְךָ וְנַזְכִּיר שִׁמְךָ וְנַמְלִיכְךָ מַלְכֵּֽנוּ אֱלֹהֵֽינוּ, יָחִיד, חֵי הָעוֹלָמִים, מֶֽלֶךְ מְשֻׁבָּח וּמְפֹאָר עֲדֵי עַד שְׁמוֹ הַגָּדוֹל: בָּרוּךְ אַתָּה יְהֹוָה מֶֽלֶךְ מְהֻלָּל בַּתִּשְׁבָּחוֹת:";
 
   function updateOutput() {
+    if (speechSpeaking) {
+      stopSpeech();
+    }
     currentAlignment = transliterator.transliterateWithAlignment(
       input.value,
       stressMarkToggle?.checked ? "stressMarks" : "text"
@@ -365,6 +376,113 @@
     }
 
     clearLinkedHighlights();
+  }
+
+  function selectedOutputText() {
+    const offsets = outputSelectionOffsets(window.getSelection());
+    return offsets && offsets.start !== offsets.end
+      ? speechTools.selectedOrAll(currentAlignment.text, offsets)
+      : "";
+  }
+
+  function setSpeechButtonState(speaking) {
+    speechSpeaking = speaking;
+    speechButton.textContent = speaking ? "Stop" : "Read";
+    speechButton.setAttribute(
+      "aria-label",
+      speaking ? "Stop reading transliteration" : "Read transliteration aloud"
+    );
+    speechButton.title = speaking
+      ? "Stop reading"
+      : "Read the selected transliteration, or all text if nothing is selected";
+  }
+
+  function stopSpeech() {
+    speechSession += 1;
+    setSpeechButtonState(false);
+    window.speechSynthesis?.cancel();
+  }
+
+  function startSpeech(text) {
+    const utteranceTexts = speechTools.chunks(text);
+    if (!utteranceTexts.length) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    speechSession += 1;
+    const session = speechSession;
+    setSpeechButtonState(true);
+
+    utteranceTexts.forEach((utteranceText, index) => {
+      const utterance = new SpeechSynthesisUtterance(utteranceText);
+      utterance.lang = "en-US";
+      if (index === utteranceTexts.length - 1) {
+        utterance.addEventListener("end", () => {
+          if (speechSession === session) {
+            setSpeechButtonState(false);
+          }
+        });
+      }
+      utterance.addEventListener("error", (event) => {
+        if (
+          speechSession === session &&
+          !["canceled", "interrupted"].includes(event.error)
+        ) {
+          stopSpeech();
+        }
+      });
+      window.speechSynthesis.speak(utterance);
+    });
+    recordUsageEvent("speech_started");
+  }
+
+  function fallbackCopy(text) {
+    const temporary = document.createElement("textarea");
+    temporary.value = text;
+    temporary.setAttribute("readonly", "");
+    temporary.style.position = "fixed";
+    temporary.style.left = "-10000px";
+    document.body.append(temporary);
+    temporary.select();
+    const copied = document.execCommand("copy");
+    temporary.remove();
+    if (!copied) {
+      throw new Error("Copy was not available.");
+    }
+  }
+
+  async function copyText(text, button, restoredLabel, usageEvent) {
+    if (!text) {
+      return;
+    }
+    let copied = false;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        fallbackCopy(text);
+      }
+      copied = true;
+    } catch {
+      try {
+        fallbackCopy(text);
+        copied = true;
+      } catch {
+        button.textContent = "Copy failed";
+        window.setTimeout(() => {
+          button.textContent = restoredLabel;
+        }, 1600);
+      }
+    }
+    if (!copied) {
+      return;
+    }
+    button.textContent = "Copied";
+    window.setTimeout(() => {
+      button.textContent = restoredLabel;
+    }, 1200);
+    recordUsageEvent(usageEvent);
   }
 
   function addLineNumbers(text) {
@@ -1529,6 +1647,28 @@
     new ResizeObserver(syncHebrewHighlightScroll).observe(input);
   }
 
+  hebrewCopyButton.addEventListener("click", () => {
+    void copyText(input.value, hebrewCopyButton, "Copy", "hebrew_copied");
+  });
+
+  speechButton.addEventListener("pointerdown", () => {
+    speechSelectionSnapshot = selectedOutputText();
+  });
+  speechButton.addEventListener("click", () => {
+    if (speechSpeaking) {
+      stopSpeech();
+      return;
+    }
+    const text = speechSelectionSnapshot || selectedOutputText() || currentAlignment.text;
+    speechSelectionSnapshot = "";
+    startSpeech(text);
+  });
+
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    speechButton.disabled = true;
+    speechButton.title = "Read aloud is not supported by this browser.";
+  }
+
   styleSelect.addEventListener("change", () => {
     setStyle(styleSelect.value);
     savePreferences();
@@ -1637,26 +1777,14 @@
     }
   });
 
-  copyButton.addEventListener("click", async () => {
-    const text = output.textContent;
-    if (!text) {
-      return;
-    }
+  copyButton.addEventListener("click", () => {
+    void copyText(output.textContent, copyButton, "Copy", "transliteration_copied");
+  });
 
-    try {
-      await navigator.clipboard.writeText(text);
-      copyButton.textContent = "Copied";
-      window.setTimeout(() => {
-        copyButton.textContent = "Copy";
-      }, 1200);
-    } catch {
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(output);
-      selection.removeAllRanges();
-      selection.addRange(range);
+  window.addEventListener("pagehide", () => {
+    if (speechSpeaking) {
+      stopSpeech();
     }
-    recordUsageEvent("transliteration_copied");
   });
 
   populateStyleSelect();

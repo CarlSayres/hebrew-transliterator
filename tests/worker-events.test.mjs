@@ -99,6 +99,15 @@ test("accepts cached version 1 clients while storing the geographic schema", asy
   assert.deepEqual(points[0].doubles, [1, 0, 0]);
 });
 
+test("accepts aggregate copy and speech action events without text", async () => {
+  for (const event of ["hebrew_copied", "speech_started"]) {
+    const { env, points } = makeEnv();
+    const result = await handleEvent(eventRequest({ schemaVersion: 2, event }), env);
+    assert.equal(result.status, 204);
+    assert.deepEqual(points[0].indexes, [event]);
+  }
+});
+
 test("rejects extra fields so text and queries cannot enter analytics", async () => {
   const { env, points } = makeEnv();
   const result = await handleEvent(
