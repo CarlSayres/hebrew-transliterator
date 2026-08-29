@@ -168,6 +168,14 @@ node .\parser\scripts\guttural-audit.js
 
 It independently classifies final furtive patach, final mappiq heh, plain final heh, and vocalized or unvocalized alef and ayin. Marker-based renderings verify the order of furtive patach and the visibility of mappiq in all three output styles. Its ignored report is `parser/reports/guttural-audit.md`. The current baseline covers 313,214 MAM word occurrences, 270,978 guttural occurrences, and 45,669 distinct guttural contexts with no classification or rendering mismatches. The audit identified an isolated interrogative `הַ` that had been mistaken for furtive patach; final heh now requires mappiq to receive furtive-patach treatment.
 
+The whole-Tanakh stress and trope audit is rebuilt with:
+
+```powershell
+node .\parser\scripts\stress-trope-audit.js
+```
+
+It scans all trope and meteg occurrences, independently maps marks to syllables, verifies that every analyzable word receives exactly one primary stress, checks words with a single non-positional accent, and checks explicit helpers for positional accents. Its ignored report is `parser/reports/stress-trope-audit.md`. The current baseline covers 313,214 MAM word occurrences, including 240,066 words with trope, 37,757 with meteg, 205,782 single reliable-accent checks, and 5,268 explicit positional-helper checks, with no mismatches. The audit generalized the earlier repeated-pashta rule to segol, pashta, telisha gedola, telisha qetana, dehi, and zinor. This corrects stress in forms such as `וַיֹּ֩אמֶר֩`, `מִצְרַ֒יִם֒`, and `הַמֶּ֒לֶךְ֒`, and preserves the explicitly helped antepenultimate stress in `הָאֹ֙הֱלָה֙`.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
@@ -466,7 +474,7 @@ not be assumed to be authoritative in every source.
 
 They should be retained during analysis because they can identify stressed syllables.
 
-All Hebrew words are treated as having either ultimate or penultimate primary stress.
+Hebrew words default to ultimate stress and ordinarily use either ultimate or penultimate primary stress. An explicit helper for a positional accent may establish rarer earlier stress, as in `הָאֹ֙הֱלָה֙`.
 
 Stress detection rules:
 
@@ -477,7 +485,7 @@ Stress detection rules:
 5. A secondary stress mark does not replace the word's primary ultimate or penultimate stress.
 6. If only secondary stress is explicitly marked, assume ultimate primary stress unless a penultimate stress marker is also present.
 7. If a stress mark appears on a sheva-only letter, attach the mark to the following syllable for analysis. If that forwarded mark lands on the penultimate syllable, it does not by itself override default ultimate stress.
-8. If a word has repeated Pashta marks, use the visually rightmost Pashta as the stress-bearing one.
+8. Segol, pashta, telisha gedola, telisha qetana, dehi, and zinor may be positional: the sign at the required word edge is the cantillation sign, while a repeated sign inside the word is its stress helper. When such a helper is present, use it as the primary-stress location and do not interpret the edge sign as a second stress.
 
 Stress affects:
 

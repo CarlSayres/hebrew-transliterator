@@ -21,7 +21,6 @@
     QUBUTS: "\u05bb",
     DAGESH: "\u05bc",
     METEG: "\u05bd",
-    PASHTA: "\u0599",
     SHIN_DOT: "\u05c1",
     SIN_DOT: "\u05c2",
     QAMATS_QATAN: "\u05c7"
@@ -53,6 +52,15 @@
     [0x0591, 0x05ae],
     [0x05bd, 0x05bd]
   ];
+
+  const POSITIONAL_TROPE_EDGES = new Map([
+    ["\u0592", "end"], // segol
+    ["\u0599", "end"], // pashta
+    ["\u05a0", "start"], // telisha gedola
+    ["\u05a9", "end"], // telisha qetana
+    ["\u05ad", "start"], // dehi
+    ["\u05ae", "end"] // zinor
+  ]);
 
   const FINAL_GUTTURALS = new Set(["ח", "ע", "ה"]);
   const BEGAD_KEFAT = new Set(["ב", "ג", "ד", "כ", "ך", "פ", "ף", "ת"]);
@@ -182,6 +190,35 @@
       const code = mark.codePointAt(0);
       return mark !== MARKS.METEG && code >= 0x0591 && code <= 0x05ae;
     }));
+  }
+
+  function positionalStressHelperIndexes(clusters) {
+    const helpers = new Map();
+    for (const [mark, edge] of POSITIONAL_TROPE_EDGES) {
+      const indexes = clusters
+        .map((cluster, index) => hasMark(cluster, mark) ? index : -1)
+        .filter((index) => index >= 0);
+      const edgeIndex = edge === "start" ? 0 : clusters.length - 1;
+      if (indexes.length > 1 && indexes.includes(edgeIndex)) {
+        helpers.set(mark, new Set(indexes.filter((index) => index !== edgeIndex)));
+      }
+    }
+    return helpers;
+  }
+
+  function hasEffectiveStressMarker(cluster, index, positionalHelpers) {
+    return cluster.marks.some((mark) => {
+      const code = mark.codePointAt(0);
+      if (!TROPE_RANGES.some(([start, end]) => code >= start && code <= end)) {
+        return false;
+      }
+      const helperIndexes = positionalHelpers.get(mark);
+      return !helperIndexes || helperIndexes.has(index);
+    });
+  }
+
+  function isPositionalStressHelper(cluster, index, positionalHelpers) {
+    return cluster.marks.some((mark) => positionalHelpers.get(mark)?.has(index));
   }
 
   function isDisplayedStress(cluster) {
@@ -399,23 +436,21 @@
     const lastSyllable = nuclei.length - 1;
     const penultimateSyllable = nuclei.length - 2;
     const markedSyllables = new Set();
+    const helperSyllables = new Set();
     const syllableMarks = new Map();
-    const pashtaIndexes = clusters
-      .map((cluster, index) => hasMark(cluster, MARKS.PASHTA) ? index : -1)
-      .filter((index) => index >= 0);
-    const rightmostPashtaIndex = pashtaIndexes.length ? pashtaIndexes[0] : -1;
+    const positionalHelpers = positionalStressHelperIndexes(clusters);
 
     clusters.forEach((cluster, index) => {
-      if (!hasStressMarker(cluster)) {
-        return;
-      }
-      if (hasMark(cluster, MARKS.PASHTA) && index !== rightmostPashtaIndex) {
+      if (!hasEffectiveStressMarker(cluster, index, positionalHelpers)) {
         return;
       }
 
       const syllableIndex = stressMarkerSyllableIndex(clusters, nuclei, index);
       if (syllableIndex >= 0) {
         markedSyllables.add(syllableIndex);
+        if (isPositionalStressHelper(cluster, index, positionalHelpers)) {
+          helperSyllables.add(syllableIndex);
+        }
         const marks = syllableMarks.get(syllableIndex) || { meteg: false, trope: false, forwardedSheva: false };
         marks.meteg = marks.meteg || hasMeteg(cluster);
         marks.trope = marks.trope || hasDisplayTropeMarker(cluster);
@@ -425,7 +460,9 @@
     });
 
     let primarySyllable = lastSyllable;
-    if (syllableMarks.get(lastSyllable)?.trope) {
+    if (helperSyllables.size === 1) {
+      primarySyllable = [...helperSyllables][0];
+    } else if (syllableMarks.get(lastSyllable)?.trope) {
       primarySyllable = lastSyllable;
     } else if (
       penultimateSyllable >= 0 &&
