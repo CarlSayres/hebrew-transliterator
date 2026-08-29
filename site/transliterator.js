@@ -1128,6 +1128,20 @@
     );
   }
 
+  function startsShurukAfterSilentGutturalAndClosedConsonant(clusters, index, output) {
+    const guttural = clusters[index - 1];
+    const closedConsonant = clusters[index - 2];
+    return Boolean(
+      guttural &&
+        ["א", "ע"].includes(guttural.base) &&
+        !getVowelMark(guttural) &&
+        !hasMark(guttural, MARKS.SHEVA) &&
+        closedConsonant?.sheva === "silent" &&
+        output.length > 0 &&
+        !OUTPUT_VOWEL_RE.test(output)
+    );
+  }
+
   function outputOptions(ruleset) {
     return {
       vowelSeparator: "·",
@@ -1477,7 +1491,9 @@
           return;
         }
 
-        if (
+        if (startsShurukAfterSilentGutturalAndClosedConsonant(clusters, index, output)) {
+          add(options.consonantSeparator);
+        } else if (
           clusters[index - 1] &&
           consonantOutput(clusters[index - 1], ruleset) === "" &&
           OUTPUT_VOWEL_RE.test(output) &&
