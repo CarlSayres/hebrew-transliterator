@@ -60,6 +60,8 @@ const cases = [
   ["וַיְהִי", "Vayehi"],
   ["וַיְכֻלּ֛וּ", "Vayekhulu"],
   ["שֶׁנִּצְטַוּוּ", "Shenitztavu"],
+  ["הַלְלוּ", "Halelu"],
+  ["הַרְרֵי", "Harerei"],
   ["נָתָתָּ", "Natata"],
   ["מִשְׁנֶ֔ה", "Mishneh"],
   ["מִשְׂגָּב", "Misgav"],
@@ -362,6 +364,8 @@ const styleCases = [
     "levShalem",
     [
       ["בְּרֵאשִׁית", "B'reshit"],
+      ["הַלְלוּ", "Ha-l'lu"],
+      ["הַרְרֵי", "Ha-r'rei"],
       ["וּמֹשֶׁה", "U-mosheh"],
       ["וּבְמֹפְתִֽים", "U-v'mof'tim"],
       ["וָבֶטַח", "Va-vetaḥ"],
@@ -436,7 +440,11 @@ const styleCases = [
       ["בְשֶׁלִּי", "V'she-li"],
       ["בְּשֶׁלִּי", "B'she-li"],
       ["בַּשֶּׁ֑לִי", "Ba-sheli"],
-      ["בְשֶׁלֶג", "V'sheleg"]
+      ["בְשֶׁלֶג", "V'sheleg"],
+      ["שֶׁלָּהּ", "She-lah"],
+      ["שֶׁלָּנוּ", "She-lanu"],
+      ["מִשֶּׁלָּנוּ", "Mi-she-lanu"],
+      ["מִשֶׁתִּדּוֹר", "Mi-she-tidor"]
       ,
       ["שָׁרְצוּ", "Shar'tzu"]
       ,
@@ -561,7 +569,7 @@ const levShalemDoubledDageshCases = [
   ["הַמֶּלֶךְ", "Ha-melekh"],
   ["שַׁבַּת", "Shabbat"],
   ["הַשַּׁבָּת", "Ha-shabbat"],
-  ["שֶׁלָּהּ", "Shellah"],
+  ["שֶׁלָּהּ", "She-lah"],
   ["שֶׁבָּא", "She-ba"],
   ["בַּבְּרָכָה", "Ba-b'rakhah"],
   ["לַבְּרָכָה", "La-b'rakhah"]

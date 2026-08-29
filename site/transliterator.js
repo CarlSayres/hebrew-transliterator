@@ -810,7 +810,8 @@
     if (
       clusters[0] &&
       hasMark(clusters[1], MARKS.SHEVA) &&
-      !hasMark(clusters[1], MARKS.DAGESH)
+      !hasMark(clusters[1], MARKS.DAGESH) &&
+      clusters[2]?.base !== clusters[1].base
     ) {
       clusters[1].sheva = "silent";
     }
@@ -1136,12 +1137,16 @@
       return "";
     }
 
-    const stackedSheAfterShevaPrefix = Boolean(
+    const previousIsVocalShevaPrefix = Boolean(
       index === 1 &&
       ["ב", "כ", "ל", "ו"].includes(clusters[0]?.base) &&
       clusters[0]?.sheva === "vocal"
     );
-    if (index !== 0 && !stackedSheAfterShevaPrefix) {
+    const stackedSheAfterMiPrefix = Boolean(
+      index === 1 &&
+      initialPrefixValue(clusters, 0) === "mi"
+    );
+    if (index !== 0 && !previousIsVocalShevaPrefix && !stackedSheAfterMiPrefix) {
       return "";
     }
 
@@ -1779,8 +1784,13 @@
     Transliterator,
     internals: {
       MARKS,
+      applyMissingMetegKamatzSheva,
       assignStress,
+      classifyShevas,
+      classifyVowels,
+      forceSilentInitialPrefixSheva,
       parseClusters,
+      repairMissingHolamMalei,
       stripMarks,
       stripTropeAndMeteg
     }

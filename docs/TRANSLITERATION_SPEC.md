@@ -117,7 +117,16 @@ The broader `שֶׁ…` audit used by prefix formatting and dagesh doubling is r
 node .\parser\scripts\build-initial-she-prefix-list.js
 ```
 
-Unlike the earlier sh'va-specific audit, it examines every pointed initial `שֶׁ` form regardless of the following consonant's vowel or dagesh. It writes `site/rulesets/lexical-initial-she.js` plus three ignored review reports under `parser/reports/`. Only forms with lexical evidence and no MorphHB prefix evidence enter the application lookup. Prefix forms retain `she-` behavior; conflicting spellings remain outside the lookup until manual review. The reviewed `שֶׁלִּי` is treated as prefix-derived (`שֶׁ־` + `לִי`).
+Unlike the earlier sh'va-specific audit, it examines every pointed initial `שֶׁ` form regardless of the following consonant's vowel or dagesh. It writes `site/rulesets/lexical-initial-she.js` plus three ignored review reports under `parser/reports/`. Only forms with lexical evidence and no MorphHB prefix evidence enter the application lookup. Prefix forms retain `she-` behavior; conflicting spellings remain outside the lookup until manual review. Reviewed possessive forms such as `שֶׁלִּי`, `שֶׁלָּהּ`, and `שֶׁלָּנוּ` are treated as prefix-derived (`שֶׁ־` + `ל` + suffix), rather than as lexical initial-shin exceptions.
+
+Whole-Tanakh audits for stacked prefixes and all sh'vas are rebuilt with:
+
+```powershell
+node .\parser\scripts\stacked-prefix-audit.js
+node .\parser\scripts\all-sheva-audit.js
+```
+
+The ignored reports `parser/reports/stacked-prefix-audit.md` and `parser/reports/all-sheva-audit.md` catalog MorphHB prefix chains and every sh'va classification respectively. They distinguish automatically provable rule violations from structural exceptions such as final sh'va and qamatz-yod.
 
 ## 4. Consonants
 
@@ -376,7 +385,7 @@ The five governing sh'va-na rules are:
 4. **Dagesh:** Sh'va under a letter containing dagesh is always na.
 5. **Identical letters (ha-domot):** When two identical letters are adjacent and the first carries sh'va, that sh'va is na, as in *hininei*.
 
-Representative outputs are `תְּנוּ` -> `tenu` (first letter), `יִשְׁמְרוּ` -> `yishmeru` (second consecutive sh'va), `תּוֹלְדֹת` -> `toledot` (after a long vowel), `יִתְּנוּ` -> `yitenu` (dagesh), and `הִנְנִי` -> `hineni` (identical letters).
+Representative outputs are `תְּנוּ` -> `tenu` (first letter), `יִשְׁמְרוּ` -> `yishmeru` (second consecutive sh'va), `תּוֹלְדֹת` -> `toledot` (after a long vowel), `יִתְּנוּ` -> `yitenu` (dagesh), and `הִנְנִי` -> `hineni` (identical letters). The identical-letter rule also prevents lexical-prefix heuristics from silencing the first lamed in `הַלְלוּ` -> `halelu` or the first resh in `הַרְרֵי` -> `harerei`.
 
 A sh'va under the final letter of a word is silent. This boundary condition is evaluated before the five rules; for example, the final khaf in `בָּרוּךְ` remains `kh`, not `khe`, even though it follows shuruk.
 
@@ -398,7 +407,7 @@ If the letter after initial conjunctive shuruk is an attached prefix letter (`ב
 
 In Lev Shalem, initial conjunctive shuruk is output as `u-`.
 
-Lev Shalem also recognizes `שֶׁ־` as a second prefix after an attached vocal-sh'va prefix. Thus `בְשֶׁלִּי` becomes `v'she-li` (or `בְּשֶׁלִּי` -> `b'she-li`). The lexical lookup prevents false division in forms such as `בְשֶׁלֶג` -> `v'sheleg`. The distinct biblical word `בַּשֶּׁלִי` has contracted `בַּ־` followed by lexical `שֶׁלִי` and remains `ba-sheli`.
+Lev Shalem also recognizes `שֶׁ־` as a second prefix after an attached vocal-sh'va prefix or `מִ־`. Thus `בְשֶׁלִּי` becomes `v'she-li` (or `בְּשֶׁלִּי` -> `b'she-li`), while `מִשֶּׁלָּנוּ` becomes `mi-she-lanu`. The lexical lookup prevents false division in forms such as `בְשֶׁלֶג` -> `v'sheleg`. The distinct biblical word `בַּשֶּׁלִי` has contracted `בַּ־` followed by lexical `שֶׁלִי` and remains `ba-sheli`.
 
 Lev Shalem's `mi-` separator is used only for a genuine attached `מִ־` prefix. It is not inserted in lexical words whose following sh'va is silent, such as `מִלְחָמָה` -> `milḥamah` and `מִלְחָמוֹת` -> `milḥamot`.
 
