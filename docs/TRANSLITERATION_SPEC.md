@@ -471,6 +471,8 @@ The interrogative `מִי` (“who”) ends in a mater yod and is a complete wor
 
 The long vowels that make a following sh'va vocal are kamatz gadol, tzeire, shuruk, holam (both haser and malei), and hiriq gadol. Conjunctive shuruk is excluded from this long-vowel sh'va rule. Examples include `תּוֹלְדֹת` -> `toledot`, `כְּכוֹכְבֵי` -> `kekhokhevei`, `וּבְמֹפְתִים` -> `uv·mofetim`, and `עוֹדְךָ` -> `odekha`. In `וּלְעֽוֹלְמֵי`, the second lamed follows `וֹ`, so the lamed sh'va is likewise vocal: `ul·olemei`.
 
+An opening `הַ` is not formatted as the definite-article prefix in the attested lexical `הלל` and `הרר` families when it is followed by an undageshed vocal sh'va on the first repeated root letter. Thus the heh belongs to the verb in `הַ֥לְלוּ` and `הַלְל֥וּהוּ`, and Lev Shalem renders them `Hal'lu` and `Hal'luhu`, not `Ha-l'lu` and `Ha-l'luhu`; `הַרְרֵי` is handled similarly. This is deliberately narrower than a general no-dagesh rule: dagesh may be omitted before a consonant with sh'va, and genuine article forms such as `הַמְמַלְּטִים` retain `Ha-`.
+
 ## 9. Stress Marks, Meteg, and Trope
 
 Meteg and trope marks do not appear in output.

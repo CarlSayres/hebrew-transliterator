@@ -1319,6 +1319,16 @@
 
     if (cluster.base === "ה") {
       if (cluster.vowelName === "patach") {
+        const following = clusters[index + 1];
+        const lexicalRepeatedRoot = Boolean(
+          following?.sheva === "vocal" &&
+          !hasMark(following, MARKS.DAGESH) &&
+          clusters[index + 2]?.base === following.base &&
+          ["ל", "ר"].includes(following.base)
+        );
+        if (lexicalRepeatedRoot) {
+          return "";
+        }
         return "ha";
       }
 
