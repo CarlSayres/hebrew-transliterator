@@ -1117,7 +1117,8 @@
     return (
       index === clusters.length - 1 &&
       FINAL_GUTTURALS.has(cluster.base) &&
-      hasMark(cluster, MARKS.PATAH)
+      hasMark(cluster, MARKS.PATAH) &&
+      (cluster.base !== "ה" || hasMark(cluster, MARKS.DAGESH))
     );
   }
 
@@ -1850,6 +1851,7 @@
       hasShuruk,
       isDageshChazak,
       isFinalYodVav,
+      isFurtivePatach,
       isSuperPleneHolamAlefVav,
       outputOptions,
       parseClusters,

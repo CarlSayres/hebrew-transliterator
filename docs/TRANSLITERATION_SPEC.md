@@ -160,6 +160,14 @@ node .\parser\scripts\mater-lectionis-audit.js
 
 It checks yod matres after hiriq, tzere, segol, and patah; holam-vav; shuruk; silent alef after tzere; the shared shin-dot holam convention; final `יו`; and negative controls for dageshed yod. Its ignored report is `parser/reports/mater-lectionis-audit.md`. The current baseline covers 313,214 MAM word occurrences and 61,312 unique structural checks with no mismatches. The audit also identified 34 super-plene holam-alef-vav spellings (74 occurrences), such as `שְׂמֹאול`, `לְמַלֹּאות`, and `חַטֹּאות`. In this pattern the unmarked vav belongs to the already-present holam and must not be repaired into or rendered as a second vowel. All 34 forms and the pronunciation evidence for their ten lexical groups are documented in [SUPER_PLENE_HOLAM_CROSS_CHECK.md](SUPER_PLENE_HOLAM_CROSS_CHECK.md).
 
+The whole-Tanakh guttural audit is rebuilt with:
+
+```powershell
+node .\parser\scripts\guttural-audit.js
+```
+
+It independently classifies final furtive patach, final mappiq heh, plain final heh, and vocalized or unvocalized alef and ayin. Marker-based renderings verify the order of furtive patach and the visibility of mappiq in all three output styles. Its ignored report is `parser/reports/guttural-audit.md`. The current baseline covers 313,214 MAM word occurrences, 270,978 guttural occurrences, and 45,669 distinct guttural contexts with no classification or rendering mismatches. The audit identified an isolated interrogative `הַ` that had been mistaken for furtive patach; final heh now requires mappiq to receive furtive-patach treatment.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
@@ -486,7 +494,7 @@ When optional stress marks are enabled, ordinary final stress is not marked. Sin
 
 ## 10. Furtive Patach
 
-A patach under final ח, ע, or הּ is pronounced before the final consonant.
+A patach under final ח, ע, or הּ is pronounced before the final consonant. Final ה requires mappiq; an undageshed final `הַ`, such as the standalone interrogative particle, is not furtive.
 
 Examples:
 
@@ -495,6 +503,7 @@ Examples:
 | רוּחַ | ruaḥ |
 | מָשִׁיחַ | mashiaḥ |
 | נֹחַ | noaḥ |
+| גָּבֹהַּ | gavoaḣ |
 
 ## 11. Vav
 
