@@ -710,6 +710,8 @@ Style-specific examples:
 | בְּכָל֯־לְ֯בָבְ֒ךָ וּבְכָל־נַפְשְׁ֒ךָ וּבְכָל־מְאֹדֶֽךָ: | bekhol-levavekha uv·khol-nafshekha uv·khol-me·odekha: | masora circle ignored; consonant boundary marked |
 | בָּרוּךְ אַתָּה יְיָ אֱלֹהֵינוּ | Barukh Atah Adonai Eloheinu | liturgical capitalization |
 | שֶׁיְהֹוָה | she·Adonai | prefixed divine name |
+| מֵיְהֹוָה | me·Adonai | `מֵ־` before the divine name |
+| וּמֵיְהֹוָה | ume·Adonai | conjunctive `וּ־` plus `מֵ־` before the divine name |
 | לָיְלָה | lailah | exception |
 | לַֽיהֹוָ֔ה | Ladonai | exception |
 | לַיהוָֹה | Ladonai | exception; alternate pointing/mark order |

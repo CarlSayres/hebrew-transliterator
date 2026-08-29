@@ -80,6 +80,10 @@
     "אֱלֹהָיו": "Elohav",
     "אֲדֹנֵינוּ": "Adoneinu",
     "שֶׁיְהֹוָה": "she·Adonai",
+    "מֵיְהֹוָה": "me·Adonai",
+    "מֵיְהוָה": "me·Adonai",
+    "וּמֵיְהֹוָה": "ume·Adonai",
+    "וּמֵיְהוָה": "ume·Adonai",
     "יִשָּׂשכָר": "Yissakhar",
     "לָיְלָה": "lailah",
     "לַיהֹוָה": "Ladonai",
@@ -324,6 +328,10 @@
   levShalem.exceptions.niqqudless = normalizeLookup(mapValues(niqqudless, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.phraseCapitalization = normalizeLookup(mapValues(phraseCapitalization, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.exactWords["שֶׁיְהֹוָה".normalize("NFD")] = "she-Adonai";
+  levShalem.exceptions.exactWords["מֵיְהֹוָה".normalize("NFD")] = "me-Adonai";
+  levShalem.exceptions.exactWords["מֵיְהוָה".normalize("NFD")] = "me-Adonai";
+  levShalem.exceptions.exactWords["וּמֵיְהֹוָה".normalize("NFD")] = "u-me-Adonai";
+  levShalem.exceptions.exactWords["וּמֵיְהוָה".normalize("NFD")] = "u-me-Adonai";
   levShalem.exceptions.exactWords["בְּעָלְמָא".normalize("NFD")] = "b'alma";
   levShalem.exceptions.exactWords["דְכָל".normalize("NFD")] = "d'khol";
   levShalem.exceptions.exactWords["וַיְהִי".normalize("NFD")] = "vay'hi";
@@ -360,6 +368,10 @@
   mishkanTefilah.exceptions.niqqudless = normalizeLookup(mapValues(niqqudless, (value) => replaceKh(replaceModernMarks(value, "-", "ḣ"))));
   mishkanTefilah.exceptions.phraseCapitalization = normalizeLookup(mapValues(phraseCapitalization, (value) => replaceKh(replaceModernMarks(value, "-", "ḣ"))));
   mishkanTefilah.exceptions.exactWords["בְּעָלְמָא".normalize("NFD")] = "b'alma";
+  mishkanTefilah.exceptions.exactWords["מֵיְהֹוָה".normalize("NFD")] = "mei-Adonai";
+  mishkanTefilah.exceptions.exactWords["מֵיְהוָה".normalize("NFD")] = "mei-Adonai";
+  mishkanTefilah.exceptions.exactWords["וּמֵיְהֹוָה".normalize("NFD")] = "u-mei-Adonai";
+  mishkanTefilah.exceptions.exactWords["וּמֵיְהוָה".normalize("NFD")] = "u-mei-Adonai";
   mishkanTefilah.exceptions.exactWords["דְכָל".normalize("NFD")] = "d'chol";
   mishkanTefilah.exceptions.exactWords["אֱלֹהֵיכֶם".normalize("NFD")] = "Eloheichem";
   mishkanTefilah.exceptions.exactWords["אֱלֹהֵיכֶן".normalize("NFD")] = "Eloheichen";

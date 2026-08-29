@@ -303,6 +303,8 @@ const cases = [
   ["אֱלוֹהַּ", "Eloah"],
   ["אֲדֹנֵינוּ", "Adoneinu"],
   ["שֶׁיְהֹוָה", "She·Adonai"],
+  ["מֵיְהֹוָה", "Me·Adonai"],
+  ["וּמֵיְהֹוָה", "Ume·Adonai"],
   ["לָיְלָה", "Lailah"],
   ["לַֽיהֹוָ֔ה", "Ladonai"],
   ["לַיהוָֹה", "Ladonai"],
@@ -395,6 +397,9 @@ const styleCases = [
       ["רְאוּבֵ֣ן", "R'uven"],
       ["שֶׁיְהֹוָה", "She-Adonai"]
       ,
+      ["מֵיְהֹוָה", "Me-Adonai"],
+      ["וּמֵיְהֹוָה", "U-me-Adonai"]
+      ,
       ["וּמְקַיֵּם", "U-m'kayem"]
       ,
       ["וּנְשַׁבֵּחֲךָ", "U-n'shabeḥakha"],
@@ -441,6 +446,8 @@ const styleCases = [
     "mishkanTefilah",
     [
       ["וּבְמֹפְתִֽים", "Uv-mof'tim"],
+      ["מֵיְהֹוָה", "Mei-Adonai"],
+      ["וּמֵיְהֹוָה", "U-mei-Adonai"],
       ["שֶׁבְּ֒כָל", "Sheb'chol"],
       ["שֶׁכָּל", "Shekol"],
       ["חָכְמָה", "Chochmah"],
