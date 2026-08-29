@@ -20,7 +20,7 @@ The page offers selectable output styles:
 | Style | Main Differences |
 |---|---|
 | Modern Sephardi | Baseline style. Vocal sh'va is `e`; khaf is `kh`; vowel-vowel and selected consonant boundaries use `·`; mappiq heh is `ḣ`. |
-| Lev Shalem | Based on Modern Sephardi. Vocal sh'va is an apostrophe after the consonant; the conjunctive vav forms are `u-`, `ve-`, and `va-`; prefixes `she-`, `ba-`, `la-`, `mi-`, and `ha-` use a dash; mappiq heh is plain `h`; vowel-vowel boundaries use `·`; selected consonant boundaries use apostrophe. |
+| Lev Shalem | Based on the evidence-based [Lev Shalem Style Guide](LEV_SHALEM_STYLE_GUIDE.md). Tzere is `ei`; vocal sh'va uses an apostrophe; a hyphen follows genuine attached morphemes with a full vowel; hiatus and selected consonant boundaries use `·`; mappiq heh is plain `h`. |
 | Mishkan Tefilah | Based on Modern Sephardi. Khaf and chet are `ch`; tzeire is `ei`; vocal sh'va is an apostrophe after the consonant; vowel-vowel boundaries and selected consonant boundaries use `-`. |
 
 Optional modifiers:
@@ -471,7 +471,7 @@ The interrogative `מִי` (“who”) ends in a mater yod and is a complete wor
 
 The long vowels that make a following sh'va vocal are kamatz gadol, tzeire, shuruk, holam (both haser and malei), and hiriq gadol. Conjunctive shuruk is excluded from this long-vowel sh'va rule. Examples include `תּוֹלְדֹת` -> `toledot`, `כְּכוֹכְבֵי` -> `kekhokhevei`, `וּבְמֹפְתִים` -> `uv·mofetim`, and `עוֹדְךָ` -> `odekha`. In `וּלְעֽוֹלְמֵי`, the second lamed follows `וֹ`, so the lamed sh'va is likewise vocal: `ul·olemei`.
 
-Lev Shalem's printed convention treats opening `הַ` as a dashed `ha-` in the `הלל` forms even when the following lamed has no dagesh. Thus Psalm 150's `הַ֥לְלוּ` and `הַלְל֥וּהוּ` render as `Ha-l'lu` and `Ha-l'luhu`. `הַלְלוּיָהּ` additionally preserves Lev Shalem's internal division as `Ha-l'lu-yah`. This is a Lev Shalem formatting convention; Modern Sefardi continues to render the lexical forms as `Halelu`, `Haleluhu`, and `Haleluyah`.
+Lev Shalem uses a hyphen only when the opening syllable is a genuine attached morpheme. The opening heh of the `הלל` family belongs to the verb, so Psalm 150's `הַ֥לְלוּ`, `הַלְל֥וּהוּ`, and `הַלְלוּיָהּ` render as `Hal'lu`, `Hal'luhu`, and `Hal'luyah`, not as `Ha-` prefix forms. Modern Sefardi continues to render the same lexical forms as `Halelu`, `Haleluhu`, and `Haleluyah`.
 
 ## 9. Stress Marks, Meteg, and Trope
 
@@ -546,13 +546,13 @@ Examples:
 
 ## 12. Maqaf and Punctuation
 
-In Lev Shalem, the initial conjunctive vav is separated from the following word: `וּמֹשֶׁה` -> `u-mosheh`, `וְדָוִד` -> `ve-david`, and `וָבֶטַח` -> `va-vetaḥ`. Its sh'va is rendered as the conjunction vowel `e`, not as Lev Shalem's ordinary vocal-sh'va apostrophe. Lexical initial-vav words are excluded; for example, `וְלָד` remains `v'lad` and `וָו` remains `vav`.
+In Lev Shalem, a conjunctive vav with a full vowel is separated from the following form: `וּמֹשֶׁה` -> `u-mosheh`, a segol/tzere conjunction may produce `ve-`, and `וָבֶטַח` -> `va-vetaḥ`. A conjunctive `וְ־` with sh'va follows the ordinary Lev Shalem sh'va convention and renders as `v'`, as in `וְאָהַבְתָּ` -> `v'ahavta` and `וְלֹא` -> `v'lo`. Lexical initial-vav words are still excluded from prefix formatting; for example, `וְלָד` remains `v'lad` and `וָו` remains `vav`.
 
 Lev Shalem also separates the definite article when its ordinary patach has undergone compensatory lengthening to qamatz before א, ע, or ר. Thus `הָרָעָב` -> `ha-ra·av`, `הָעָם` -> `ha-am`, and `הָאָרֶץ` -> `ha-aretz`. Lexical initial-heh words are excluded from this formatting; for example, `הָרָה` remains `harah`.
 
-Maqaf always becomes an English hyphen.
+In Modern Sephardi and Mishkan Tefilah, maqaf becomes a roman hyphen. In Lev Shalem, maqaf between independent words normally becomes a space; roman hyphens are reserved for attached-morpheme boundaries.
 
-Words connected by maqaf are treated as one stress unit. Stress is assigned across the whole maqaf-connected sequence, while the output still preserves the hyphen.
+Words connected by maqaf are treated as one stress unit. Stress is assigned across the whole maqaf-connected sequence even when Lev Shalem renders the boundary as a space.
 
 Punctuation and whitespace should otherwise be preserved where possible.
 
@@ -697,7 +697,7 @@ Consonant-boundary separators are style-specific:
 | Style | Separator |
 |---|---|
 | Modern Sephardi | `·` |
-| Lev Shalem | apostrophe |
+| Lev Shalem | `·` |
 | Mishkan Tefilah | `-` |
 
 Examples:
@@ -715,21 +715,21 @@ Style-specific examples:
 
 | Hebrew | Modern Sephardi | Lev Shalem | Mishkan Tefilah |
 |---|---|---|---|
-| בְּרֵאשִׁית | bereshit | b'reshit | b'reishit |
+| בְּרֵאשִׁית | bereshit | b'reishit | b'reishit |
 | וּמֹשֶׁה | umosheh | u-mosheh | umosheh |
 | וּמְקַיֵּם | um·kayem | u-m'kayem | um-kayeim |
 | וּנְשַׁבֵּחֲךָ | un·shabeḥakha | u-n'shabeḥakha | un-shabeḥacha |
 | וַיְהִי | vayehi | vay'hi | vay'hi |
 | הָיְתָה | hayetah | hay'tah | hay'tah |
 | בְּעָלְמָא | be·alma | b'alma | b'alma |
-| וּלְעָלְמֵי | ul·almei | u-l·almei | ul-almei |
+| וּלְעָלְמֵי | ul·almei | u-l'almei | ul-almei |
 | דְכָל | dekhol | d'khol | d'chol |
 | לְבָבְךָ | levavekha | l'vav'kha | l'vav'cha |
 | הַמֶּלֶךְ | hamelekh | ha-melekh | hamelekh |
 | שֶׁבְרָכָה | sheverakhah | she-v'rakhah | shev'rachah |
 | בָּאָרֶץ | ba·aretz | ba-aretz | ba-aretz |
-| הָעָם | ha·am | ha·am | ha-am |
-| הָאֵל | ha·el | ha·el | ha-el |
+| הָעָם | ha·am | ha-am | ha-am |
+| הָאֵל | ha·el | ha-El | ha-el |
 | חָכְמָה | ḥokhmah | ḥokhmah | chochmah |
 | חֵי | ḥei | ḥei | chei |
 

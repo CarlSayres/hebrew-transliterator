@@ -65,3 +65,6 @@ node --test tests\*.test.js
 ```
 
 The deployment roadmap is maintained in `DEPLOYMENT_PLAN.md`.
+
+The evidence-based Lev Shalem conventions derived from the supplied siddur
+excerpts are documented in `docs/LEV_SHALEM_STYLE_GUIDE.md`.
