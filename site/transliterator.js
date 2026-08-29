@@ -480,7 +480,7 @@
 
     const prefix = clusters[0];
     if (prefix?.base === "ש") {
-      return hasMark(prefix, MARKS.SHIN_DOT) && hasSegol(prefix);
+      return !prefix.lexicalInitialShe && hasMark(prefix, MARKS.SHIN_DOT) && hasSegol(prefix);
     }
 
     return ["ו", "ב", "כ", "ל"].includes(prefix?.base);
@@ -1155,6 +1155,7 @@
 
     if (
       cluster.base === "ש" &&
+      !cluster.lexicalInitialShe &&
       hasMark(cluster, MARKS.SHIN_DOT) &&
       cluster.vowelName === "segol"
     ) {
@@ -1708,6 +1709,12 @@
           return inferred;
         }
         return word;
+      }
+
+      if (wordClusters[0]) {
+        wordClusters[0].lexicalInitialShe = Boolean(
+          this.ruleset.exceptions.lexicalInitialShe?.[cleaned]
+        );
       }
 
       repairMissingHolamMalei(wordClusters);

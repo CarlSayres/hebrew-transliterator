@@ -13,6 +13,7 @@ for (const file of [
   "site/rulesets/morphhb-silent-initial-mem-sheva.js",
   "site/rulesets/wikidata-silent-initial-mem-sheva.js",
   "site/rulesets/other-prefix-silent-initial-sheva.js",
+  "site/rulesets/lexical-initial-she.js",
   "site/rulesets/modern-sefardi.js",
   "site/transliterator.js"
 ]) {
@@ -427,7 +428,11 @@ const styleCases = [
       ["בַּקְבּוּק", "Bakbuk"],
       ["לַחְמָנִיָּה", "Laḥmaniyah"],
       ["הַבְדָּלָה", "Havdalah"],
-      ["שֶׁנְהָב", "Shenhav"]
+      ["שֶׁנְהָב", "Shenhav"],
+      ["שֶׁלֶג", "Sheleg"],
+      ["שֶׁכֶם", "Shekhem"],
+      ["שֶׁלִּי", "She-li"],
+      ["שֶׁבָּא", "She-ba"]
       ,
       ["שָׁרְצוּ", "Shar'tzu"]
       ,
@@ -523,6 +528,7 @@ const doubledDageshCases = [
   ["בָּא", "Ba"],
   ["הַמֶּלֶךְ", "Hammelekh"],
   ["שַׁבַּת", "Shabbat"],
+  ["שֶׁלָּהּ", "Shellaḣ"],
   ["שֶׁבָּא", "Sheba"],
   ["וָדָּֽעַת", "Vada·at"],
   ["וַיֹּאמֶר", "Vayyomer"],
@@ -551,6 +557,7 @@ const levShalemDoubledDageshCases = [
   ["הַמֶּלֶךְ", "Ha-melekh"],
   ["שַׁבַּת", "Shabbat"],
   ["הַשַּׁבָּת", "Ha-shabbat"],
+  ["שֶׁלָּהּ", "Shellah"],
   ["שֶׁבָּא", "She-ba"],
   ["בַּבְּרָכָה", "Ba-b'rakhah"],
   ["לַבְּרָכָה", "La-b'rakhah"]

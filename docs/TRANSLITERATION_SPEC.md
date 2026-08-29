@@ -111,6 +111,14 @@ The application lookup is written to `site/rulesets/other-prefix-silent-initial-
 
 A form is included as lexical only when Wikidata or MorphHB supplies lexical evidence and MorphHB supplies no genuine-prefix evidence for the same pointed spelling. Spellings with both kinds of evidence are conservatively excluded because an exact-word lookup cannot distinguish their context. As with the mem lookup, forms whose sh'va-bearing consonant has dagesh are excluded before classification.
 
+The broader `שֶׁ…` audit used by prefix formatting and dagesh doubling is rebuilt with:
+
+```powershell
+node .\parser\scripts\build-initial-she-prefix-list.js
+```
+
+Unlike the earlier sh'va-specific audit, it examines every pointed initial `שֶׁ` form regardless of the following consonant's vowel or dagesh. It writes `site/rulesets/lexical-initial-she.js` plus three ignored review reports under `parser/reports/`. Only forms with lexical evidence and no MorphHB prefix evidence enter the application lookup. Prefix forms retain `she-` behavior; ambiguous spellings remain outside the lookup for manual review.
+
 ## 4. Consonants
 
 ### 4.1 Basic Consonant Table
