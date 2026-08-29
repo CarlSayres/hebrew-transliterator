@@ -1,5 +1,6 @@
 (function () {
   const input = document.getElementById("hebrewInput");
+  const hebrewHighlightMirror = document.getElementById("hebrewHighlightMirror");
   const output = document.getElementById("transliterationOutput");
   const transliterationNotice = document.getElementById("transliterationNotice");
   const styleSelect = document.getElementById("styleSelect");
@@ -37,6 +38,7 @@
   const sefariaResultTools = window.HebrewTransliteratorSefaria;
   const sefariaCatalog = window.HebrewTransliteratorSefariaCatalog;
   const lineNumberTools = window.HebrewTransliteratorLineNumbers;
+  const selectionAlignmentTools = window.HebrewTransliteratorSelectionAlignment;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({
     timeoutMs: 9000,
     slowRequestMs: 5000,
@@ -191,6 +193,8 @@
   let lastSefariaSearch = "";
   let lastImportedSefariaContext = null;
   let lineNumberStart = 1;
+  let currentAlignment = { text: "", segments: [] };
+  let outputAlignmentSpans = [];
 
   const liturgySearchAliases = [
     {
@@ -238,12 +242,129 @@
   const sampleText = "בָּרוּךְ שֶׁאָמַר וְהָיָה הָעוֹלָם, בָּרוּךְ הוּא, בָּרוּךְ עֹשֶׂה בְרֵאשִׁית, בָּרוּךְ אוֹמֵר וְעוֹשֶׂה, בָּרוּךְ גּוֹזֵר וּמְקַיֵּם, בָּרוּךְ מְרַחֵם עַל הָאָֽרֶץ, בָּרוּךְ מְרַחֵם עַל הַבְּרִיּוֹת, בָּרוּךְ מְשַׁלֵּם שָׂכָר טוֹב לִירֵאָיו, בָּרוּךְ חַי לָעַד וְקַיָּם לָנֶֽצַח, בָּרוּךְ פּוֹדֶה וּמַצִּיל, בָּרוּךְ שְׁמוֹ: בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵֽינוּ מֶֽלֶךְ הָעוֹלָם הָאֵל הָאָב הָרַחֲמָן הַמְּהֻלָּל בְּפִי עַמּוֹ מְשֻׁבָּח וּמְפֹאָר בִּלְשׁוֹן חֲסִידָיו וַעֲבָדָיו וּבְשִׁירֵי דָוִד עַבְדֶּֽךָ, נְהַלֶּלְךָ יְהֹוָה אֱלֹהֵֽינוּ בִּשְׁבָחוֹת וּבִזְמִירוֹת נְגַדֶּלְךָ וּנְשַׁבֵּחֲךָ וּנְפָאֶרְךָ וְנַזְכִּיר שִׁמְךָ וְנַמְלִיכְךָ מַלְכֵּֽנוּ אֱלֹהֵֽינוּ, יָחִיד, חֵי הָעוֹלָמִים, מֶֽלֶךְ מְשֻׁבָּח וּמְפֹאָר עֲדֵי עַד שְׁמוֹ הַגָּדוֹל: בָּרוּךְ אַתָּה יְהֹוָה מֶֽלֶךְ מְהֻלָּל בַּתִּשְׁבָּחוֹת:";
 
   function updateOutput() {
-    if (stressMarkToggle?.checked) {
-      output.textContent = transliterator.transliterateWithStressMarks(input.value);
-    } else {
-      output.textContent = transliterator.transliterate(input.value);
-    }
+    currentAlignment = transliterator.transliterateWithAlignment(
+      input.value,
+      stressMarkToggle?.checked ? "stressMarks" : "text"
+    );
+    renderAlignedOutput();
+    clearLinkedHighlights();
     updateTransliterationNotice();
+  }
+
+  function renderAlignedOutput() {
+    const fragment = document.createDocumentFragment();
+    outputAlignmentSpans = [];
+    let cursor = 0;
+
+    currentAlignment.segments.forEach((segment, index) => {
+      if (segment.targetStart > cursor) {
+        fragment.append(document.createTextNode(currentAlignment.text.slice(cursor, segment.targetStart)));
+      }
+      const span = document.createElement("span");
+      span.className = "aligned-output-word";
+      span.dataset.alignmentIndex = String(index);
+      span.textContent = currentAlignment.text.slice(segment.targetStart, segment.targetEnd);
+      fragment.append(span);
+      outputAlignmentSpans[index] = span;
+      cursor = segment.targetEnd;
+    });
+
+    if (cursor < currentAlignment.text.length) {
+      fragment.append(document.createTextNode(currentAlignment.text.slice(cursor)));
+    }
+    output.replaceChildren(fragment);
+  }
+
+  function syncHebrewHighlightScroll() {
+    hebrewHighlightMirror.scrollTop = input.scrollTop;
+    hebrewHighlightMirror.scrollLeft = input.scrollLeft;
+  }
+
+  function renderHebrewHighlights(indexes) {
+    const ranges = selectionAlignmentTools.mergedRanges(
+      currentAlignment.segments,
+      indexes,
+      "source"
+    );
+    if (!ranges.length) {
+      hebrewHighlightMirror.replaceChildren();
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    let cursor = 0;
+    for (const range of ranges) {
+      if (range.start > cursor) {
+        fragment.append(document.createTextNode(input.value.slice(cursor, range.start)));
+      }
+      const mark = document.createElement("mark");
+      mark.textContent = input.value.slice(range.start, range.end);
+      fragment.append(mark);
+      cursor = range.end;
+    }
+    if (cursor < input.value.length) {
+      fragment.append(document.createTextNode(input.value.slice(cursor)));
+    }
+    hebrewHighlightMirror.replaceChildren(fragment);
+    syncHebrewHighlightScroll();
+  }
+
+  function renderOutputHighlights(indexes) {
+    const selected = new Set(indexes);
+    outputAlignmentSpans.forEach((span, index) => {
+      span?.classList.toggle("alignment-match", selected.has(index));
+    });
+  }
+
+  function clearLinkedHighlights() {
+    renderOutputHighlights([]);
+    renderHebrewHighlights([]);
+  }
+
+  function outputSelectionOffsets(selection) {
+    if (
+      !selection ||
+      selection.rangeCount === 0 ||
+      !output.contains(selection.anchorNode) ||
+      !output.contains(selection.focusNode)
+    ) {
+      return null;
+    }
+    const range = selection.getRangeAt(0);
+    const prefix = document.createRange();
+    prefix.selectNodeContents(output);
+    prefix.setEnd(range.startContainer, range.startOffset);
+    const start = prefix.toString().length;
+    return { start, end: start + range.toString().length };
+  }
+
+  function updateLinkedHighlightsFromSelection() {
+    if (document.activeElement === input) {
+      const indexes = selectionAlignmentTools.matchingIndexes(
+        currentAlignment.segments,
+        input.selectionStart,
+        input.selectionEnd,
+        "source"
+      );
+      renderHebrewHighlights([]);
+      renderOutputHighlights(indexes);
+      return;
+    }
+
+    const offsets = outputSelectionOffsets(window.getSelection());
+    if (offsets) {
+      const indexes = selectionAlignmentTools.matchingIndexes(
+        currentAlignment.segments,
+        offsets.start,
+        offsets.end,
+        "target"
+      );
+      renderOutputHighlights([]);
+      renderHebrewHighlights(indexes);
+      return;
+    }
+
+    clearLinkedHighlights();
   }
 
   function addLineNumbers(text) {
@@ -1395,6 +1516,18 @@
   }
 
   input.addEventListener("input", updateOutput);
+  input.addEventListener("select", updateLinkedHighlightsFromSelection);
+  input.addEventListener("keyup", updateLinkedHighlightsFromSelection);
+  input.addEventListener("pointerup", updateLinkedHighlightsFromSelection);
+  input.addEventListener("pointerdown", clearLinkedHighlights);
+  input.addEventListener("scroll", syncHebrewHighlightScroll);
+  output.addEventListener("pointerdown", clearLinkedHighlights);
+  output.addEventListener("pointerup", updateLinkedHighlightsFromSelection);
+  output.addEventListener("keyup", updateLinkedHighlightsFromSelection);
+  document.addEventListener("selectionchange", updateLinkedHighlightsFromSelection);
+  if (typeof ResizeObserver === "function") {
+    new ResizeObserver(syncHebrewHighlightScroll).observe(input);
+  }
 
   styleSelect.addEventListener("change", () => {
     setStyle(styleSelect.value);

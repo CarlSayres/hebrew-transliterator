@@ -97,14 +97,20 @@
   }
 
   function splitInput(text) {
-    const normalized = normalize(text);
+    const source = String(text || "");
     const tokens = [];
     let buffer = "";
     let mode = null;
+    let bufferStart = 0;
 
-    for (const char of normalized) {
+    for (let index = 0; index < source.length;) {
+      const codePoint = source.codePointAt(index);
+      const char = String.fromCodePoint(codePoint);
+      const charLength = char.length;
       let nextMode = "other";
-      if (char === MAQAF) {
+      if (char === "\u034f" && mode) {
+        nextMode = mode;
+      } else if (char === MAQAF) {
         nextMode = "maqaf";
       } else if (char === PSIK) {
         nextMode = "psik";
@@ -115,15 +121,29 @@
       }
 
       if (mode && nextMode !== mode) {
-        tokens.push({ type: mode, value: buffer });
+        tokens.push({
+          type: mode,
+          value: normalize(buffer),
+          sourceStart: bufferStart,
+          sourceEnd: index
+        });
         buffer = "";
+        bufferStart = index;
+      } else if (!mode) {
+        bufferStart = index;
       }
       mode = nextMode;
       buffer += char;
+      index += charLength;
     }
 
     if (buffer) {
-      tokens.push({ type: mode, value: buffer });
+      tokens.push({
+        type: mode,
+        value: normalize(buffer),
+        sourceStart: bufferStart,
+        sourceEnd: source.length
+      });
     }
 
     return tokens;
@@ -1733,6 +1753,75 @@
       return capitalizeSentenceStarts(transliterated);
     }
 
+    transliterateWithAlignment(text, format = "text") {
+      const tokens = splitInput(text);
+      const segments = [];
+      let output = "";
+
+      const appendAligned = (value, sourceStart, sourceEnd) => {
+        const targetStart = output.length;
+        output += value;
+        segments.push({
+          sourceStart,
+          sourceEnd,
+          targetStart,
+          targetEnd: output.length
+        });
+      };
+
+      for (let index = 0; index < tokens.length; index += 1) {
+        const lamedHeyApostropheSuffix = this.lamedHeyApostropheDivineNameSuffix(tokens, index);
+        const heyApostropheSuffix = this.heyApostropheDivineNameSuffix(tokens, index);
+        const apostropheHeyPrefix = this.apostropheHeyDivineNamePrefix(tokens, index);
+        if (lamedHeyApostropheSuffix !== null) {
+          appendAligned(
+            `Ladonai${lamedHeyApostropheSuffix}`,
+            tokens[index].sourceStart,
+            tokens[index + 1].sourceEnd
+          );
+          index += 1;
+        } else if (heyApostropheSuffix !== null) {
+          appendAligned(
+            `Adonai${heyApostropheSuffix}`,
+            tokens[index].sourceStart,
+            tokens[index + 1].sourceEnd
+          );
+          index += 1;
+        } else if (apostropheHeyPrefix !== null) {
+          appendAligned(
+            `${apostropheHeyPrefix}Adonai`,
+            tokens[index].sourceStart,
+            tokens[index + 1].sourceEnd
+          );
+          index += 1;
+        } else if (this.startsMaqafGroup(tokens, index)) {
+          const group = this.collectMaqafGroup(tokens, index);
+          const rendered = this.transliterateMaqafParts(group.words, format);
+          rendered.parts.forEach((part, partIndex) => {
+            if (partIndex > 0) {
+              output += rendered.separator;
+            }
+            const sourceToken = tokens[index + (partIndex * 2)];
+            appendAligned(part, sourceToken.sourceStart, sourceToken.sourceEnd);
+          });
+          index = group.endIndex;
+        } else {
+          const token = tokens[index];
+          const rendered = this.transliterateToken(token, format);
+          if (token.type === "hebrew" && hasHebrew(token.value)) {
+            appendAligned(rendered, token.sourceStart, token.sourceEnd);
+          } else {
+            output += rendered;
+          }
+        }
+      }
+
+      return {
+        text: capitalizeSentenceStarts(output),
+        segments
+      };
+    }
+
     unvocalizedWords(text) {
       const tokens = splitInput(text);
       const words = [];
@@ -1867,7 +1956,7 @@
       return { words, endIndex: index };
     }
 
-    transliterateMaqafGroup(words, format = "text") {
+    transliterateMaqafParts(words, format = "text") {
       const options = outputOptions(this.ruleset);
       const clusterGroups = words.map((word) => parseClusters(word));
       const combinedClusters = clusterGroups.flat();
@@ -1881,9 +1970,17 @@
           ? "stressMarksAll"
           : format;
 
-      return words
-        .map((word, index) => this.transliterateWord(word, clusterGroups[index], true, wordFormat))
-        .join(separator);
+      return {
+        parts: words.map((word, index) =>
+          this.transliterateWord(word, clusterGroups[index], true, wordFormat)
+        ),
+        separator
+      };
+    }
+
+    transliterateMaqafGroup(words, format = "text") {
+      const rendered = this.transliterateMaqafParts(words, format);
+      return rendered.parts.join(rendered.separator);
     }
 
     transliterateToken(token, format = "text") {

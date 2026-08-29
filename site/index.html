@@ -130,12 +130,15 @@
                 <span>Line numbers</span>
               </label>
             </div>
-            <textarea
-              id="hebrewInput"
-              dir="rtl"
-              spellcheck="false"
-              placeholder="הקלד עברית מנוקדת כאן"
-            ></textarea>
+            <div class="hebrew-editor">
+              <div id="hebrewHighlightMirror" class="hebrew-highlight-mirror" aria-hidden="true"></div>
+              <textarea
+                id="hebrewInput"
+                dir="rtl"
+                spellcheck="false"
+                placeholder="הקלד עברית מנוקדת כאן"
+              ></textarea>
+            </div>
           </section>
 
           <section class="panel" aria-labelledby="outputLabel">
@@ -145,7 +148,7 @@
                 <span aria-hidden="true">Copy</span>
               </button>
             </div>
-            <output id="transliterationOutput" class="output" aria-live="polite"></output>
+            <output id="transliterationOutput" class="output" aria-live="polite" tabindex="0"></output>
             <div id="transliterationNotice" class="output-notice" role="status" aria-live="polite"></div>
           </section>
         </div>
@@ -205,6 +208,7 @@
     <script src="sefaria-catalog.js?v=3"></script>
     <script src="sefaria-client.js?v=8"></script>
     <script src="line-numbers.js?v=1"></script>
-    <script src="app.js?v=21"></script>
+    <script src="selection-alignment.js?v=1"></script>
+    <script src="app.js?v=22"></script>
   </body>
 </html>

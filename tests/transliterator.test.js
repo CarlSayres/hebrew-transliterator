@@ -892,6 +892,53 @@ for (const [input, kind, expected] of stressCases) {
 
 failures.push(...stressFailures);
 
+const alignmentTransliterator = new context.window.HebrewTransliterator.Transliterator(
+  context.window.HebrewRulesets.levShalem
+);
+const alignmentCases = [
+  {
+    input: "4. שְׁמַע יִשְׂרָאֵל",
+    expectedText: "4. Sh'ma yisra·eil",
+    expectedPairs: [["שְׁמַע", "Sh'ma"], ["יִשְׂרָאֵל", "yisra·eil"]]
+  },
+  {
+    input: "הַלְלוּ־יָהּ",
+    expectedText: "Hal'luyah",
+    expectedPairs: [["הַלְלוּ", "Hal'lu"], ["יָהּ", "yah"]]
+  }
+];
+
+for (const alignmentCase of alignmentCases) {
+  const aligned = alignmentTransliterator.transliterateWithAlignment(alignmentCase.input);
+  if (aligned.text !== alignmentCase.expectedText || aligned.segments.length !== alignmentCase.expectedPairs.length) {
+    failures.push({ feature: "alignment", ...alignmentCase, actual: aligned });
+    continue;
+  }
+  alignmentCase.expectedPairs.forEach(([sourceWord, targetWord], index) => {
+    const segment = aligned.segments[index];
+    const actualSource = alignmentCase.input.slice(segment.sourceStart, segment.sourceEnd);
+    const actualTarget = aligned.text.slice(segment.targetStart, segment.targetEnd);
+    if (actualSource !== sourceWord || actualTarget !== targetWord) {
+      failures.push({
+        feature: "alignmentSegment",
+        input: alignmentCase.input,
+        index,
+        expected: [sourceWord, targetWord],
+        actual: [actualSource, actualTarget]
+      });
+    }
+  });
+}
+
+const stressedAlignmentInput = "בָּרֽוּךְ יְהֹוָה";
+const stressedAlignment = alignmentTransliterator.transliterateWithAlignment(stressedAlignmentInput, "stressMarks");
+if (
+  stressedAlignment.text !== alignmentTransliterator.transliterateWithStressMarks(stressedAlignmentInput) ||
+  stressedAlignment.segments.length !== 2
+) {
+  failures.push({ feature: "stressAlignment", input: stressedAlignmentInput, actual: stressedAlignment });
+}
+
 if (failures.length) {
   console.error("Transliteration test failures:");
   for (const failure of failures) {
@@ -901,4 +948,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length} transliteration tests passed.`);
+console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + 1} transliteration tests passed.`);
