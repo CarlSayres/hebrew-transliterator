@@ -777,6 +777,13 @@ textarea:focus {
   word-break: break-word;
 }
 
+.output.speech-debug-hebrew {
+  direction: rtl;
+  font-family: "SBL Hebrew", "Ezra SIL", "Taamey David CLM", "Frank Ruehl CLM", "Noto Serif Hebrew", "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2vw, 1.8rem);
+  line-height: 1.45;
+}
+
 .output:focus {
   outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
   outline-offset: -3px;

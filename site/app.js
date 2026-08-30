@@ -2,6 +2,7 @@
   const input = document.getElementById("hebrewInput");
   const hebrewHighlightMirror = document.getElementById("hebrewHighlightMirror");
   const output = document.getElementById("transliterationOutput");
+  const outputLabel = document.getElementById("outputLabel");
   const transliterationNotice = document.getElementById("transliterationNotice");
   const styleSelect = document.getElementById("styleSelect");
   const doubleDageshToggle = document.getElementById("doubleDageshToggle");
@@ -219,6 +220,7 @@
   let speechSession = 0;
   let speechSpeaking = false;
   let speechSelectionSnapshot = "";
+  let speechDebugVisible = false;
 
   const liturgySearchAliases = [
     {
@@ -273,6 +275,10 @@
       input.value,
       stressMarkToggle?.checked ? "stressMarks" : "text"
     );
+    speechDebugVisible = false;
+    output.classList.remove("speech-debug-hebrew");
+    output.removeAttribute("dir");
+    outputLabel.textContent = "Transliteration";
     renderAlignedOutput();
     clearLinkedHighlights();
     updateTransliterationNotice();
@@ -395,6 +401,9 @@
   }
 
   function selectedHebrewForSpeech() {
+    if (speechDebugVisible) {
+      return "";
+    }
     const offsets = outputSelectionOffsets(window.getSelection());
     return speechTools.sourceForTargetSelection(
       input.value,
@@ -427,6 +436,22 @@
     ) || null;
   }
 
+  function usesHebrewSpeechVoice() {
+    return /^(?:he|iw)(?:[-_]|$)/i.test(selectedSpeechVoice()?.lang || "");
+  }
+
+  function showHebrewSpeechDebug(text) {
+    speechDebugVisible = true;
+    outputAlignmentSpans = [];
+    output.classList.add("speech-debug-hebrew");
+    output.setAttribute("dir", "rtl");
+    outputLabel.textContent = "Hebrew sent to voice (temporary debug)";
+    output.replaceChildren(document.createTextNode(text));
+    clearLinkedHighlights();
+    transliterationNotice.hidden = false;
+    transliterationNotice.textContent = "This is the rule-adjusted Hebrew being sent to the selected Hebrew voice. Edit the source text to restore the transliteration.";
+  }
+
   function configureUtterance(utterance) {
     const voice = selectedSpeechVoice();
     utterance.voice = voice;
@@ -439,8 +464,7 @@
   }
 
   function updateSpeechVoiceModeNote() {
-    const voice = selectedSpeechVoice();
-    speechVoiceModeNote.textContent = /^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")
+    speechVoiceModeNote.textContent = usesHebrewSpeechVoice()
       ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit."
       : "English mode: reads the hidden phonetic spelling and follows the e/ei setting.";
   }
@@ -1757,7 +1781,11 @@
     }
     const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
     speechSelectionSnapshot = "";
-    startSpeech(speechTextForHebrew(hebrew));
+    const speechText = speechTextForHebrew(hebrew);
+    if (usesHebrewSpeechVoice()) {
+      showHebrewSpeechDebug(speechText);
+    }
+    startSpeech(speechText);
   });
 
   speechSettingsButton.addEventListener("click", () => {
