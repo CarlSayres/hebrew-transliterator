@@ -1820,14 +1820,26 @@
         } else if (cluster.sheva === "vocal") {
           marks = marks.filter((mark) => mark !== MARKS.SHEVA);
           marks.push(MARKS.SEGOL);
+        } else if (cluster.vowelName === "holam" && cluster.base !== "ו") {
+          marks = marks.filter((mark) => ![MARKS.HOLAM, MARKS.HOLAM_HASER].includes(mark));
+          suffix += `ו${MARKS.HOLAM}`;
         }
 
-        if (
-          cluster.vowelName === "tzere" &&
-          tzere === "ei" &&
-          clusters[index + 1]?.base !== "י"
-        ) {
-          suffix += "י";
+        if (cluster.vowelName === "tzere" && tzere === "ei") {
+          marks = marks.filter((mark) => mark !== MARKS.TSERE);
+          marks.push(MARKS.SEGOL);
+          if (clusters[index + 1]?.base !== "י") {
+            suffix += "י";
+          }
+        }
+
+        const startsAtoSuffix =
+          cluster.vowelName === "kamatzGadol" &&
+          clusters[index + 1]?.base === "ת" &&
+          clusters[index + 2]?.base === "ו" &&
+          clusters[index + 2]?.vowelName === "holam";
+        if (startsAtoSuffix) {
+          suffix += "ה";
         }
 
         return `${cluster.base}${marks.join("")}${suffix}`.normalize("NFC");
