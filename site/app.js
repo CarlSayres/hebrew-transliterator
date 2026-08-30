@@ -164,7 +164,7 @@
     }
     preferredSpeechVoiceKey = String(preferences.speechVoice || "");
     const restoredRate = Number(preferences.speechRate);
-    if (restoredRate >= 0.6 && restoredRate <= 1.2) {
+    if (restoredRate >= 0.3 && restoredRate <= 1.2) {
       speechRate.value = String(restoredRate);
     }
     updateSpeechRateLabel();
@@ -465,7 +465,7 @@
 
   function updateSpeechVoiceModeNote() {
     speechVoiceModeNote.textContent = usesHebrewSpeechVoice()
-      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit."
+      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz gadol is forced to patach, while kamatz katan, sh’va na, e/ei, and consonantal v are made explicit."
       : "English mode: reads the hidden phonetic spelling and follows the e/ei setting.";
   }
 
