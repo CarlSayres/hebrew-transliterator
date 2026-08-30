@@ -111,7 +111,14 @@
       .slice(0, limit);
   }
 
+  function importedTextHeading(ref) {
+    const parts = String(ref || "").split(",").map((part) => part.trim()).filter(Boolean);
+    const name = parts[parts.length - 1];
+    return name ? `Vocalized Hebrew — ${name}` : "Vocalized Hebrew";
+  }
+
   return {
+    importedTextHeading,
     isCommentaryRef,
     isImportableSearchResult,
     isLiturgyRef,

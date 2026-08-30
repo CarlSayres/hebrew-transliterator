@@ -893,6 +893,8 @@ textarea:focus {
 
 .output-header .panel-label {
   padding-block: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .output-header .icon-button {

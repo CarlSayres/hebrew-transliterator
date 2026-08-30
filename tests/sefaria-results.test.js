@@ -2,11 +2,29 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 
 const {
+  importedTextHeading,
   isImportableSearchResult,
   normalizeRefKey,
   prepareResults,
   schemaNodeName
 } = require("../site/sefaria-results");
+
+test("labels imported chapters and ranges without losing their verse numbers", () => {
+  assert.equal(importedTextHeading("Jeremiah 5"), "Vocalized Hebrew — Jeremiah 5");
+  assert.equal(importedTextHeading("Deuteronomy 6:4-9"), "Vocalized Hebrew — Deuteronomy 6:4-9");
+  assert.equal(importedTextHeading("Pirkei Avot 2"), "Vocalized Hebrew — Pirkei Avot 2");
+});
+
+test("uses the final named section of a liturgical reference for the header", () => {
+  assert.equal(importedTextHeading("Siddur Ashkenaz, Weekday, Shacharit, Aleinu"), "Vocalized Hebrew — Aleinu");
+  assert.equal(importedTextHeading(" Siddur Ashkenaz, Preparatory Prayers, Modeh Ani "), "Vocalized Hebrew — Modeh Ani");
+});
+
+test("resets the Hebrew header when there is no imported reference", () => {
+  for (const ref of [undefined, null, "", " , "]) {
+    assert.equal(importedTextHeading(ref), "Vocalized Hebrew");
+  }
+});
 
 test("uses Sefaria's canonical English title instead of an internal schema key", () => {
   assert.equal(schemaNodeName({

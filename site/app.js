@@ -1,5 +1,6 @@
 (function () {
   const input = document.getElementById("hebrewInput");
+  const hebrewInputLabel = document.getElementById("hebrewInputLabel");
   const hebrewHighlightMirror = document.getElementById("hebrewHighlightMirror");
   const output = document.getElementById("transliterationOutput");
   const outputLabel = document.getElementById("outputLabel");
@@ -938,6 +939,11 @@
     return fetchJson(indexUrl, { signal });
   }
 
+  function setHebrewSourceHeading(ref = "") {
+    hebrewInputLabel.textContent = sefariaResultTools.importedTextHeading(ref);
+    hebrewInputLabel.title = ref;
+  }
+
   function insertImportedText(text) {
     input.value = text;
     updateOutput();
@@ -1112,6 +1118,7 @@
         versionTitle: result.versionTitle || "",
         text: result.text.slice(0, 20000)
       };
+      setHebrewSourceHeading(lastImportedSefariaContext.ref);
       const warning = result.quality?.status === "unvocalized"
         ? " The source contains no vowel points, so transliteration will be limited."
         : result.quality?.status === "partial"
@@ -1776,7 +1783,10 @@
     }
   }
 
-  input.addEventListener("input", updateOutput);
+  input.addEventListener("input", () => {
+    setHebrewSourceHeading();
+    updateOutput();
+  });
   input.addEventListener("select", updateLinkedHighlightsFromSelection);
   input.addEventListener("keyup", updateLinkedHighlightsFromSelection);
   input.addEventListener("pointerup", updateLinkedHighlightsFromSelection);
@@ -1886,6 +1896,7 @@
 
   sampleButton.addEventListener("click", () => {
     lastImportedSefariaContext = null;
+    setHebrewSourceHeading();
     setLineNumberAvailability(null);
     input.value = sampleText;
     updateOutput();
