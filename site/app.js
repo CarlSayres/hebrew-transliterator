@@ -191,6 +191,9 @@
 
   const rulesets = window.HebrewRulesets.all || [window.HebrewRulesets.modernSefardi];
   let transliterator = new window.HebrewTransliterator.Transliterator(rulesets[0]);
+  const speechTransliterator = new window.HebrewTransliterator.Transliterator(
+    window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi
+  );
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
   let activeSefariaController = null;
@@ -378,11 +381,17 @@
     clearLinkedHighlights();
   }
 
-  function selectedOutputText() {
+  function selectedHebrewForSpeech() {
     const offsets = outputSelectionOffsets(window.getSelection());
-    return offsets && offsets.start !== offsets.end
-      ? speechTools.selectedOrAll(currentAlignment.text, offsets)
-      : "";
+    return speechTools.sourceForTargetSelection(
+      input.value,
+      currentAlignment.segments,
+      offsets
+    );
+  }
+
+  function speechTextForHebrew(hebrew) {
+    return speechTools.phoneticize(speechTransliterator.transliterate(hebrew));
   }
 
   function setSpeechButtonState(speaking) {
@@ -1652,16 +1661,16 @@
   });
 
   speechButton.addEventListener("pointerdown", () => {
-    speechSelectionSnapshot = selectedOutputText();
+    speechSelectionSnapshot = selectedHebrewForSpeech();
   });
   speechButton.addEventListener("click", () => {
     if (speechSpeaking) {
       stopSpeech();
       return;
     }
-    const text = speechSelectionSnapshot || selectedOutputText() || currentAlignment.text;
+    const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
     speechSelectionSnapshot = "";
-    startSpeech(text);
+    startSpeech(speechTextForHebrew(hebrew));
   });
 
   if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {

@@ -25,6 +25,10 @@ for (const file of [
 const transliterator = new context.window.HebrewTransliterator.Transliterator(
   context.window.HebrewRulesets.modernSefardi
 );
+const speech = require("../site/speech");
+const speechTransliterator = new context.window.HebrewTransliterator.Transliterator(
+  context.window.HebrewRulesets.speechEnglish
+);
 
 const cases = [
   ["שָׁלוֹם", "Shalom"],
@@ -939,6 +943,20 @@ if (
   failures.push({ feature: "stressAlignment", input: stressedAlignmentInput, actual: stressedAlignment });
 }
 
+const speechCases = [
+  ["שְׁמַע", "sheh-mah"],
+  ["בְּרֵאשִׁית", "beh-ray-sheet"],
+  ["גָּאָֽלְתָּ", "gah-ahl-tah"],
+  ["וּבְמֹפְתִֽים", "oov-moh-feh-teem"]
+];
+for (const [input, expected] of speechCases) {
+  const sourceStyle = speechTransliterator.transliterate(input);
+  const actual = speech.phoneticize(sourceStyle);
+  if (actual !== expected) {
+    failures.push({ feature: "speechStyle", input, expected, sourceStyle, actual });
+  }
+}
+
 if (failures.length) {
   console.error("Transliteration test failures:");
   for (const failure of failures) {
@@ -948,4 +966,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + 1} transliteration tests passed.`);
+console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + 1} transliteration tests passed.`);

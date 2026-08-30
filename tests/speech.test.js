@@ -28,3 +28,24 @@ test("prefers a transliteration selection and otherwise returns all text", () =>
   assert.equal(speech.selectedOrAll(text, { start: 6, end: 15 }), "yisra·eil");
   assert.equal(speech.selectedOrAll(text, null), text);
 });
+
+test("maps a transliteration selection back to its Hebrew source word", () => {
+  const source = "שְׁמַע יִשְׂרָאֵל";
+  const secondWordStart = source.indexOf("יִ");
+  const segments = [
+    { sourceStart: 0, sourceEnd: secondWordStart - 1, targetStart: 0, targetEnd: 5 },
+    { sourceStart: secondWordStart, sourceEnd: source.length, targetStart: 6, targetEnd: 14 }
+  ];
+  assert.equal(
+    speech.sourceForTargetSelection(source, segments, { start: 7, end: 12 }),
+    "יִשְׂרָאֵל"
+  );
+});
+
+test("renders English-friendly syllables for speech", () => {
+  assert.equal(
+    speech.phoneticize("Shema yisra·eil Adonai Eloheinu"),
+    "sheh-mah yees-rah-ayl ah-doh-nye eh-loh-hay-noo"
+  );
+  assert.equal(speech.phoneticize("Bereishit"), "beh-ray-sheet");
+});

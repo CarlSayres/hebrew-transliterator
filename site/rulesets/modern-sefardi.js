@@ -395,9 +395,21 @@
   mishkanTefilah.exceptions.exactWords["וְלא".normalize("NFD")] = "v'lo";
   mishkanTefilah.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'chol";
 
+  // Private source style for English text-to-speech. It is deliberately
+  // excluded from `all`, so it never appears in the visible style menu.
+  const speechEnglish = clone(modernSefardi);
+  speechEnglish.id = "speechEnglish";
+  speechEnglish.name = "Speech (English)";
+  speechEnglish.vowels.tzere = "ei";
+  speechEnglish.vowels.vocalSheva = "e";
+  speechEnglish.output.maqafSeparator = " ";
+  speechEnglish.output.dashedInitialPrefixes = [];
+  speechEnglish.output.doubleDageshChazak = false;
+
   window.HebrewRulesets.modernSefardi = modernSefardi;
   window.HebrewRulesets.levShalem = levShalem;
   window.HebrewRulesets.mishkanTefilah = mishkanTefilah;
+  window.HebrewRulesets.speechEnglish = speechEnglish;
   window.HebrewRulesets.all = [
     modernSefardi,
     levShalem,
