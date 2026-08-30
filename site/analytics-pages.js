@@ -16,7 +16,13 @@
   }
 
   function encodedPath(segments) {
-    return `/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`;
+    return `/${segments
+      .map((segment) => segment
+        .replace(/\s+/g, "_")
+        .replace(/[^A-Za-z0-9._~-]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "") || "Reference")
+      .join("/")}`;
   }
 
   function sefariaPage(reference) {

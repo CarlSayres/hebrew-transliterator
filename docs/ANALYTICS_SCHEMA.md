@@ -95,14 +95,14 @@ and audio actions are also sent to Google Analytics as virtual page views. This
 makes the reference hierarchy available in the standard Pages reports:
 
 ```text
-/Sefaria/Siddur%20Ashkenaz/Weekday/Shacharit/Preparatory%20Prayers/Modeh%20Ani
-/Audio/Generated/Siddur%20Ashkenaz/Weekday/Shacharit/Preparatory%20Prayers/Modeh%20Ani
-/Audio/Listened/Siddur%20Ashkenaz/Weekday/Shacharit/Preparatory%20Prayers/Modeh%20Ani
-/Audio/Downloaded/Siddur%20Ashkenaz/Weekday/Shacharit/Preparatory%20Prayers/Modeh%20Ani
+/Sefaria/Siddur_Ashkenaz/Weekday/Shacharit/Preparatory_Prayers/Modeh_Ani
+/Audio/Generated/Siddur_Ashkenaz/Weekday/Shacharit/Preparatory_Prayers/Modeh_Ani
+/Audio/Listened/Siddur_Ashkenaz/Weekday/Shacharit/Preparatory_Prayers/Modeh_Ani
+/Audio/Downloaded/Siddur_Ashkenaz/Weekday/Shacharit/Preparatory_Prayers/Modeh_Ani
 ```
 
 Each virtual page is accompanied by a specifically named event:
 `sefaria_reference_viewed`, `audio_generated`, `audio_listened`, or
 `audio_downloaded`. `audio_generated` is sent only for an Azure cache miss.
 Audio made from pasted or edited Hebrew uses the final path segment
-`Arbitrary%20Hebrew`; the Hebrew itself is never sent to Google Analytics.
+`Arbitrary_Hebrew`; the Hebrew itself is never sent to Google Analytics.

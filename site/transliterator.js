@@ -2045,7 +2045,7 @@
     }
 
     unvocalizedWords(text) {
-      const tokens = splitInput(text);
+      const tokens = splitInput(String(text || "").replace(/\{\s*[פס]\s*\}/gu, ""));
       const words = [];
 
       for (let index = 0; index < tokens.length; index += 1) {
