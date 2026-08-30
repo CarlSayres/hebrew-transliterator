@@ -1833,12 +1833,37 @@
           }
         }
 
-        const startsAtoSuffix =
+        const next = clusters[index + 1];
+        const hasExistingKamatzMater = Boolean(
+          next &&
+          (
+            next.base === "י" ||
+            (
+              ["א", "ה"].includes(next.base) &&
+              !getVowelMark(next) &&
+              !hasMark(next, MARKS.SHEVA)
+            )
+          )
+        );
+        const nextBeginsVocalicSyllable = Boolean(
+          next &&
+          (
+            next.vowelName ||
+            next.sheva === "vocal" ||
+            (
+              !next.vowelName &&
+              !hasMark(next, MARKS.SHEVA) &&
+              clusters[index + 2]?.base === "ו" &&
+              clusters[index + 2]?.vowelName === "holam"
+            )
+          )
+        );
+        const isOpenKamatzGadol = !next || nextBeginsVocalicSyllable;
+        if (
           cluster.vowelName === "kamatzGadol" &&
-          clusters[index + 1]?.base === "ת" &&
-          clusters[index + 2]?.base === "ו" &&
-          clusters[index + 2]?.vowelName === "holam";
-        if (startsAtoSuffix) {
+          isOpenKamatzGadol &&
+          !hasExistingKamatzMater
+        ) {
           suffix += "ה";
         }
 
