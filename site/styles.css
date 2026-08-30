@@ -1026,6 +1026,7 @@ textarea:focus {
   margin-right: 12px;
   padding: 7px 10px;
   font-size: 0.82rem;
+  white-space: nowrap;
 }
 
 .icon-button:disabled {
@@ -1041,6 +1042,22 @@ textarea:focus {
 .quiet-icon-button {
   background: #ffffff;
   color: var(--accent-strong);
+}
+
+.audio-status {
+  min-height: 1.2em;
+  padding: 5px 16px 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.audio-status:empty {
+  display: none;
+}
+
+.audio-status.error {
+  color: #9b2c2c;
 }
 
 .speech-dialog {

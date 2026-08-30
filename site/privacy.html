@@ -22,10 +22,10 @@
       <p>Hebrew Transliterator works without an account. Optional Google Analytics measurement begins only after you consent to Analytics cookies.</p>
 
       <h2>Saved transliteration preferences</h2>
-      <p>The site stores a functional cookie named <code>ht_preferences</code> for up to one year so your transliteration style, pronunciation options, stress-mark setting, dagesh preference, and speech voice and speed are restored when you return. This cookie does not contain Hebrew text, transliteration output, Sefaria searches, or feedback.</p>
+      <p>The site stores a functional cookie named <code>ht_preferences</code> for up to one year so your transliteration style, pronunciation options, stress-mark setting, and dagesh preference are restored when you return. This cookie does not contain Hebrew text, transliteration output, Sefaria searches, or feedback.</p>
 
       <h2>What is measured</h2>
-      <p>Cloudflare Web Analytics provides aggregate page-traffic and performance measurements. The application also records a small set of action counts, such as copying a transliteration, changing a style, or whether a Sefaria search or import succeeded.</p>
+      <p>Cloudflare Web Analytics provides aggregate page-traffic and performance measurements. The application also records a small set of action counts, such as copying a transliteration, changing a style, whether a Sefaria search or import succeeded, and whether audio was generated, listened to, or downloaded. Audio action counts identify only whether the source was an unchanged Sefaria import or other Hebrew; they do not contain the Hebrew, transliteration, Sefaria reference, or audio filename.</p>
 
       <h2>Optional Google Analytics</h2>
       <p>If you consent to Analytics, Google Analytics uses a first-party browser identifier to estimate users and sessions. It receives page and referral information, browser and device information, approximate location, and application events. For a Sefaria name or phrase search, it also receives the normalized text entered in the Sefaria search field, whether the search succeeded, and the displayed result count. Obvious email addresses, URLs, and phone-number-like entries are replaced with <code>[redacted]</code>.</p>
@@ -41,8 +41,9 @@
       <h2>Sefaria requests</h2>
       <p>When you use the Sefaria search or import controls, your browser sends that request directly to Sefaria. Sefaria handles those requests under its own privacy practices. If you have consented to Analytics, searches made with the “Search name/phrase” control are also reported to Google Analytics as described above; exact-reference imports are not.</p>
 
-      <h2>Read aloud</h2>
-      <p>When you choose Read, the site creates speech input from the Hebrew corresponding to your selected transliteration—or from all of the Hebrew when nothing is selected—and passes it to your browser’s Web Speech service. English voices receive an English-friendly phonetic rendering. Hebrew voices receive a rule-adjusted copy of the vocalized Hebrew that makes certain pronunciation decisions explicit. This speech-only rendering is not displayed. The site does not receive, store, or include that text in analytics. Speech may be produced on your device or by a voice service selected by your browser or operating system.</p>
+      <h2>Audio</h2>
+      <p>When you choose Audio Listen or Audio Download, the site sends the selected Hebrew—or all of the Hebrew when nothing is selected—and a rule-derived pronunciation guide through Cloudflare to Microsoft Azure Speech. Azure creates the audio with the Hila Hebrew voice. The Azure credential remains on the server and is never sent to your browser.</p>
+      <p>For unchanged text imported from Sefaria, the resulting audio is stored in Cloudflare R2 under an opaque hash derived from the normalized text and the fixed pronunciation settings. This lets identical passages reuse an existing audio file. The stored object does not include the Sefaria reference or Hebrew text in its filename or metadata. Audio made from pasted or edited Hebrew is returned to your browser but is not persistently stored. A temporary pronunciation lexicon is deleted after each new synthesis request.</p>
 
       <h2>Feedback</h2>
       <p>Feedback is optional. When you submit the feedback form, the site sends your selected feedback type and message to the site owner by email. If you leave “Include the current Sefaria context” selected, it also sends the current Sefaria search, imported reference and edition, and the original Hebrew text imported from Sefaria. The form does not attach unrelated Hebrew you pasted or the transliteration output.</p>

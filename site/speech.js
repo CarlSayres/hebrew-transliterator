@@ -228,6 +228,165 @@
     );
   }
 
+  function canonicalHebrew(text) {
+    return String(text || "")
+      .normalize("NFC")
+      .replace(/[ \t]*\{\s*[פס]\s*\}[ \t]*/gu, " ")
+      .split("\n")
+      .map((line) => line.replace(/^\s*\d+\.\s*/, "").trim())
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/gu, " ")
+      .trim();
+  }
+
+  const ipaVowels = new Map([
+    ["ei", "ej"], ["ai", "aj"], ["oi", "oj"],
+    ["a", "a"], ["e", "e"], ["i", "i"], ["o", "o"], ["u", "u"]
+  ]);
+  const ipaConsonants = new Map([
+    ["sh", "ʃ"], ["kh", "x"], ["ch", "x"], ["ḥ", "x"], ["ḥ", "x"],
+    ["tz", "t͡s"], ["ts", "t͡s"], ["y", "j"], ["r", "ʁ"], ["'", "ʔ"]
+  ]);
+
+  function ipaUnits(value) {
+    const normalized = String(value || "")
+      .normalize("NFD")
+      .toLowerCase()
+      .replace(/([eao])\u0301([iy])/gu, "$1$2\u0301");
+    const units = [];
+    let index = 0;
+    while (index < normalized.length) {
+      const tail = normalized.slice(index);
+      if (tail[0] === "\u0301") {
+        if (units.length) {
+          units[units.length - 1].stressed = true;
+        }
+        index += 1;
+        continue;
+      }
+      if (/^[·\-.]/u.test(tail)) {
+        units.push({ type: "boundary", value: tail[0] });
+        index += 1;
+        continue;
+      }
+      const vowel = [...ipaVowels.keys()].find((candidate) => tail.startsWith(candidate));
+      if (vowel) {
+        units.push({ type: "vowel", value: ipaVowels.get(vowel), stressed: false });
+        index += vowel.length;
+        continue;
+      }
+      const consonant = [...ipaConsonants.keys()].find((candidate) => tail.startsWith(candidate));
+      if (consonant) {
+        units.push({ type: "consonant", value: ipaConsonants.get(consonant) });
+        index += consonant.length;
+        continue;
+      }
+      if (/[a-zʔʃxʁ]/u.test(tail[0])) {
+        units.push({ type: "consonant", value: tail[0] });
+      }
+      index += 1;
+    }
+    return units;
+  }
+
+  function syllabifyIpaUnits(units) {
+    const explicit = [];
+    let current = [];
+    for (const unit of units) {
+      if (unit.type === "boundary") {
+        if (current.length) {
+          explicit.push(current);
+          current = [];
+        }
+      } else {
+        current.push(unit);
+      }
+    }
+    if (current.length) {
+      explicit.push(current);
+    }
+
+    const syllables = [];
+    for (const part of explicit) {
+      const nuclei = part
+        .map((unit, index) => unit.type === "vowel" ? index : -1)
+        .filter((index) => index >= 0);
+      if (nuclei.length <= 1) {
+        if (part.length) syllables.push(part);
+        continue;
+      }
+      let start = 0;
+      for (let index = 0; index < nuclei.length - 1; index += 1) {
+        const nucleus = nuclei[index];
+        const nextNucleus = nuclei[index + 1];
+        const consonantCount = nextNucleus - nucleus - 1;
+        const end = consonantCount <= 1 ? nucleus + 1 : nextNucleus - 1;
+        syllables.push(part.slice(start, end));
+        start = end;
+      }
+      syllables.push(part.slice(start));
+    }
+    return syllables.filter((syllable) => syllable.some((unit) => unit.type === "vowel"));
+  }
+
+  function ipaFromTransliteration(value, options = {}) {
+    const syllables = syllabifyIpaUnits(ipaUnits(value));
+    if (!syllables.length) {
+      return "";
+    }
+    let stressedIndex = syllables.findIndex((syllable) => syllable.some((unit) => unit.stressed));
+    if (stressedIndex < 0) {
+      stressedIndex = syllables.length - 1;
+    }
+    let result = syllables.map((syllable, index) => {
+      const rendered = syllable.map((unit) => unit.value).join("");
+      return `${index === stressedIndex ? "ˈ" : ""}${rendered}`;
+    }).join(".");
+    result = result.replace(/ʔ$/u, "");
+    if (!options.preserveFinalH) {
+      result = result.replace(/(?<=[aeiouj])h$/u, "");
+    }
+    return result;
+  }
+
+  function speechRuleset(baseRuleset, tzere) {
+    const ruleset = rulesetForTzere(baseRuleset, tzere);
+    ruleset.consonants = {
+      ...(ruleset.consonants || {}),
+      "א": "'",
+      "ע": "'"
+    };
+    ruleset.output = {
+      ...(ruleset.output || {}),
+      vowelSeparator: "·",
+      consonantSeparator: "·",
+      dashedInitialPrefixes: [],
+      doubleDageshChazak: false,
+      maqafSeparator: " "
+    };
+    ruleset.output.vocalShevaAfterInitialShuruk = true;
+    return ruleset;
+  }
+
+  function lexiconEntries(text, transliterator) {
+    const prepared = canonicalHebrew(text);
+    const words = prepared.match(/[\u0591-\u05c7\u05d0-\u05ea]+/gu) || [];
+    const uniqueWords = [...new Set(words.map((word) => word.normalize("NFC")))];
+    return uniqueWords.map((grapheme) => {
+      const rendered = transliterator.transliterateWithAllStressMarks(grapheme);
+      const nfd = grapheme.normalize("NFD");
+      const preserveFinalH = /ה[^א-ת]*\u05bc[^א-ת]*$/u.test(nfd);
+      return { grapheme, phoneme: ipaFromTransliteration(rendered, { preserveFinalH }) };
+    }).filter((entry) => entry.phoneme);
+  }
+
+  function audioSourceType(currentText, importedText) {
+    const current = canonicalHebrew(currentText);
+    const imported = canonicalHebrew(importedText);
+    return current && imported && current === imported ? "sefaria" : "arbitrary";
+  }
+
   return {
     prepareText,
     chunks,
@@ -236,6 +395,11 @@
     phoneticize,
     phoneticizeWord,
     rulesetForTzere,
-    hebrewVoices
+    hebrewVoices,
+    canonicalHebrew,
+    ipaFromTransliteration,
+    speechRuleset,
+    lexiconEntries,
+    audioSourceType
   };
 });

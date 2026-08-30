@@ -805,8 +805,8 @@ const stressMarkCases = [
   ["נְשַׁבֵּחֲךָ", "Neshabeḥakha"],
   ["וּנְפָאֶרְךָ", "Un·fa·erkha"],
   ["נְפָאֶרְךָ", "Nefa·erkha"],
-  ["וְנַמְלִיכְךָ", "Venamlikhekha"],
-  ["נַמְלִיכְךָ", "Namlikhekha"],
+  ["וְנַמְלִיכְךָ", "Venamlikhkha"],
+  ["נַמְלִיכְךָ", "Namlikhkha"],
   ["יִשרָאֵל", "Yisrael"],
   ["שלום <test>", "שלום <test>"]
 ];

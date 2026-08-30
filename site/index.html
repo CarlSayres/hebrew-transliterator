@@ -150,11 +150,11 @@
             <div class="output-header">
               <span id="outputLabel" class="panel-label">Transliteration</span>
               <div class="output-actions">
-                <button id="speechSettingsButton" class="icon-button quiet-icon-button" type="button" aria-label="Speech voice and speed settings" title="Speech settings">
-                  <span aria-hidden="true">Voice</span>
+                <button id="speechButton" class="icon-button" type="button" aria-label="Listen to audio" title="Listen to the selected text, or all text if nothing is selected">
+                  <span aria-hidden="true">Audio Listen</span>
                 </button>
-                <button id="speechButton" class="icon-button" type="button" aria-label="Read transliteration aloud" title="Read the selected transliteration, or all text if nothing is selected">
-                  <span aria-hidden="true">Read</span>
+                <button id="speechDownloadButton" class="icon-button quiet-icon-button" type="button" aria-label="Download audio" title="Download the selected text, or all text if nothing is selected">
+                  <span aria-hidden="true">Audio Download</span>
                 </button>
                 <button id="copyButton" class="icon-button" type="button" aria-label="Copy transliteration" title="Copy transliteration">
                   <span aria-hidden="true">Copy</span>
@@ -163,6 +163,7 @@
             </div>
             <output id="transliterationOutput" class="output" aria-live="polite" tabindex="0"></output>
             <div id="transliterationNotice" class="output-notice" role="status" aria-live="polite"></div>
+            <div id="audioStatus" class="audio-status" role="status" aria-live="polite"></div>
           </section>
         </div>
       </section>
@@ -210,46 +211,19 @@
       </form>
     </dialog>
 
-    <dialog id="speechSettingsDialog" class="speech-dialog" aria-labelledby="speechSettingsTitle">
-      <form method="dialog" class="speech-settings-form">
-        <div class="feedback-heading">
-          <div>
-            <h2 id="speechSettingsTitle">Speech settings</h2>
-            <p>Choose an available Hebrew voice.</p>
-          </div>
-          <button class="dialog-close-button" type="submit" aria-label="Close speech settings">×</button>
-        </div>
-
-        <label for="speechVoiceSelect">Voice</label>
-        <select id="speechVoiceSelect">
-        </select>
-        <p id="speechVoiceModeNote" class="speech-voice-note"></p>
-
-        <label class="speech-rate-heading" for="speechRate">
-          <span>Speed</span>
-          <output id="speechRateValue" for="speechRate">0.85×</output>
-        </label>
-        <input id="speechRate" type="range" min="0.3" max="1.2" step="0.05" value="0.85">
-
-        <div class="feedback-actions">
-          <button class="secondary-button" type="submit">Done</button>
-        </div>
-      </form>
-    </dialog>
-
     <script src="rulesets/morphhb-silent-initial-mem-sheva.js?v=2"></script>
     <script src="rulesets/wikidata-silent-initial-mem-sheva.js?v=2"></script>
     <script src="rulesets/other-prefix-silent-initial-sheva.js?v=1"></script>
     <script src="rulesets/lexical-initial-she.js?v=2"></script>
     <script src="rulesets/mam-forced-kamatz-gadol.js?v=2"></script>
     <script src="rulesets/modern-sefardi.js?v=9"></script>
-    <script src="transliterator.js?v=34"></script>
+    <script src="transliterator.js?v=35"></script>
     <script src="sefaria-results.js?v=4"></script>
     <script src="sefaria-catalog.js?v=3"></script>
     <script src="sefaria-client.js?v=8"></script>
     <script src="line-numbers.js?v=1"></script>
     <script src="selection-alignment.js?v=1"></script>
-    <script src="speech.js?v=7"></script>
-    <script src="app.js?v=33"></script>
+    <script src="speech.js?v=8"></script>
+    <script src="app.js?v=34"></script>
   </body>
 </html>

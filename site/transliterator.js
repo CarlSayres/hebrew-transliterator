@@ -773,7 +773,7 @@
         previous &&
         hasMark(previous, MARKS.SHEVA)
       );
-      const followsLongVowel = followsLongVowelBeforeSheva(clusters, index);
+      const followsLongVowel = followsLongVowelBeforeSheva(clusters, index, ruleset);
       const undageshedBegadKefatFollowsAmbiguousKamatz = Boolean(
         previous &&
         hasMark(previous, MARKS.QAMATS) &&
@@ -810,6 +810,16 @@
       // Perfect-tense endings close the stem syllable. This remains true when
       // a source places meteg or trope on the preceding long vowel.
       if (precedesVerbSuffix(clusters, index)) {
+        cluster.sheva = "silent";
+        return;
+      }
+
+      if (
+        ["כ", "ך"].includes(cluster.base) &&
+        clusters[index + 1]?.base === "ך" &&
+        clusters[index + 1].wordFinal &&
+        hasMark(clusters[index + 1], MARKS.QAMATS)
+      ) {
         cluster.sheva = "silent";
         return;
       }
@@ -971,7 +981,7 @@
     );
   }
 
-  function followsLongVowelBeforeSheva(clusters, index) {
+  function followsLongVowelBeforeSheva(clusters, index, ruleset) {
     const previous = clusters[index - 1];
     if (!previous) {
       return false;
@@ -986,11 +996,15 @@
     }
 
     if (hasShuruk(previous)) {
+      if (ruleset?.output?.vocalShevaAfterInitialShuruk) {
+        return true;
+      }
       if (
         index === 1 &&
         previous.base === "ו" &&
         ["ב", "כ", "ל", "מ"].includes(clusters[index].base) &&
-        clusters[index + 1]
+        clusters[index + 1] &&
+        !ruleset?.output?.vocalShevaAfterInitialShuruk
       ) {
         return false;
       }
@@ -1753,6 +1767,10 @@
       return capitalizeSentenceStarts(transliterated);
     }
 
+    transliterateWithAllStressMarks(text) {
+      return this.transliterateTokens(splitInput(text), "stressMarksAll");
+    }
+
     pronunciationHebrew(text, options = {}) {
       const tzere = options.tzere === "ei" ? "ei" : "e";
       const speechInput = String(text || "")
@@ -2222,15 +2240,15 @@
       );
 
       if (exact && !useRuleStress) {
-        return format === "stressMarks" ? markStress(exact) : exact;
+        return (format === "stressMarks" || format === "stressMarksAll") ? markStress(exact) : exact;
       }
 
       if (niqqudless) {
-        return format === "stressMarks" ? markStress(niqqudless) : niqqudless;
+        return (format === "stressMarks" || format === "stressMarksAll") ? markStress(niqqudless) : niqqudless;
       }
 
       if (phrase && !this.ruleset.output?.doubleDageshChazak) {
-        return format === "stressMarks" ? markStress(phrase) : phrase;
+        return (format === "stressMarks" || format === "stressMarksAll") ? markStress(phrase) : phrase;
       }
 
       const wordClusters = clusters || parseClusters(word);

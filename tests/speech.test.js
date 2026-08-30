@@ -79,3 +79,24 @@ test("offers only Hebrew speech voices", () => {
   );
   assert.deepEqual(speech.hebrewVoices([]), []);
 });
+
+test("canonicalizes Hebrew without destroying word boundaries", () => {
+  assert.equal(
+    speech.canonicalHebrew("4.  שְׁמַע   יִשְׂרָאֵל\n5. {ס} יְהֹוָה"),
+    "שְׁמַע יִשְׂרָאֵל יְהֹוָה".normalize("NFC")
+  );
+});
+
+test("converts stressed transliteration to Azure Hebrew IPA", () => {
+  assert.equal(speech.ipaFromTransliteration("barúkh"), "ba.ˈʁux");
+  assert.equal(speech.ipaFromTransliteration("she'amár"), "ʃe.ʔa.ˈmaʁ");
+  assert.equal(speech.ipaFromTransliteration("Elohéinu"), "e.lo.ˈhej.nu");
+  assert.equal(speech.ipaFromTransliteration("meshubáḥ"), "me.ʃu.ˈbax");
+});
+
+test("classifies only unchanged imported text as Sefaria audio", () => {
+  const imported = "שְׁמַע יִשְׂרָאֵל";
+  assert.equal(speech.audioSourceType("4. שְׁמַע יִשְׂרָאֵל", imported), "sefaria");
+  assert.equal(speech.audioSourceType("שְׁמַע יִשְׂרָאֵל!", imported), "arbitrary");
+  assert.equal(speech.audioSourceType(imported, ""), "arbitrary");
+});

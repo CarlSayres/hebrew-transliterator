@@ -63,7 +63,7 @@ test("records a whitelisted event with Cloudflare geographic dimensions", async 
   assert.deepEqual(points, [{
     indexes: ["transliteration_copied"],
     blobs: [
-      "schema-2",
+      "schema-3",
       "client-schema-2",
       "version-id",
       "release-tag",
@@ -79,7 +79,8 @@ test("records a whitelisted event with Cloudflare geographic dimensions", async 
       "America/New_York",
       "0",
       "EWR",
-      "1"
+      "1",
+      ""
     ],
     doubles: [1, 40.7128, -74.006]
   }]);
@@ -93,7 +94,7 @@ test("accepts cached version 1 clients while storing the geographic schema", asy
   );
 
   assert.equal(result.status, 204);
-  assert.equal(points[0].blobs[0], "schema-2");
+  assert.equal(points[0].blobs[0], "schema-3");
   assert.equal(points[0].blobs[1], "client-schema-1");
   assert.equal(points[0].blobs[16], "0");
   assert.deepEqual(points[0].doubles, [1, 0, 0]);
@@ -106,6 +107,26 @@ test("accepts aggregate copy and speech action events without text", async () =>
     assert.equal(result.status, 204);
     assert.deepEqual(points[0].indexes, [event]);
   }
+});
+
+test("records audio actions with only their source classification", async () => {
+  const { env, points } = makeEnv();
+  const result = await handleEvent(
+    eventRequest({ schemaVersion: 3, event: "audio_listened", sourceType: "sefaria" }),
+    env
+  );
+  assert.equal(result.status, 204);
+  assert.equal(points[0].blobs[17], "sefaria");
+});
+
+test("rejects audio analytics without a valid source classification", async () => {
+  const { env, points } = makeEnv();
+  const result = await handleEvent(
+    eventRequest({ schemaVersion: 3, event: "audio_downloaded", sourceType: "private text" }),
+    env
+  );
+  assert.equal(result.status, 400);
+  assert.deepEqual(points, []);
 });
 
 test("rejects extra fields so text and queries cannot enter analytics", async () => {

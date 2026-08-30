@@ -14,12 +14,8 @@
   const hebrewCopyButton = document.getElementById("hebrewCopyButton");
   const copyButton = document.getElementById("copyButton");
   const speechButton = document.getElementById("speechButton");
-  const speechSettingsButton = document.getElementById("speechSettingsButton");
-  const speechSettingsDialog = document.getElementById("speechSettingsDialog");
-  const speechVoiceSelect = document.getElementById("speechVoiceSelect");
-  const speechVoiceModeNote = document.getElementById("speechVoiceModeNote");
-  const speechRate = document.getElementById("speechRate");
-  const speechRateValue = document.getElementById("speechRateValue");
+  const speechDownloadButton = document.getElementById("speechDownloadButton");
+  const audioStatus = document.getElementById("audioStatus");
   const sefariaQuery = document.getElementById("sefariaQuery");
   const sefariaImportButton = document.getElementById("sefariaImportButton");
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
@@ -63,7 +59,8 @@
   const usageEventNames = new Set([
     "transliteration_copied",
     "hebrew_copied",
-    "speech_started",
+    "audio_listened",
+    "audio_downloaded",
     "sefaria_search_succeeded",
     "sefaria_search_zero_results",
     "sefaria_search_failed",
@@ -73,12 +70,15 @@
     "style_selected"
   ]);
 
-  function recordUsageEvent(eventName) {
+  function recordUsageEvent(eventName, sourceType = "") {
     if (!usageEventNames.has(eventName) || location.protocol === "file:") {
       return;
     }
 
-    const body = JSON.stringify({ schemaVersion: 2, event: eventName });
+    const audioEvent = ["audio_listened", "audio_downloaded"].includes(eventName);
+    const body = JSON.stringify(audioEvent
+      ? { schemaVersion: 3, event: eventName, sourceType }
+      : { schemaVersion: 2, event: eventName });
     try {
       if (navigator.sendBeacon) {
         const queued = navigator.sendBeacon(
@@ -129,9 +129,7 @@
       stressMarks: Boolean(stressMarkToggle?.checked),
       tzere: tzereOverrideRadios.find((radio) => radio.checked)?.value || "e",
       chet: chetOverride?.value || "",
-      khaf: khafOverride?.value || "",
-      speechVoice: speechVoiceSelect?.value || "",
-      speechRate: Number(speechRate?.value) || 0.85
+      khaf: khafOverride?.value || ""
     };
     const secure = location.protocol === "https:" ? "; Secure" : "";
     document.cookie = `${preferencesCookieName}=${encodeURIComponent(JSON.stringify(preferences))}; Max-Age=${preferencesCookieMaxAge}; Path=/; SameSite=Lax${secure}`;
@@ -162,12 +160,6 @@
     if (hasSelectValue(khafOverride, preferences.khaf)) {
       khafOverride.value = preferences.khaf;
     }
-    preferredSpeechVoiceKey = String(preferences.speechVoice || "");
-    const restoredRate = Number(preferences.speechRate);
-    if (restoredRate >= 0.3 && restoredRate <= 1.2) {
-      speechRate.value = String(restoredRate);
-    }
-    updateSpeechRateLabel();
   }
 
   function normalizedSefariaSearchTerm(value) {
@@ -206,8 +198,6 @@
 
   const rulesets = window.HebrewRulesets.all || [window.HebrewRulesets.modernSefardi];
   let transliterator = new window.HebrewTransliterator.Transliterator(rulesets[0]);
-  let availableSpeechVoices = [];
-  let preferredSpeechVoiceKey = "";
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
   let activeSefariaController = null;
@@ -217,11 +207,12 @@
   let lineNumberStart = 1;
   let currentAlignment = { text: "", segments: [] };
   let outputAlignmentSpans = [];
-  let speechSession = 0;
-  let speechSpeaking = false;
+  let audioElement = null;
+  let audioObjectUrl = "";
+  let audioCacheIdentity = "";
+  let audioRequest = null;
+  let audioRequestController = null;
   let speechSelectionSnapshot = "";
-  let speechDebugVisible = false;
-  const missingHebrewVoiceMessage = "So sorry, but this browser does not have a Hebrew voice available. Try Edge on Windows.";
 
   const liturgySearchAliases = [
     {
@@ -269,17 +260,12 @@
   const sampleText = "בָּרוּךְ שֶׁאָמַר וְהָיָה הָעוֹלָם, בָּרוּךְ הוּא, בָּרוּךְ עֹשֶׂה בְרֵאשִׁית, בָּרוּךְ אוֹמֵר וְעוֹשֶׂה, בָּרוּךְ גּוֹזֵר וּמְקַיֵּם, בָּרוּךְ מְרַחֵם עַל הָאָֽרֶץ, בָּרוּךְ מְרַחֵם עַל הַבְּרִיּוֹת, בָּרוּךְ מְשַׁלֵּם שָׂכָר טוֹב לִירֵאָיו, בָּרוּךְ חַי לָעַד וְקַיָּם לָנֶֽצַח, בָּרוּךְ פּוֹדֶה וּמַצִּיל, בָּרוּךְ שְׁמוֹ: בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵֽינוּ מֶֽלֶךְ הָעוֹלָם הָאֵל הָאָב הָרַחֲמָן הַמְּהֻלָּל בְּפִי עַמּוֹ מְשֻׁבָּח וּמְפֹאָר בִּלְשׁוֹן חֲסִידָיו וַעֲבָדָיו וּבְשִׁירֵי דָוִד עַבְדֶּֽךָ, נְהַלֶּלְךָ יְהֹוָה אֱלֹהֵֽינוּ בִּשְׁבָחוֹת וּבִזְמִירוֹת נְגַדֶּלְךָ וּנְשַׁבֵּחֲךָ וּנְפָאֶרְךָ וְנַזְכִּיר שִׁמְךָ וְנַמְלִיכְךָ מַלְכֵּֽנוּ אֱלֹהֵֽינוּ, יָחִיד, חֵי הָעוֹלָמִים, מֶֽלֶךְ מְשֻׁבָּח וּמְפֹאָר עֲדֵי עַד שְׁמוֹ הַגָּדוֹל: בָּרוּךְ אַתָּה יְהֹוָה מֶֽלֶךְ מְהֻלָּל בַּתִּשְׁבָּחוֹת:";
 
   function updateOutput() {
-    if (speechSpeaking) {
-      stopSpeech();
-    }
+    stopAudio();
+    clearPreparedAudio();
     currentAlignment = transliterator.transliterateWithAlignment(
       input.value,
       stressMarkToggle?.checked ? "stressMarks" : "text"
     );
-    speechDebugVisible = false;
-    output.classList.remove("speech-debug-hebrew");
-    output.removeAttribute("dir");
-    outputLabel.textContent = "Transliteration";
     renderAlignedOutput();
     clearLinkedHighlights();
     updateTransliterationNotice();
@@ -402,8 +388,15 @@
   }
 
   function selectedHebrewForSpeech() {
-    if (speechDebugVisible) {
-      return "";
+    if (
+      document.activeElement === input &&
+      Number.isInteger(input.selectionStart) &&
+      input.selectionStart !== input.selectionEnd
+    ) {
+      return speechTools.selectedOrAll(input.value, {
+        start: input.selectionStart,
+        end: input.selectionEnd
+      });
     }
     const offsets = outputSelectionOffsets(window.getSelection());
     return speechTools.sourceForTargetSelection(
@@ -413,137 +406,122 @@
     );
   }
 
-  function speechTextForHebrew(hebrew) {
+  function audioPreparation(hebrew) {
+    const text = speechTools.canonicalHebrew(hebrew);
     const tzere = tzereOverrideRadios.find((radio) => radio.checked)?.value || "e";
-    const speechRuleset = speechTools.rulesetForTzere(
+    const speechRuleset = speechTools.speechRuleset(
       window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi,
       tzere
     );
     const speechTransliterator = new window.HebrewTransliterator.Transliterator(speechRuleset);
-    return speechTransliterator.pronunciationHebrew(hebrew, { tzere });
-  }
-
-  function speechVoiceKey(voice) {
-    return voice?.voiceURI || `${voice?.name || ""}::${voice?.lang || ""}`;
-  }
-
-  function selectedSpeechVoice() {
-    return availableSpeechVoices.find(
-      (voice) => speechVoiceKey(voice) === speechVoiceSelect.value
-    ) || null;
-  }
-
-  function usesHebrewSpeechVoice() {
-    return Boolean(selectedSpeechVoice());
-  }
-
-  function showHebrewSpeechDebug(text) {
-    speechDebugVisible = true;
-    outputAlignmentSpans = [];
-    output.classList.add("speech-debug-hebrew");
-    output.setAttribute("dir", "rtl");
-    outputLabel.textContent = "Hebrew sent to voice (temporary debug)";
-    output.replaceChildren(document.createTextNode(text));
-    clearLinkedHighlights();
-    transliterationNotice.hidden = false;
-    transliterationNotice.textContent = "This is the rule-adjusted Hebrew being sent to the selected Hebrew voice. Edit the source text to restore the transliteration.";
-  }
-
-  function configureUtterance(utterance) {
-    const voice = selectedSpeechVoice();
-    utterance.voice = voice;
-    utterance.lang = voice?.lang || "he-IL";
-    utterance.rate = Number(speechRate.value) || 0.85;
-  }
-
-  function updateSpeechRateLabel() {
-    speechRateValue.textContent = `${Number(speechRate.value).toFixed(2)}×`;
-  }
-
-  function updateSpeechVoiceModeNote() {
-    speechVoiceModeNote.textContent = usesHebrewSpeechVoice()
-      ? "Reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit, and dagesh is removed from gimel, tav, and kuf."
-      : "No Hebrew speech voice is available in this browser.";
-  }
-
-  function populateSpeechVoices() {
-    const voices = window.speechSynthesis?.getVoices?.() || [];
-    availableSpeechVoices = speechTools.hebrewVoices(voices);
-    const desired = speechVoiceSelect.value || preferredSpeechVoiceKey;
-    speechVoiceSelect.replaceChildren();
-    const hasHebrewVoices = availableSpeechVoices.length > 0;
-    if (!hasHebrewVoices) {
-      if (speechSpeaking) {
-        stopSpeech();
-      }
-      speechSettingsDialog.close?.();
-      updateSpeechVoiceModeNote();
-      return;
-    }
-
-    for (const voice of availableSpeechVoices) {
-      const option = document.createElement("option");
-      option.value = speechVoiceKey(voice);
-      option.textContent = `${voice.name} (${voice.lang})${voice.localService ? " — local" : ""}`;
-      speechVoiceSelect.append(option);
-    }
-    speechVoiceSelect.value = hasSelectValue(speechVoiceSelect, desired)
-      ? desired
-      : speechVoiceKey(availableSpeechVoices[0]);
-    preferredSpeechVoiceKey = speechVoiceSelect.value;
-    updateSpeechVoiceModeNote();
-  }
-
-  function setSpeechButtonState(speaking) {
-    speechSpeaking = speaking;
-    speechButton.textContent = speaking ? "Stop" : "Read";
-    speechButton.setAttribute(
-      "aria-label",
-      speaking ? "Stop reading transliteration" : "Read transliteration aloud"
+    const sourceType = speechTools.audioSourceType(
+      input.value,
+      lastImportedSefariaContext?.text || ""
     );
-    speechButton.title = speaking
-      ? "Stop reading"
-      : "Read the selected transliteration, or all text if nothing is selected";
+    return {
+      text,
+      sourceType,
+      lexicon: speechTools.lexiconEntries(text, speechTransliterator),
+      identity: JSON.stringify({ text, sourceType, tzere })
+    };
   }
 
-  function stopSpeech() {
-    speechSession += 1;
-    setSpeechButtonState(false);
-    window.speechSynthesis?.cancel();
+  function setAudioStatus(message, isError = false) {
+    audioStatus.textContent = message;
+    audioStatus.classList.toggle("error", isError);
   }
 
-  function startSpeech(text) {
-    const utteranceTexts = speechTools.chunks(text);
-    if (!utteranceTexts.length) {
-      return;
+  function setAudioBusy(isBusy) {
+    speechButton.disabled = isBusy;
+    speechDownloadButton.disabled = isBusy;
+    if (isBusy) setAudioStatus("Preparing audio with Azure…");
+  }
+
+  function setAudioPlaying(playing) {
+    speechButton.textContent = playing ? "Stop Audio" : "Audio Listen";
+    speechButton.setAttribute("aria-label", playing ? "Stop audio" : "Listen to audio");
+  }
+
+  function stopAudio() {
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
     }
+    setAudioPlaying(false);
+  }
 
-    window.speechSynthesis.cancel();
-    speechSession += 1;
-    const session = speechSession;
-    setSpeechButtonState(true);
+  function clearPreparedAudio() {
+    audioRequestController?.abort();
+    audioRequestController = null;
+    audioRequest = null;
+    audioCacheIdentity = "";
+    audioElement = null;
+    if (audioObjectUrl) URL.revokeObjectURL(audioObjectUrl);
+    audioObjectUrl = "";
+    setAudioBusy(false);
+    setAudioStatus("");
+  }
 
-    utteranceTexts.forEach((utteranceText, index) => {
-      const utterance = new SpeechSynthesisUtterance(utteranceText);
-      configureUtterance(utterance);
-      if (index === utteranceTexts.length - 1) {
-        utterance.addEventListener("end", () => {
-          if (speechSession === session) {
-            setSpeechButtonState(false);
-          }
-        });
-      }
-      utterance.addEventListener("error", (event) => {
-        if (
-          speechSession === session &&
-          !["canceled", "interrupted"].includes(event.error)
-        ) {
-          stopSpeech();
-        }
+  function audioErrorMessage(response) {
+    if (response?.status === 429) return "Audio is busy right now. Please wait a minute and try again.";
+    if (response?.status === 413) return "That passage is too long for one audio file. Select a shorter portion and try again.";
+    if (response?.status === 503) return "Audio is not configured yet. Please try again later.";
+    return "Azure could not create the audio. Please try again in a few minutes.";
+  }
+
+  async function prepareAudio(hebrew) {
+    const prepared = audioPreparation(hebrew);
+    if (!prepared.text || !prepared.lexicon.length) {
+      throw new Error("Enter vocalized Hebrew before creating audio.");
+    }
+    if (audioElement && audioCacheIdentity === prepared.identity && audioObjectUrl) {
+      return { ...prepared, audio: audioElement };
+    }
+    if (audioRequest && audioCacheIdentity === prepared.identity) return audioRequest;
+
+    clearPreparedAudio();
+    audioCacheIdentity = prepared.identity;
+    const controller = new AbortController();
+    audioRequestController = controller;
+    setAudioBusy(true);
+    audioRequest = (async () => {
+      const response = await fetch("/api/audio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          schemaVersion: 1,
+          text: prepared.text,
+          sourceType: prepared.sourceType,
+          tzere: tzereOverrideRadios.find((radio) => radio.checked)?.value || "e",
+          lexicon: prepared.lexicon
+        })
       });
-      window.speechSynthesis.speak(utterance);
-    });
-    recordUsageEvent("speech_started");
+      if (!response.ok) {
+        const error = new Error(audioErrorMessage(response));
+        error.status = response.status;
+        throw error;
+      }
+      const blob = await response.blob();
+      audioObjectUrl = URL.createObjectURL(blob);
+      audioElement = new Audio(audioObjectUrl);
+      audioElement.addEventListener("ended", () => setAudioPlaying(false));
+      audioElement.addEventListener("error", () => {
+        setAudioPlaying(false);
+        setAudioStatus("The audio file could not be played.", true);
+      });
+      setAudioStatus(response.headers.get("X-Audio-Cache") === "HIT" ? "Audio ready from cache." : "Audio ready.");
+      return { ...prepared, audio: audioElement };
+    })();
+    try {
+      return await audioRequest;
+    } finally {
+      if (audioRequestController === controller) {
+        audioRequestController = null;
+        audioRequest = null;
+        setAudioBusy(false);
+      }
+    }
   }
 
   function fallbackCopy(text) {
@@ -1763,51 +1741,50 @@
   speechButton.addEventListener("pointerdown", () => {
     speechSelectionSnapshot = selectedHebrewForSpeech();
   });
-  speechButton.addEventListener("click", () => {
-    if (!usesHebrewSpeechVoice()) {
-      window.alert(missingHebrewVoiceMessage);
-      return;
-    }
-    if (speechSpeaking) {
-      stopSpeech();
+  speechButton.addEventListener("click", async () => {
+    if (audioElement && !audioElement.paused) {
+      stopAudio();
       return;
     }
     const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
     speechSelectionSnapshot = "";
-    const speechText = speechTextForHebrew(hebrew);
-    if (usesHebrewSpeechVoice()) {
-      showHebrewSpeechDebug(speechText);
+    try {
+      const prepared = await prepareAudio(hebrew);
+      await prepared.audio.play();
+      setAudioPlaying(true);
+      recordUsageEvent("audio_listened", prepared.sourceType);
+    } catch (error) {
+      setAudioPlaying(false);
+      if (error.name !== "AbortError") {
+        setAudioStatus(error.message || "The audio could not be played.", true);
+      }
     }
-    startSpeech(speechText);
   });
 
-  speechSettingsButton.addEventListener("click", () => {
-    populateSpeechVoices();
-    if (!usesHebrewSpeechVoice()) {
-      window.alert(missingHebrewVoiceMessage);
-      return;
+  speechDownloadButton.addEventListener("pointerdown", () => {
+    speechSelectionSnapshot = selectedHebrewForSpeech();
+  });
+  speechDownloadButton.addEventListener("click", async () => {
+    const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
+    speechSelectionSnapshot = "";
+    try {
+      const prepared = await prepareAudio(hebrew);
+      const link = document.createElement("a");
+      const sourceName = prepared.sourceType === "sefaria"
+        ? (lastImportedSefariaContext?.ref || "sefaria")
+        : "hebrew-audio";
+      link.href = audioObjectUrl;
+      link.download = `${sourceName.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "hebrew-audio"}.mp3`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      recordUsageEvent("audio_downloaded", prepared.sourceType);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        setAudioStatus(error.message || "The audio could not be downloaded.", true);
+      }
     }
-    speechSettingsDialog.showModal();
   });
-  speechSettingsDialog.addEventListener("click", (event) => {
-    if (event.target === speechSettingsDialog) {
-      speechSettingsDialog.close();
-    }
-  });
-  speechVoiceSelect.addEventListener("change", () => {
-    preferredSpeechVoiceKey = speechVoiceSelect.value;
-    updateSpeechVoiceModeNote();
-    savePreferences();
-  });
-  speechRate.addEventListener("input", updateSpeechRateLabel);
-  speechRate.addEventListener("change", savePreferences);
-
-  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
-    speechButton.title = missingHebrewVoiceMessage;
-    speechSettingsButton.title = missingHebrewVoiceMessage;
-  } else {
-    window.speechSynthesis.addEventListener?.("voiceschanged", populateSpeechVoices);
-  }
 
   styleSelect.addEventListener("change", () => {
     setStyle(styleSelect.value);
@@ -1922,14 +1899,12 @@
   });
 
   window.addEventListener("pagehide", () => {
-    if (speechSpeaking) {
-      stopSpeech();
-    }
+    stopAudio();
+    clearPreparedAudio();
   });
 
   populateStyleSelect();
   restorePreferences();
-  populateSpeechVoices();
   refreshTransliterator();
   if (new URLSearchParams(location.search).get("feedback") === "1") {
     window.requestAnimationFrame(openFeedbackDialog);

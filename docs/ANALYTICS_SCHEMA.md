@@ -2,15 +2,17 @@
 
 The `hebrew_transliterator_usage` Analytics Engine dataset stores one row for
 each accepted product event. The browser sends only `schemaVersion` and a
-whitelisted event name. All location fields are added by the Worker from
-Cloudflare's `request.cf` metadata.
+whitelisted event name, plus the coarse `sefaria` or `arbitrary` classification
+for audio listen/download actions. All location fields are added by the Worker
+from Cloudflare's `request.cf` metadata. No Hebrew, transliteration, reference,
+audio filename, or content hash is stored in analytics.
 
-## Version 2 field map
+## Version 3 field map
 
 | Column | Meaning |
 | --- | --- |
 | `index1` | Event name |
-| `blob1` | Storage schema (`schema-2`) |
+| `blob1` | Storage schema (`schema-3`) |
 | `blob2` | Client event schema |
 | `blob3` | Worker version ID |
 | `blob4` | Worker version tag |
@@ -27,6 +29,7 @@ Cloudflare's `request.cf` metadata.
 | `blob15` | EU-country indicator (`1` or `0`) |
 | `blob16` | Serving Cloudflare data center code |
 | `blob17` | Coordinates-present indicator (`1` or `0`) |
+| `blob18` | Audio source (`sefaria`, `arbitrary`, or empty for non-audio events) |
 | `double1` | Event count (`1`) |
 | `double2` | Approximate latitude, or `0` when unavailable |
 | `double3` | Approximate longitude, or `0` when unavailable |
@@ -65,3 +68,22 @@ ORDER BY events DESC
 
 Results should be reported in aggregate. Avoid publishing small geographic
 groups that could make individual visitors recognizable.
+
+## Example: audio activity and generation cost
+
+```sql
+SELECT
+  index1 AS event,
+  blob18 AS source_type,
+  SUM(_sample_interval * double1) AS actions
+FROM hebrew_transliterator_usage
+WHERE timestamp > NOW() - INTERVAL '30' DAY
+  AND index1 IN ('audio_generated', 'audio_listened', 'audio_downloaded')
+GROUP BY event, source_type
+ORDER BY event, source_type
+```
+
+`audio_generated` is written by the Worker only after Azure successfully
+creates a new file. A reused R2 object does not increment it, so this event is
+the closest count of billable synthesis requests. Listen and download events
+are browser actions and may be higher than generation counts.
