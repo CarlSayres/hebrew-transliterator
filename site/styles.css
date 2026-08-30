@@ -3,13 +3,13 @@
   --bg: #f6f6f3;
   --surface: #ffffff;
   --surface-warm: #f1f5f6;
-  --text: #26323d;
-  --muted: #65717b;
-  --line: #d6dde1;
-  --accent: #28758a;
-  --accent-strong: #193f5f;
-  --accent-soft: #e8f1f3;
-  --focus: #b57b19;
+  --text: #202a33;
+  --muted: #4f5d67;
+  --line: #bdc8cf;
+  --accent: #176d85;
+  --accent-strong: #173f68;
+  --accent-soft: #e3eef2;
+  --focus: #287fa6;
   --shadow-soft: 0 10px 32px rgb(25 63 95 / 7%);
   --shadow-panel: 0 18px 52px rgb(25 63 95 / 9%);
 }
@@ -785,7 +785,7 @@ textarea {
 }
 
 textarea:focus {
-  outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--focus) 72%, transparent);
   outline-offset: -3px;
 }
 
@@ -803,7 +803,7 @@ textarea:focus {
 }
 
 .output:focus {
-  outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--focus) 72%, transparent);
   outline-offset: -3px;
 }
 
