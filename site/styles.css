@@ -1,15 +1,16 @@
 :root {
   color-scheme: light;
-  --bg: #f4f1ea;
+  --bg: #ede8f5;
   --surface: #ffffff;
-  --surface-warm: #f3f1ed;
+  --surface-warm: #ede8f5;
   --text: #191e24;
   --muted: #484d54;
-  --line: #b4b6b9;
-  --accent: #205b99;
-  --accent-strong: #173f68;
-  --accent-soft: #edf2f8;
-  --focus: #205b99;
+  --line: #8697c4;
+  --accent: #3d52a0;
+  --accent-strong: #3d52a0;
+  --accent-hover: #2f4080;
+  --accent-soft: #adbbda;
+  --focus: #7091e6;
 }
 
 * {
@@ -342,8 +343,8 @@ h1 {
 }
 
 .sefaria-start-button:hover {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
 }
 
 .sefaria-start-button:disabled {
@@ -526,7 +527,7 @@ h1 {
   border-radius: 999px;
   padding: 3px 8px;
   background: var(--accent-soft);
-  color: var(--accent-strong);
+  color: var(--text);
   cursor: pointer;
   font: inherit;
   font-weight: 700;
@@ -582,15 +583,69 @@ h1 {
 
 .result-button:hover {
   border-color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--surface-warm);
   color: var(--accent-strong);
 }
 
 .folder-button {
   border-color: var(--accent-strong);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Use shapes as well as color to distinguish navigation from importable text. */
+.folder-button,
+.page-button {
+  position: relative;
+  padding-left: 30px;
+}
+
+.folder-button::before,
+.page-button::before,
+.result-card-title::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 19px;
+  background: currentColor;
+  mask: url("page.svg") center / contain no-repeat;
+}
+
+.folder-button::before,
+.result-card-folder .result-card-title::before {
+  mask-image: url("folder.svg");
+}
+
+.page-button {
+  border-color: var(--line);
   background: white;
   color: var(--accent-strong);
-  font-weight: 600;
+}
+
+.folder-button:hover:not(:disabled),
+.page-button:hover:not(:disabled) {
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: white;
+}
+
+.result-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.chapter-number-strip .page-button {
+  padding-left: 24px;
+}
+
+.chapter-number-strip .page-button::before {
+  left: 5px;
+  width: 14px;
+  height: 16px;
 }
 
 .result-card {
@@ -605,6 +660,8 @@ h1 {
 }
 
 .result-card-title {
+  position: relative;
+  padding-left: 24px;
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -612,6 +669,18 @@ h1 {
   margin: 0;
   font-size: 0.86rem;
   line-height: 1.25;
+}
+
+.result-card-title::before {
+  left: 0;
+  top: 0;
+  transform: none;
+  color: var(--accent-strong);
+}
+
+.result-card-folder {
+  border-color: var(--accent-strong);
+  border-top: 3px solid var(--accent-strong);
 }
 
 .result-card-hebrew {
@@ -775,7 +844,7 @@ textarea {
 }
 
 textarea:focus {
-  outline: 3px solid color-mix(in srgb, var(--focus) 72%, transparent);
+  outline: 3px solid var(--focus);
   outline-offset: -3px;
 }
 
@@ -793,7 +862,7 @@ textarea:focus {
 }
 
 .output:focus {
-  outline: 3px solid color-mix(in srgb, var(--focus) 72%, transparent);
+  outline: 3px solid var(--focus);
   outline-offset: -3px;
 }
 
@@ -1081,8 +1150,8 @@ textarea:focus {
 
 .secondary-button:hover,
 .icon-button:hover {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
 }
 
 .quiet-icon-button {

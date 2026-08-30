@@ -1524,7 +1524,7 @@
         const button = document.createElement("button");
         button.className = result.availability === "browse"
           ? "result-button folder-button"
-          : "result-button";
+          : "result-button page-button";
         button.type = "button";
         button.textContent = label;
 
@@ -1542,7 +1542,9 @@
       }
 
       const card = document.createElement("article");
-      card.className = "result-card";
+      card.className = result.availability === "browse"
+        ? "result-card result-card-folder"
+        : "result-card result-card-page";
 
       const title = document.createElement("h3");
       title.className = "result-card-title";
@@ -1598,7 +1600,7 @@
       actions.className = "result-card-actions";
       if (result.availability === "import" || result.availability === "browse") {
         const button = document.createElement("button");
-        button.className = result.availability === "browse" ? "result-button folder-button" : "result-button";
+        button.className = result.availability === "browse" ? "result-button folder-button" : "result-button page-button";
         button.type = "button";
         button.textContent = result.availability === "browse" ? "Browse sections" : "Import Hebrew";
         button.addEventListener("click", () => handleSefariaResultClick(result));
