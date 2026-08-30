@@ -8,7 +8,7 @@
   --line: #b3b4bd;
   --accent: #0a21c0;
   --accent-strong: #050a44;
-  --accent-hover: #0a21c0;
+  --accent-hover: #081ba0;
   --accent-soft: #b3b4bd;
   --focus: #0a21c0;
 }
@@ -333,10 +333,10 @@ h1 {
 }
 
 .sefaria-start-button {
-  border: 1px solid var(--accent-strong);
+  border: 1px solid var(--accent);
   border-radius: 5px;
   padding: 5px 11px;
-  background: var(--accent-strong);
+  background: var(--accent);
   color: white;
   cursor: pointer;
   font: inherit;
@@ -628,8 +628,8 @@ h1 {
 
 .folder-button:hover:not(:disabled),
 .page-button:hover:not(:disabled) {
-  border-color: var(--accent-strong);
-  background: var(--accent-strong);
+  border-color: var(--accent);
+  background: var(--accent);
   color: white;
 }
 
@@ -744,9 +744,9 @@ h1 {
 }
 
 .back-button {
-  background: var(--text);
+  background: var(--accent);
   color: white;
-  border-color: var(--text);
+  border-color: var(--accent);
 }
 
 .panel {
@@ -903,7 +903,7 @@ textarea:focus {
 
 .output-header .icon-button {
   border-color: #ffffff;
-  background: transparent;
+  background: var(--accent);
   color: white;
   border-radius: 4px;
 }
@@ -941,9 +941,9 @@ textarea:focus {
 
 .secondary-button,
 .icon-button {
-  border: 1px solid var(--accent-strong);
+  border: 1px solid var(--accent);
   border-radius: 7px;
-  background: var(--accent-strong);
+  background: var(--accent);
   color: white;
   cursor: pointer;
   font-weight: 700;
