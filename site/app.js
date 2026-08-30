@@ -221,6 +221,7 @@
   let speechSpeaking = false;
   let speechSelectionSnapshot = "";
   let speechDebugVisible = false;
+  const missingHebrewVoiceMessage = "So sorry, but this browser does not have a Hebrew voice available. Try Edge on Windows.";
 
   const liturgySearchAliases = [
     {
@@ -461,7 +462,7 @@
 
   function updateSpeechVoiceModeNote() {
     speechVoiceModeNote.textContent = usesHebrewSpeechVoice()
-      ? "Reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit, and dagesh is removed from gimel and tav."
+      ? "Reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit, and dagesh is removed from gimel, tav, and kuf."
       : "No Hebrew speech voice is available in this browser.";
   }
 
@@ -471,8 +472,6 @@
     const desired = speechVoiceSelect.value || preferredSpeechVoiceKey;
     speechVoiceSelect.replaceChildren();
     const hasHebrewVoices = availableSpeechVoices.length > 0;
-    speechButton.hidden = !hasHebrewVoices;
-    speechSettingsButton.hidden = !hasHebrewVoices;
     if (!hasHebrewVoices) {
       if (speechSpeaking) {
         stopSpeech();
@@ -1765,6 +1764,10 @@
     speechSelectionSnapshot = selectedHebrewForSpeech();
   });
   speechButton.addEventListener("click", () => {
+    if (!usesHebrewSpeechVoice()) {
+      window.alert(missingHebrewVoiceMessage);
+      return;
+    }
     if (speechSpeaking) {
       stopSpeech();
       return;
@@ -1780,6 +1783,10 @@
 
   speechSettingsButton.addEventListener("click", () => {
     populateSpeechVoices();
+    if (!usesHebrewSpeechVoice()) {
+      window.alert(missingHebrewVoiceMessage);
+      return;
+    }
     speechSettingsDialog.showModal();
   });
   speechSettingsDialog.addEventListener("click", (event) => {
@@ -1796,9 +1803,8 @@
   speechRate.addEventListener("change", savePreferences);
 
   if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
-    speechButton.disabled = true;
-    speechSettingsButton.disabled = true;
-    speechButton.title = "Read aloud is not supported by this browser.";
+    speechButton.title = missingHebrewVoiceMessage;
+    speechSettingsButton.title = missingHebrewVoiceMessage;
   } else {
     window.speechSynthesis.addEventListener?.("voiceschanged", populateSpeechVoices);
   }

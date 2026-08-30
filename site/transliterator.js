@@ -1806,6 +1806,25 @@
         forceSilentInitialPrefixSheva(clusters);
       }
 
+      const kolKafIndex = (() => {
+        if (clusters.length < 2) {
+          return -1;
+        }
+        const kafIndex = clusters.length - 2;
+        const kaf = clusters[kafIndex];
+        const lamed = clusters[kafIndex + 1];
+        const validPrefixLetters = new Set(["ו", "ה", "ב", "כ", "ל", "מ", "ש", "ד"]);
+        const validPrefixes = clusters
+          .slice(0, kafIndex)
+          .every((prefix) => validPrefixLetters.has(prefix.base));
+        return (
+          kaf.base === "כ" &&
+          lamed.base === "ל" &&
+          [MARKS.QAMATS, MARKS.QAMATS_QATAN].some((mark) => hasMark(kaf, mark)) &&
+          validPrefixes
+        ) ? kafIndex : -1;
+      })();
+
       return clusters.map((cluster, index) => {
         let marks = cluster.marks.filter((mark) => {
           const code = mark.codePointAt(0);
@@ -1872,14 +1891,14 @@
         if (consonantalVav) {
           marks = marks.filter((mark) => mark !== MARKS.DAGESH);
         }
-        if (["ג", "ת"].includes(speechBase)) {
+        if (["ג", "ת", "ק"].includes(speechBase)) {
           marks = marks.filter((mark) => mark !== MARKS.DAGESH);
         }
         if (nextIsHolamMaterVav && !marks.includes(MARKS.HOLAM)) {
           marks.push(MARKS.HOLAM);
         }
 
-        if (cluster.vowelName === "kamatzKatan") {
+        if (cluster.vowelName === "kamatzKatan" || index === kolKafIndex) {
           marks = marks.filter((mark) => ![MARKS.QAMATS, MARKS.QAMATS_QATAN].includes(mark));
           suffix += `ו${MARKS.HOLAM}`;
         } else if (cluster.sheva === "vocal") {
