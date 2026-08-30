@@ -1818,8 +1818,43 @@
           !shouldSkipMater(clusters, index)
         );
         const speechBase = consonantalVav ? "ב" : cluster.base;
+        const isHolamMaterVav = Boolean(
+          cluster.base === "ו" &&
+          hasMark(cluster, MARKS.HOLAM) &&
+          shouldSkipMater(clusters, index)
+        );
+        const nextIsHolamMaterVav = Boolean(
+          clusters[index + 1]?.base === "ו" &&
+          hasMark(clusters[index + 1], MARKS.HOLAM) &&
+          shouldSkipMater(clusters, index + 1)
+        );
+        const isSilentYodInAvSuffix = Boolean(
+          cluster.base === "י" &&
+          !getVowelMark(cluster) &&
+          !hasMark(cluster, MARKS.SHEVA) &&
+          clusters[index - 1]?.vowelName === "kamatzGadol" &&
+          clusters[index + 1]?.base === "ו" &&
+          index + 2 === clusters.length
+        );
+        const needsTzereCarrierBeforeAvSuffix = Boolean(
+          cluster.vowelName === "tzere" &&
+          clusters[index + 1]?.base === "א" &&
+          clusters[index + 1]?.vowelName === "kamatzGadol" &&
+          clusters[index + 2]?.base === "י" &&
+          clusters[index + 3]?.base === "ו" &&
+          index + 4 === clusters.length
+        );
+        if (isSilentYodInAvSuffix) {
+          return "";
+        }
+        if (isHolamMaterVav) {
+          return "";
+        }
         if (consonantalVav) {
           marks = marks.filter((mark) => mark !== MARKS.DAGESH);
+        }
+        if (nextIsHolamMaterVav && !marks.includes(MARKS.HOLAM)) {
+          marks.push(MARKS.HOLAM);
         }
 
         if (cluster.vowelName === "kamatzKatan") {
@@ -1828,12 +1863,18 @@
         } else if (cluster.sheva === "vocal") {
           marks = marks.filter((mark) => mark !== MARKS.SHEVA);
           marks.push(MARKS.SEGOL);
-        } else if (cluster.vowelName === "holam" && (cluster.base !== "ו" || consonantalVav)) {
+        } else if (
+          cluster.vowelName === "holam" &&
+          (cluster.base !== "ו" || consonantalVav) &&
+          !nextIsHolamMaterVav
+        ) {
           marks = marks.filter((mark) => ![MARKS.HOLAM, MARKS.HOLAM_HASER].includes(mark));
           suffix += `ו${MARKS.HOLAM}`;
         }
 
-        if (cluster.vowelName === "tzere" && tzere === "ei") {
+        if (needsTzereCarrierBeforeAvSuffix) {
+          suffix += tzere === "ei" ? "י" : "ה";
+        } else if (cluster.vowelName === "tzere" && tzere === "ei") {
           marks = marks.filter((mark) => mark !== MARKS.TSERE);
           marks.push(MARKS.SEGOL);
           if (clusters[index + 1]?.base !== "י") {
