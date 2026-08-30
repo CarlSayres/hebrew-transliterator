@@ -286,6 +286,7 @@
   function updateOutput() {
     stopAudio();
     clearPreparedAudio();
+    speechSelectionSnapshot = "";
     currentAlignment = transliterator.transliterateWithAlignment(
       input.value,
       stressMarkToggle?.checked ? "stressMarks" : "text"
@@ -385,6 +386,12 @@
 
   function updateLinkedHighlightsFromSelection() {
     if (document.activeElement === input) {
+      speechSelectionSnapshot = input.selectionStart !== input.selectionEnd
+        ? speechTools.selectedOrAll(input.value, {
+            start: input.selectionStart,
+            end: input.selectionEnd
+          })
+        : "";
       const indexes = selectionAlignmentTools.matchingIndexes(
         currentAlignment.segments,
         input.selectionStart,
@@ -398,6 +405,11 @@
 
     const offsets = outputSelectionOffsets(window.getSelection());
     if (offsets) {
+      speechSelectionSnapshot = speechTools.sourceForTargetSelection(
+        input.value,
+        currentAlignment.segments,
+        offsets
+      );
       const indexes = selectionAlignmentTools.matchingIndexes(
         currentAlignment.segments,
         offsets.start,
@@ -409,6 +421,13 @@
       return;
     }
 
+    if (
+      (document.activeElement === speechButton || document.activeElement === speechDownloadButton) &&
+      speechSelectionSnapshot
+    ) {
+      return;
+    }
+    speechSelectionSnapshot = "";
     clearLinkedHighlights();
   }
 
@@ -1781,8 +1800,9 @@
     void copyText(input.value, hebrewCopyButton, "Copy", "hebrew_copied");
   });
 
-  speechButton.addEventListener("pointerdown", () => {
-    speechSelectionSnapshot = selectedHebrewForSpeech();
+  speechButton.addEventListener("pointerdown", (event) => {
+    speechSelectionSnapshot ||= selectedHebrewForSpeech();
+    event.preventDefault();
   });
   speechButton.addEventListener("click", async () => {
     if (audioElement && !audioElement.paused) {
@@ -1808,8 +1828,9 @@
     }
   });
 
-  speechDownloadButton.addEventListener("pointerdown", () => {
-    speechSelectionSnapshot = selectedHebrewForSpeech();
+  speechDownloadButton.addEventListener("pointerdown", (event) => {
+    speechSelectionSnapshot ||= selectedHebrewForSpeech();
+    event.preventDefault();
   });
   speechDownloadButton.addEventListener("click", async () => {
     const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
