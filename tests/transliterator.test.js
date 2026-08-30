@@ -957,6 +957,21 @@ for (const [input, expected] of speechCases) {
   }
 }
 
+const speechERuleset = speech.rulesetForTzere(
+  context.window.HebrewRulesets.speechEnglish,
+  "e"
+);
+const speechETransliterator = new context.window.HebrewTransliterator.Transliterator(speechERuleset);
+const speechETzere = speech.phoneticize(speechETransliterator.transliterate("אֱלֹהֵינוּ"));
+if (speechETzere !== "eh-loh-heh-noo") {
+  failures.push({
+    feature: "speechTzere",
+    input: "אֱלֹהֵינוּ",
+    expected: "eh-loh-heh-noo",
+    actual: speechETzere
+  });
+}
+
 if (failures.length) {
   console.error("Transliteration test failures:");
   for (const failure of failures) {
@@ -966,4 +981,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + 1} transliteration tests passed.`);
+console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + 2} transliteration tests passed.`);

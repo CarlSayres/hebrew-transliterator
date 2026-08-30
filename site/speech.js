@@ -199,12 +199,45 @@
     );
   }
 
+  function rulesetForTzere(baseRuleset, tzere) {
+    const ruleset = JSON.parse(JSON.stringify(baseRuleset || {}));
+    const selected = tzere === "e" ? "e" : "ei";
+    ruleset.vowels = { ...(ruleset.vowels || {}), tzere: selected };
+    if (selected !== "e") {
+      return ruleset;
+    }
+
+    const remap = (table) => Object.fromEntries(
+      Object.entries(table || {}).map(([key, value]) => [
+        key,
+        String(value).replace(/Ei/g, "E").replace(/ei/g, "e")
+      ])
+    );
+    ruleset.exceptions = {
+      ...(ruleset.exceptions || {}),
+      exactWords: remap(ruleset.exceptions?.exactWords),
+      niqqudless: remap(ruleset.exceptions?.niqqudless),
+      phraseCapitalization: remap(ruleset.exceptions?.phraseCapitalization)
+    };
+    return ruleset;
+  }
+
+  function ssmlDiagnostic() {
+    return [
+      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">',
+      '<phoneme alphabet="ipa" ph="təˈmeɪtoʊ">banana</phoneme>',
+      "</speak>"
+    ].join("");
+  }
+
   return {
     prepareText,
     chunks,
     selectedOrAll,
     sourceForTargetSelection,
     phoneticize,
-    phoneticizeWord
+    phoneticizeWord,
+    rulesetForTzere,
+    ssmlDiagnostic
   };
 });

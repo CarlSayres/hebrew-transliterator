@@ -49,3 +49,26 @@ test("renders English-friendly syllables for speech", () => {
   );
   assert.equal(speech.phoneticize("Bereishit"), "beh-ray-sheet");
 });
+
+test("makes the speech ruleset follow the selected tzere pronunciation", () => {
+  const base = {
+    vowels: { tzere: "ei" },
+    exceptions: {
+      exactWords: { word: "Eloheinu" },
+      niqqudless: { word: "Elohei" },
+      phraseCapitalization: {}
+    }
+  };
+  const eRuleset = speech.rulesetForTzere(base, "e");
+  const eiRuleset = speech.rulesetForTzere(base, "ei");
+  assert.equal(eRuleset.vowels.tzere, "e");
+  assert.equal(eRuleset.exceptions.exactWords.word, "Elohenu");
+  assert.equal(eiRuleset.exceptions.exactWords.word, "Eloheinu");
+});
+
+test("builds an unambiguous SSML IPA diagnostic with a plain-text fallback", () => {
+  const diagnostic = speech.ssmlDiagnostic();
+  assert.match(diagnostic, /alphabet="ipa"/);
+  assert.match(diagnostic, /ph="təˈmeɪtoʊ"/);
+  assert.match(diagnostic, />banana</);
+});

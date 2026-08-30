@@ -13,6 +13,15 @@
   const hebrewCopyButton = document.getElementById("hebrewCopyButton");
   const copyButton = document.getElementById("copyButton");
   const speechButton = document.getElementById("speechButton");
+  const speechSettingsButton = document.getElementById("speechSettingsButton");
+  const speechSettingsDialog = document.getElementById("speechSettingsDialog");
+  const speechVoiceSelect = document.getElementById("speechVoiceSelect");
+  const speechRate = document.getElementById("speechRate");
+  const speechRateValue = document.getElementById("speechRateValue");
+  const ssmlTestButton = document.getElementById("ssmlTestButton");
+  const ssmlWorkedButton = document.getElementById("ssmlWorkedButton");
+  const ssmlFallbackButton = document.getElementById("ssmlFallbackButton");
+  const ssmlTestStatus = document.getElementById("ssmlTestStatus");
   const sefariaQuery = document.getElementById("sefariaQuery");
   const sefariaImportButton = document.getElementById("sefariaImportButton");
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
@@ -122,7 +131,11 @@
       stressMarks: Boolean(stressMarkToggle?.checked),
       tzere: tzereOverrideRadios.find((radio) => radio.checked)?.value || "e",
       chet: chetOverride?.value || "",
-      khaf: khafOverride?.value || ""
+      khaf: khafOverride?.value || "",
+      speechVoice: speechVoiceSelect?.value || "",
+      speechRate: Number(speechRate?.value) || 0.85,
+      speechSsmlVoice: speechSsmlVoiceKey,
+      speechSsmlSupported
     };
     const secure = location.protocol === "https:" ? "; Secure" : "";
     document.cookie = `${preferencesCookieName}=${encodeURIComponent(JSON.stringify(preferences))}; Max-Age=${preferencesCookieMaxAge}; Path=/; SameSite=Lax${secure}`;
@@ -153,6 +166,18 @@
     if (hasSelectValue(khafOverride, preferences.khaf)) {
       khafOverride.value = preferences.khaf;
     }
+    preferredSpeechVoiceKey = String(preferences.speechVoice || "");
+    const restoredRate = Number(preferences.speechRate);
+    if (restoredRate >= 0.6 && restoredRate <= 1.2) {
+      speechRate.value = String(restoredRate);
+    }
+    speechSsmlVoiceKey = String(preferences.speechSsmlVoice || "");
+    speechSsmlSupported = preferences.speechSsmlSupported === true
+      ? true
+      : preferences.speechSsmlSupported === false
+        ? false
+        : null;
+    updateSpeechRateLabel();
   }
 
   function normalizedSefariaSearchTerm(value) {
@@ -191,9 +216,10 @@
 
   const rulesets = window.HebrewRulesets.all || [window.HebrewRulesets.modernSefardi];
   let transliterator = new window.HebrewTransliterator.Transliterator(rulesets[0]);
-  const speechTransliterator = new window.HebrewTransliterator.Transliterator(
-    window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi
-  );
+  let availableSpeechVoices = [];
+  let preferredSpeechVoiceKey = "";
+  let speechSsmlVoiceKey = "";
+  let speechSsmlSupported = null;
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
   let activeSefariaController = null;
@@ -391,7 +417,88 @@
   }
 
   function speechTextForHebrew(hebrew) {
+    const tzere = tzereOverrideRadios.find((radio) => radio.checked)?.value || "e";
+    const speechRuleset = speechTools.rulesetForTzere(
+      window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi,
+      tzere
+    );
+    const speechTransliterator = new window.HebrewTransliterator.Transliterator(speechRuleset);
     return speechTools.phoneticize(speechTransliterator.transliterate(hebrew));
+  }
+
+  function speechVoiceKey(voice) {
+    return voice?.voiceURI || `${voice?.name || ""}::${voice?.lang || ""}`;
+  }
+
+  function selectedSpeechVoice() {
+    return availableSpeechVoices.find(
+      (voice) => speechVoiceKey(voice) === speechVoiceSelect.value
+    ) || null;
+  }
+
+  function configureUtterance(utterance) {
+    const voice = selectedSpeechVoice();
+    utterance.voice = voice;
+    utterance.lang = voice?.lang || "en-US";
+    utterance.rate = Number(speechRate.value) || 0.85;
+  }
+
+  function updateSpeechRateLabel() {
+    speechRateValue.textContent = `${Number(speechRate.value).toFixed(2)}×`;
+  }
+
+  function updateSsmlTestStatus() {
+    const selectedKey = speechVoiceSelect.value || "__default_en__";
+    if (selectedKey !== speechSsmlVoiceKey || speechSsmlSupported === null) {
+      ssmlTestStatus.textContent = "This voice has not been verified for IPA/SSML.";
+      return;
+    }
+    ssmlTestStatus.textContent = speechSsmlSupported
+      ? "You marked this voice as supporting IPA/SSML."
+      : "You marked this voice as fallback-only; IPA/SSML will not be assumed.";
+  }
+
+  function populateSpeechVoices() {
+    const voices = window.speechSynthesis?.getVoices?.() || [];
+    availableSpeechVoices = voices.filter((voice) => /^en(?:[-_]|$)/i.test(voice.lang));
+    const desired = speechVoiceSelect.value || preferredSpeechVoiceKey;
+    speechVoiceSelect.replaceChildren();
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Browser default (English)";
+    speechVoiceSelect.append(defaultOption);
+
+    for (const voice of availableSpeechVoices) {
+      const option = document.createElement("option");
+      option.value = speechVoiceKey(voice);
+      option.textContent = `${voice.name} (${voice.lang})${voice.localService ? " — local" : ""}`;
+      speechVoiceSelect.append(option);
+    }
+    speechVoiceSelect.value = hasSelectValue(speechVoiceSelect, desired) ? desired : "";
+    if (availableSpeechVoices.length) {
+      preferredSpeechVoiceKey = speechVoiceSelect.value;
+    }
+    updateSsmlTestStatus();
+  }
+
+  function playSsmlDiagnostic() {
+    stopSpeech();
+    const session = speechSession;
+    const utterance = new SpeechSynthesisUtterance(speechTools.ssmlDiagnostic());
+    configureUtterance(utterance);
+    setSpeechButtonState(true);
+    utterance.addEventListener("end", () => {
+      if (speechSession === session) {
+        setSpeechButtonState(false);
+      }
+    });
+    utterance.addEventListener("error", () => {
+      if (speechSession === session) {
+        setSpeechButtonState(false);
+      }
+    });
+    window.speechSynthesis.speak(utterance);
+    ssmlTestStatus.textContent = "Listen for “tomato” (IPA supported) or “banana” (fallback only).";
   }
 
   function setSpeechButtonState(speaking) {
@@ -425,7 +532,7 @@
 
     utteranceTexts.forEach((utteranceText, index) => {
       const utterance = new SpeechSynthesisUtterance(utteranceText);
-      utterance.lang = "en-US";
+      configureUtterance(utterance);
       if (index === utteranceTexts.length - 1) {
         utterance.addEventListener("end", () => {
           if (speechSession === session) {
@@ -1673,9 +1780,42 @@
     startSpeech(speechTextForHebrew(hebrew));
   });
 
+  speechSettingsButton.addEventListener("click", () => {
+    populateSpeechVoices();
+    speechSettingsDialog.showModal();
+  });
+  speechSettingsDialog.addEventListener("click", (event) => {
+    if (event.target === speechSettingsDialog) {
+      speechSettingsDialog.close();
+    }
+  });
+  speechVoiceSelect.addEventListener("change", () => {
+    preferredSpeechVoiceKey = speechVoiceSelect.value;
+    updateSsmlTestStatus();
+    savePreferences();
+  });
+  speechRate.addEventListener("input", updateSpeechRateLabel);
+  speechRate.addEventListener("change", savePreferences);
+  ssmlTestButton.addEventListener("click", playSsmlDiagnostic);
+  ssmlWorkedButton.addEventListener("click", () => {
+    speechSsmlVoiceKey = speechVoiceSelect.value || "__default_en__";
+    speechSsmlSupported = true;
+    updateSsmlTestStatus();
+    savePreferences();
+  });
+  ssmlFallbackButton.addEventListener("click", () => {
+    speechSsmlVoiceKey = speechVoiceSelect.value || "__default_en__";
+    speechSsmlSupported = false;
+    updateSsmlTestStatus();
+    savePreferences();
+  });
+
   if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
     speechButton.disabled = true;
+    speechSettingsButton.disabled = true;
     speechButton.title = "Read aloud is not supported by this browser.";
+  } else {
+    window.speechSynthesis.addEventListener?.("voiceschanged", populateSpeechVoices);
   }
 
   styleSelect.addEventListener("change", () => {
@@ -1798,6 +1938,7 @@
 
   populateStyleSelect();
   restorePreferences();
+  populateSpeechVoices();
   refreshTransliterator();
   if (new URLSearchParams(location.search).get("feedback") === "1") {
     window.requestAnimationFrame(openFeedbackDialog);
