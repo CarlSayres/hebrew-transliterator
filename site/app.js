@@ -398,7 +398,7 @@
         input.selectionEnd,
         "source"
       );
-      renderHebrewHighlights([]);
+      renderHebrewHighlights(indexes);
       renderOutputHighlights(indexes);
       return;
     }
@@ -416,17 +416,12 @@
         offsets.end,
         "target"
       );
-      renderOutputHighlights([]);
+      renderOutputHighlights(indexes);
       renderHebrewHighlights(indexes);
       return;
     }
 
-    if (
-      (document.activeElement === speechButton || document.activeElement === speechDownloadButton) &&
-      speechSelectionSnapshot
-    ) {
-      return;
-    }
+    if (speechSelectionSnapshot) return;
     speechSelectionSnapshot = "";
     clearLinkedHighlights();
   }
@@ -1810,7 +1805,6 @@
       return;
     }
     const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
-    speechSelectionSnapshot = "";
     try {
       const prepared = await prepareAudio(hebrew);
       await prepared.audio.play();
@@ -1834,7 +1828,6 @@
   });
   speechDownloadButton.addEventListener("click", async () => {
     const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
-    speechSelectionSnapshot = "";
     try {
       const prepared = await prepareAudio(hebrew);
       const link = document.createElement("a");
