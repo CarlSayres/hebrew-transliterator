@@ -1,17 +1,15 @@
 :root {
   color-scheme: light;
-  --bg: #f6f6f3;
+  --bg: #f4f1ea;
   --surface: #ffffff;
-  --surface-warm: #f1f5f6;
-  --text: #202a33;
-  --muted: #4f5d67;
-  --line: #bdc8cf;
-  --accent: #176d85;
+  --surface-warm: #f3f1ed;
+  --text: #191e24;
+  --muted: #484d54;
+  --line: #b4b6b9;
+  --accent: #205b99;
   --accent-strong: #173f68;
-  --accent-soft: #e3eef2;
-  --focus: #287fa6;
-  --shadow-soft: 0 10px 32px rgb(25 63 95 / 7%);
-  --shadow-panel: 0 18px 52px rgb(25 63 95 / 9%);
+  --accent-soft: #edf2f8;
+  --focus: #205b99;
 }
 
 * {
@@ -21,7 +19,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(180deg, #fbfaf7 0, var(--bg) 300px);
+  background: var(--bg);
+  border-top: 5px solid var(--accent-strong);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -133,8 +132,8 @@ h1 {
   margin: 0;
   font-size: clamp(2rem, 5vw, 4.25rem);
   line-height: 1;
-  color: var(--accent-strong);
-  font-weight: 720;
+  color: var(--text);
+  font-weight: 750;
   letter-spacing: -0.035em;
 }
 
@@ -160,10 +159,9 @@ h1 {
   gap: clamp(10px, 1.5vw, 14px);
   flex-wrap: wrap;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--line) 82%, white);
-  border-radius: 10px;
-  background: rgb(255 255 255 / 72%);
-  box-shadow: 0 8px 24px rgb(25 63 95 / 5%);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
 }
 
 .style-controls {
@@ -290,9 +288,9 @@ h1 {
   margin-bottom: clamp(12px, 2vw, 18px);
   padding: clamp(12px, 1.5vw, 16px);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-top: 3px solid var(--accent-strong);
+  border-radius: 6px;
   background: var(--surface);
-  box-shadow: var(--shadow-soft);
 }
 
 .sefaria-label {
@@ -334,18 +332,18 @@ h1 {
 }
 
 .sefaria-start-button {
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
-  border-radius: 999px;
-  padding: 3px 9px;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  border: 1px solid var(--accent-strong);
+  border-radius: 5px;
+  padding: 5px 11px;
+  background: var(--accent-strong);
+  color: white;
   cursor: pointer;
   font: inherit;
 }
 
 .sefaria-start-button:hover {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent-soft) 72%, white);
+  background: var(--accent);
 }
 
 .sefaria-start-button:disabled {
@@ -372,15 +370,6 @@ h1 {
   border-color: var(--accent);
   outline: 3px solid color-mix(in srgb, var(--accent) 20%, transparent);
   outline-offset: 0;
-}
-
-.quiet-button {
-  background: transparent;
-  color: var(--accent-strong);
-}
-
-.quiet-button:hover {
-  color: white;
 }
 
 .cancel-button {
@@ -598,8 +587,10 @@ h1 {
 }
 
 .folder-button {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  background: var(--accent-soft);
+  border-color: var(--accent-strong);
+  background: white;
+  color: var(--accent-strong);
+  font-weight: 600;
 }
 
 .result-card {
@@ -696,9 +687,8 @@ h1 {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 6px;
   background: var(--surface);
-  box-shadow: var(--shadow-panel);
   overflow: hidden;
 }
 
@@ -826,14 +816,49 @@ textarea:focus {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--surface-warm) 44%, white);
+  border-bottom: 1px solid var(--accent-strong);
+  background: var(--accent-strong);
+  min-height: 56px;
+  flex-wrap: wrap;
+  padding-block: 4px;
+}
+
+.output-header .panel-label,
+.output-header .line-numbers-toggle {
+  color: white;
+}
+
+.output-header .panel-label {
+  padding-block: 12px;
+}
+
+.output-header .icon-button {
+  border-color: #ffffff;
+  background: transparent;
+  color: white;
+  border-radius: 4px;
+}
+
+.output-header #speechButton,
+.output-header .icon-button:hover:not(:disabled) {
+  background: white;
+  color: var(--accent-strong);
+}
+
+.output-header .icon-button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+.output-header input {
+  accent-color: var(--accent);
 }
 
 .output-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
   margin-right: 12px;
 }
 
@@ -1063,6 +1088,21 @@ textarea:focus {
 .quiet-icon-button {
   background: #ffffff;
   color: var(--accent-strong);
+}
+
+.quiet-button {
+  background: white;
+  color: var(--accent-strong);
+}
+
+.quiet-button:hover {
+  color: white;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #62666c;
+  opacity: 1;
 }
 
 .secondary-button:focus-visible,
