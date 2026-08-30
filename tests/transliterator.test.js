@@ -972,6 +972,25 @@ if (speechETzere !== "eh-loh-heh-noo") {
   });
 }
 
+const pronunciationHebrewCases = [
+  ["חָכְמָה", "חוֹכְמָה", "e"],
+  ["שְׁמַע", "שֶׁמַע", "e"],
+  ["גָּאָֽלְתָּ", "גָּאָלְתָּ", "e"],
+  ["וּבְמֹפְתִֽים", "וּבְמֹפֶתִים", "e"],
+  ["כְּכָל", "כֶּכוֹל", "e"],
+  ["שֶׁכָּל", "שֶׁכּוֹל", "e"],
+  ["מִצְרָיְמָה", "מִצְרָיְמָה", "e"],
+  ["מִלְחָמוֹת", "מִלְחָמוֹת", "e"],
+  ["בֵּן", "בֵּין", "ei"],
+  ["יְהֹוָ֔ה מֶֽלֶךְ׃", "אֲדֹנָי מֶלֶךְ:", "e"]
+];
+for (const [input, expected, tzere] of pronunciationHebrewCases) {
+  const actual = speechTransliterator.pronunciationHebrew(input, { tzere });
+  if (actual.normalize("NFD") !== expected.normalize("NFD")) {
+    failures.push({ feature: "pronunciationHebrew", input, expected, tzere, actual });
+  }
+}
+
 if (failures.length) {
   console.error("Transliteration test failures:");
   for (const failure of failures) {
@@ -981,4 +1000,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + 2} transliteration tests passed.`);
+console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + pronunciationHebrewCases.length + 2} transliteration tests passed.`);

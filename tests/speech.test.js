@@ -65,10 +65,3 @@ test("makes the speech ruleset follow the selected tzere pronunciation", () => {
   assert.equal(eRuleset.exceptions.exactWords.word, "Elohenu");
   assert.equal(eiRuleset.exceptions.exactWords.word, "Eloheinu");
 });
-
-test("prepares vocalized Hebrew for a native Hebrew voice", () => {
-  assert.equal(
-    speech.hebrewForSpeech("יְהֹוָ֔ה מֶֽלֶךְ׃"),
-    "אֲדֹנָי מֶלֶךְ:"
-  );
-});

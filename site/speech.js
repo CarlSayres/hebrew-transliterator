@@ -222,18 +222,6 @@
     return ruleset;
   }
 
-  function hebrewForSpeech(text) {
-    return String(text || "")
-      .normalize("NFD")
-      .replace(/[\u0591-\u05af\u05bd\u05c4\u05c5]/g, "")
-      .replace(/[\u0590-\u05ff]+/g, (word) => {
-        const base = word.replace(/[\u0591-\u05c7]/g, "");
-        return base === "יהוה" || base === "יי" ? "אֲדֹנָי" : word;
-      })
-      .replace(/\u05c3/g, ":")
-      .normalize("NFC");
-  }
-
   return {
     prepareText,
     chunks,
@@ -241,7 +229,6 @@
     sourceForTargetSelection,
     phoneticize,
     phoneticizeWord,
-    rulesetForTzere,
-    hebrewForSpeech
+    rulesetForTzere
   };
 });

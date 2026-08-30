@@ -404,16 +404,16 @@
   }
 
   function speechTextForHebrew(hebrew) {
-    const voice = selectedSpeechVoice();
-    if (/^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")) {
-      return speechTools.hebrewForSpeech(hebrew);
-    }
     const tzere = tzereOverrideRadios.find((radio) => radio.checked)?.value || "e";
     const speechRuleset = speechTools.rulesetForTzere(
       window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi,
       tzere
     );
     const speechTransliterator = new window.HebrewTransliterator.Transliterator(speechRuleset);
+    const voice = selectedSpeechVoice();
+    if (/^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")) {
+      return speechTransliterator.pronunciationHebrew(hebrew, { tzere });
+    }
     return speechTools.phoneticize(speechTransliterator.transliterate(hebrew));
   }
 
@@ -441,7 +441,7 @@
   function updateSpeechVoiceModeNote() {
     const voice = selectedSpeechVoice();
     speechVoiceModeNote.textContent = /^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")
-      ? "Hebrew mode: reads the vocalized Hebrew directly; the e/ei setting does not apply."
+      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz katan, sh’va na, and e/ei are made explicit."
       : "English mode: reads the hidden phonetic spelling and follows the e/ei setting.";
   }
 

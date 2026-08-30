@@ -1753,6 +1753,87 @@
       return capitalizeSentenceStarts(transliterated);
     }
 
+    pronunciationHebrew(text, options = {}) {
+      const tzere = options.tzere === "ei" ? "ei" : "e";
+      return splitInput(text).map((token) => {
+        if (token.type === "maqaf") {
+          return " ";
+        }
+        if (token.type === "psik") {
+          return "";
+        }
+        if (token.type === "sofPasuq") {
+          return ":";
+        }
+        if (token.type !== "hebrew" || !hasHebrew(token.value)) {
+          return token.value;
+        }
+        return this.pronunciationHebrewWord(token.value, tzere);
+      }).join("");
+    }
+
+    pronunciationHebrewWord(word, tzere = "e") {
+      const cleaned = stripTropeAndMeteg(word);
+      const noMarks = stripMarks(word);
+      if (noMarks === "יהוה" || noMarks === "יי") {
+        return "אֲדֹנָי";
+      }
+
+      const clusters = parseClusters(word);
+      if (!hasWordVocalization(clusters)) {
+        return cleaned;
+      }
+
+      for (let index = 0; index < clusters.length; index += 1) {
+        if (clusters[index].base === "ש") {
+          clusters[index].lexicalInitialShe = Boolean(
+            this.ruleset.exceptions.lexicalInitialShe?.[clusterLookupKey(clusters, index)]
+          );
+        }
+      }
+      repairMissingHolamMalei(clusters);
+      assignStress(clusters);
+      applyMissingMetegKamatzSheva(clusters, word, this.ruleset);
+      applyForcedKamatzGadol(clusters, word, this.ruleset);
+      classifyShevas(clusters, this.ruleset);
+      classifyVowels(clusters, this.ruleset);
+      classifyShevas(clusters, this.ruleset);
+      if (this.ruleset.exceptions.silentInitialPrefixSheva?.[cleaned]) {
+        forceSilentInitialPrefixSheva(clusters);
+      }
+
+      return clusters.map((cluster, index) => {
+        let marks = cluster.marks.filter((mark) => {
+          const code = mark.codePointAt(0);
+          return !(
+            (code >= 0x0591 && code <= 0x05af) ||
+            mark === MARKS.METEG ||
+            code === 0x05c4 ||
+            code === 0x05c5
+          );
+        });
+        let suffix = "";
+
+        if (cluster.vowelName === "kamatzKatan") {
+          marks = marks.filter((mark) => ![MARKS.QAMATS, MARKS.QAMATS_QATAN].includes(mark));
+          suffix += `ו${MARKS.HOLAM}`;
+        } else if (cluster.sheva === "vocal") {
+          marks = marks.filter((mark) => mark !== MARKS.SHEVA);
+          marks.push(MARKS.SEGOL);
+        }
+
+        if (
+          cluster.vowelName === "tzere" &&
+          tzere === "ei" &&
+          clusters[index + 1]?.base !== "י"
+        ) {
+          suffix += "י";
+        }
+
+        return `${cluster.base}${marks.join("")}${suffix}`.normalize("NFC");
+      }).join("");
+    }
+
     transliterateWithAlignment(text, format = "text") {
       const tokens = splitInput(text);
       const segments = [];
