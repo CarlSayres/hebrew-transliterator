@@ -1774,6 +1774,10 @@
 
     pronunciationHebrewWord(word, tzere = "e") {
       const cleaned = stripTropeAndMeteg(word);
+      const speechCleaned = word
+        .normalize("NFD")
+        .replace(/[\u05af\u05c4\u05c5]/g, "")
+        .normalize("NFC");
       const noMarks = stripMarks(word);
       if (noMarks === "יהוה" || noMarks === "יי") {
         return "אֲדֹנָי";
@@ -1781,7 +1785,7 @@
 
       const clusters = parseClusters(word);
       if (!hasWordVocalization(clusters)) {
-        return cleaned;
+        return speechCleaned;
       }
 
       for (let index = 0; index < clusters.length; index += 1) {
@@ -1805,14 +1809,18 @@
       return clusters.map((cluster, index) => {
         let marks = cluster.marks.filter((mark) => {
           const code = mark.codePointAt(0);
-          return !(
-            (code >= 0x0591 && code <= 0x05af) ||
-            mark === MARKS.METEG ||
-            code === 0x05c4 ||
-            code === 0x05c5
-          );
+          return code !== 0x05af && code !== 0x05c4 && code !== 0x05c5;
         });
         let suffix = "";
+        const consonantalVav = (
+          cluster.base === "ו" &&
+          !hasShuruk(cluster) &&
+          !shouldSkipMater(clusters, index)
+        );
+        const speechBase = consonantalVav ? "ב" : cluster.base;
+        if (consonantalVav) {
+          marks = marks.filter((mark) => mark !== MARKS.DAGESH);
+        }
 
         if (cluster.vowelName === "kamatzKatan") {
           marks = marks.filter((mark) => ![MARKS.QAMATS, MARKS.QAMATS_QATAN].includes(mark));
@@ -1820,7 +1828,7 @@
         } else if (cluster.sheva === "vocal") {
           marks = marks.filter((mark) => mark !== MARKS.SHEVA);
           marks.push(MARKS.SEGOL);
-        } else if (cluster.vowelName === "holam" && cluster.base !== "ו") {
+        } else if (cluster.vowelName === "holam" && (cluster.base !== "ו" || consonantalVav)) {
           marks = marks.filter((mark) => ![MARKS.HOLAM, MARKS.HOLAM_HASER].includes(mark));
           suffix += `ו${MARKS.HOLAM}`;
         }
@@ -1833,41 +1841,7 @@
           }
         }
 
-        const next = clusters[index + 1];
-        const hasExistingKamatzMater = Boolean(
-          next &&
-          (
-            next.base === "י" ||
-            (
-              ["א", "ה"].includes(next.base) &&
-              !getVowelMark(next) &&
-              !hasMark(next, MARKS.SHEVA)
-            )
-          )
-        );
-        const nextBeginsVocalicSyllable = Boolean(
-          next &&
-          (
-            next.vowelName ||
-            next.sheva === "vocal" ||
-            (
-              !next.vowelName &&
-              !hasMark(next, MARKS.SHEVA) &&
-              clusters[index + 2]?.base === "ו" &&
-              clusters[index + 2]?.vowelName === "holam"
-            )
-          )
-        );
-        const isOpenKamatzGadol = !next || nextBeginsVocalicSyllable;
-        if (
-          cluster.vowelName === "kamatzGadol" &&
-          isOpenKamatzGadol &&
-          !hasExistingKamatzMater
-        ) {
-          suffix += "ה";
-        }
-
-        return `${cluster.base}${marks.join("")}${suffix}`.normalize("NFC");
+        return `${speechBase}${marks.join("")}${suffix}`.normalize("NFC");
       }).join("");
     }
 

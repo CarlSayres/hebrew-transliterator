@@ -441,7 +441,7 @@
   function updateSpeechVoiceModeNote() {
     const voice = selectedSpeechVoice();
     speechVoiceModeNote.textContent = /^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")
-      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz katan, sh’va na, and e/ei are made explicit."
+      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit."
       : "English mode: reads the hidden phonetic spelling and follows the e/ei setting.";
   }
 
