@@ -126,6 +126,20 @@ test("does not persist arbitrary Hebrew audio", async () => {
   assert.deepEqual(state.points.map((point) => point.blobs[17]), ["arbitrary", "arbitrary"]);
 });
 
+test("omits non-Hebrew and unvocalized Hebrew from Azure SSML", async () => {
+  const state = makeEnv();
+  const result = await handleAudio(
+    audioRequest("arbitrary", "English בָּרוּךְ שלום 42"),
+    state.env
+  );
+  assert.equal(result.status, 200);
+  assert.ok(state.azureBodies[0].includes("בָּרוּךְ".normalize("NFC")));
+  assert.doesNotMatch(state.azureBodies[0], /English|שלום|42/u);
+
+  const rejected = await handleAudio(audioRequest("arbitrary", "English שלום 42"), state.env);
+  assert.equal(rejected.status, 400);
+});
+
 test("serves only a temporary unguessable lexicon object", async () => {
   const bucket = new MemoryBucket();
   const id = "123e4567-e89b-12d3-a456-426614174000";

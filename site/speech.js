@@ -240,6 +240,22 @@
       .trim();
   }
 
+  function vocalizedHebrewOnly(text) {
+    const tokens = canonicalHebrew(text)
+      .replace(/־/gu, " ")
+      .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*|[.,!?;:׃–—…]+/gu) || [];
+    let result = "";
+    for (const token of tokens) {
+      if (/^[\u05d0-\u05ea]/u.test(token)) {
+        if (!/[\u05b0-\u05bb\u05c7]/u.test(token)) continue;
+        result += `${result && !result.endsWith(" ") ? " " : ""}${token}`;
+      } else if (result) {
+        result = `${result.trimEnd()}${token} `;
+      }
+    }
+    return result.trim();
+  }
+
   const ipaVowels = new Map([
     ["ei", "ej"], ["ai", "aj"], ["oi", "oj"],
     ["a", "a"], ["e", "e"], ["i", "i"], ["o", "o"], ["u", "u"]
@@ -397,6 +413,7 @@
     rulesetForTzere,
     hebrewVoices,
     canonicalHebrew,
+    vocalizedHebrewOnly,
     ipaFromTransliteration,
     speechRuleset,
     lexiconEntries,

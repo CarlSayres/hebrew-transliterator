@@ -446,7 +446,7 @@
   }
 
   function audioPreparation(hebrew) {
-    const text = speechTools.canonicalHebrew(hebrew);
+    const text = speechTools.vocalizedHebrewOnly(hebrew);
     const tzere = tzereOverrideRadios.find((radio) => radio.checked)?.value || "e";
     const speechRuleset = speechTools.speechRuleset(
       window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi,

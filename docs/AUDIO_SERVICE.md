@@ -7,6 +7,11 @@ The production audio path uses one fixed rendering profile:
 - Output: 24 kHz, 48 kbit/s mono MP3
 - Pronunciation rules: versioned IPA lexicon generated from the transliterator
 
+Before synthesis, the browser and Worker both remove non-Hebrew content and
+Hebrew words that contain no actual vowel point. Dagesh, shin/sin dots, trope,
+and meteg alone do not make a word vocalized. Relevant punctuation is retained
+for pacing, while the displayed source and transliteration remain unchanged.
+
 The Worker holds the Azure credential, creates a short-lived pronunciation
 lexicon for Azure to retrieve, calls Azure Speech, and deletes that serving copy
 after synthesis. For debugging, it also stores the exact lexicon and SSML in R2

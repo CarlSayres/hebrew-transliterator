@@ -343,6 +343,22 @@ function canonicalAudioText(value) {
     .trim();
 }
 
+function vocalizedAudioText(value) {
+  const tokens = canonicalAudioText(value)
+    .replace(/־/gu, " ")
+    .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*|[.,!?;:׃–—…]+/gu) || [];
+  let result = "";
+  for (const token of tokens) {
+    if (/^[\u05d0-\u05ea]/u.test(token)) {
+      if (!/[\u05b0-\u05bb\u05c7]/u.test(token)) continue;
+      result += `${result && !result.endsWith(" ") ? " " : ""}${token}`;
+    } else if (result) {
+      result = `${result.trimEnd()}${token} `;
+    }
+  }
+  return result.trim();
+}
+
 function xmlEscape(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -523,7 +539,7 @@ export async function handleAudio(request, env) {
   const isCurrentPayload = payload?.schemaVersion === 2 &&
     keys.length === 6 && keys[0] === "lexicon" && keys[1] === "schemaVersion" &&
     keys[2] === "sourceRef" && keys[3] === "sourceType" && keys[4] === "text" && keys[5] === "tzere";
-  const text = canonicalAudioText(payload?.text);
+  const text = vocalizedAudioText(payload?.text);
   const sourceRef = cleanSefariaReference(payload?.sourceRef);
   if (
     (!isLegacyPayload && !isCurrentPayload) || !["e", "ei"].includes(payload.tzere) ||

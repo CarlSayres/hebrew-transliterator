@@ -87,6 +87,18 @@ test("canonicalizes Hebrew without destroying word boundaries", () => {
   );
 });
 
+test("keeps only genuinely vocalized Hebrew for Azure audio", () => {
+  assert.equal(
+    speech.vocalizedHebrewOnly("English: בָּרוּךְ שלום; שָׁלוֹם! {פ} 42"),
+    "בָּרוּךְ; שָׁלוֹם!".normalize("NFC")
+  );
+  assert.equal(
+    speech.vocalizedHebrewOnly("בָּרוּךְ־שלום שָׁלוֹם"),
+    "בָּרוּךְ שָׁלוֹם".normalize("NFC")
+  );
+  assert.equal(speech.vocalizedHebrewOnly("English שלום שּׁ 42"), "");
+});
+
 test("converts stressed transliteration to Azure Hebrew IPA", () => {
   assert.equal(speech.ipaFromTransliteration("barúkh"), "ba.ˈʁux");
   assert.equal(speech.ipaFromTransliteration("she'amár"), "ʃe.ʔa.ˈmaʁ");
