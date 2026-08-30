@@ -638,14 +638,8 @@ h1 {
   opacity: 0.55;
 }
 
-.chapter-number-strip .page-button {
-  padding-left: 24px;
-}
-
-.chapter-number-strip .page-button::before {
-  left: 5px;
-  width: 14px;
-  height: 16px;
+.chapter-number-strip .result-button::before {
+  content: none;
 }
 
 .result-card {
