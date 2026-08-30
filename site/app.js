@@ -929,7 +929,7 @@
   }
 
   function primaryNodeName(node) {
-    return node.key || node.title || nodeNames(node)[0] || "";
+    return sefariaResultTools.schemaNodeName(node) || nodeNames(node)[0] || "";
   }
 
   async function fetchSefariaIndex(title, signal) {

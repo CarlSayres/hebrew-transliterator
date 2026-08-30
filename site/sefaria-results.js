@@ -35,6 +35,13 @@
     return /\bon\b/i.test(String(ref || "")) || /Commentary/i.test(categoryList.join(" "));
   }
 
+  function schemaNodeName(node) {
+    const primaryEnglish = Array.from(node?.titles || []).find((title) =>
+      title?.lang === "en" && title?.primary && title?.text
+    );
+    return primaryEnglish?.text || node?.title || node?.key || "";
+  }
+
   function isImportableSearchResult(result) {
     const ref = typeof result === "string" ? result : result?.ref;
     const categories = typeof result === "string" ? [] : result?.categories || [];
@@ -111,6 +118,7 @@
     isTanakhRef,
     normalizeRefKey,
     prepareResults,
-    resultRank
+    resultRank,
+    schemaNodeName
   };
 });

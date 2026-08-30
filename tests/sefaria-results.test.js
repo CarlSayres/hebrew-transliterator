@@ -4,8 +4,27 @@ const test = require("node:test");
 const {
   isImportableSearchResult,
   normalizeRefKey,
-  prepareResults
+  prepareResults,
+  schemaNodeName
 } = require("../site/sefaria-results");
+
+test("uses Sefaria's canonical English title instead of an internal schema key", () => {
+  assert.equal(schemaNodeName({
+    key: "Master of all worlds",
+    title: "Ribon Kol HaOlamim",
+    titles: [{ lang: "en", text: "Ribon Kol HaOlamim", primary: true }]
+  }), "Ribon Kol HaOlamim");
+  assert.equal(schemaNodeName({
+    key: "Ashet Chayil",
+    title: "Eshet Chayil",
+    titles: [{ lang: "en", text: "Eshet Chayil", primary: true }]
+  }), "Eshet Chayil");
+  assert.equal(schemaNodeName({
+    key: "Kol M'kadesh",
+    title: "Kol Mekadesh",
+    titles: [{ lang: "en", text: "Kol Mekadesh", primary: true }]
+  }), "Kol Mekadesh");
+});
 
 test("normalizes equivalent Sefaria references for deduplication", () => {
   assert.equal(
