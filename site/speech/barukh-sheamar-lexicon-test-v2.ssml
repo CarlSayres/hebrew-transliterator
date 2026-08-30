@@ -1,5 +1,6 @@
 <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="he-IL">
   <voice name="he-IL-HilaNeural">
+    <lexicon uri="https://hebrewtransliterator.com/speech/barukh-sheamar-v2.xml"/>
     <mstts:silence type="Sentenceboundary-exact" value="140ms"/>
     <prosody rate="-45%">
       <s>בָּרוּךְ שֶׁאָמַר וְהָיָה הָעוֹלָם, בָּרוּךְ הוּא, בָּרוּךְ עֹשֶׂה בְרֵאשִׁית, בָּרוּךְ אוֹמֵר וְעוֹשֶׂה, בָּרוּךְ גּוֹזֵר וּמְקַיֵּם.</s>
