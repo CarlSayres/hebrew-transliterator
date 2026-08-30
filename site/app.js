@@ -418,11 +418,13 @@
       input.value,
       lastImportedSefariaContext?.text || ""
     );
+    const sourceRef = sourceType === "sefaria" ? (lastImportedSefariaContext?.ref || "") : "";
     return {
       text,
       sourceType,
+      sourceRef,
       lexicon: speechTools.lexiconEntries(text, speechTransliterator),
-      identity: JSON.stringify({ text, sourceType, tzere })
+      identity: JSON.stringify({ text, sourceType, sourceRef, tzere })
     };
   }
 
@@ -490,9 +492,10 @@
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
         body: JSON.stringify({
-          schemaVersion: 1,
+          schemaVersion: 2,
           text: prepared.text,
           sourceType: prepared.sourceType,
+          sourceRef: prepared.sourceRef,
           tzere: tzereOverrideRadios.find((radio) => radio.checked)?.value || "e",
           lexicon: prepared.lexicon
         })

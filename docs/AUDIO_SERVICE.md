@@ -33,6 +33,11 @@ is collapsed to a single space rather than deleted because word boundaries can
 change speech. When pronunciation rules change, increment the Worker rules
 version so old audio cannot be mistaken for the new rendering.
 
+Sefaria audio objects store the imported reference in the
+`sefariaReferences` custom-metadata field. If identical text is imported from
+more than one reference, the field keeps a compact ` | `-separated list while
+the audio itself remains shared. Hebrew text is never stored in object metadata.
+
 ## Analytics
 
 `audio_generated` counts successful Azure syntheses and excludes R2 cache hits.

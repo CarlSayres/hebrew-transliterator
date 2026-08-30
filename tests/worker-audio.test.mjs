@@ -8,23 +8,24 @@ class MemoryBucket {
     this.objects = new Map();
   }
   async get(key) {
-    return this.objects.has(key) ? { body: this.objects.get(key) } : null;
+    return this.objects.get(key) || null;
   }
-  async put(key, body) {
-    this.objects.set(key, body);
+  async put(key, body, options = {}) {
+    this.objects.set(key, { body, customMetadata: options.customMetadata || {} });
   }
   async delete(key) {
     this.objects.delete(key);
   }
 }
 
-function audioRequest(sourceType = "sefaria", text = "בָּרוּךְ") {
+function audioRequest(sourceType = "sefaria", text = "בָּרוּךְ", sourceRef = "Siddur Ashkenaz, Weekday, Shacharit") {
   const request = new Request("https://hebrewtransliterator.com/api/audio", {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: "https://hebrewtransliterator.com" },
     body: JSON.stringify({
-      schemaVersion: 1,
+      schemaVersion: 2,
       sourceType,
+      sourceRef: sourceType === "sefaria" ? sourceRef : "",
       text,
       tzere: "ei",
       lexicon: [{ grapheme: "בָּרוּךְ", phoneme: "ba.ˈʁux" }]
@@ -73,12 +74,30 @@ test("uses fixed Hila settings, stores Sefaria audio, and reuses the cache", asy
   assert.equal(state.points[0].indexes[0], "audio_generated");
   assert.equal(state.points[0].blobs[17], "sefaria");
   assert.equal([...state.bucket.objects.keys()].some((key) => key.startsWith("lexicons/")), false);
+  const audioObject = [...state.bucket.objects.entries()].find(([key]) => key.startsWith("audio/"))[1];
+  assert.equal(audioObject.customMetadata.sefariaReferences, "Siddur Ashkenaz, Weekday, Shacharit");
 
   const second = await handleAudio(audioRequest(), state.env);
   assert.equal(second.status, 200);
   assert.equal(second.headers.get("X-Audio-Cache"), "HIT");
   assert.equal(state.azureCalls, 1);
   assert.equal(state.points.length, 1);
+});
+
+test("adds another Sefaria reference to shared cached-audio metadata", async () => {
+  const state = makeEnv();
+  await handleAudio(audioRequest(), state.env);
+  const result = await handleAudio(
+    audioRequest("sefaria", "בָּרוּךְ", "Siddur Ashkenaz, Shabbat, Shacharit"),
+    state.env
+  );
+  assert.equal(result.headers.get("X-Audio-Cache"), "HIT");
+  const audioObject = [...state.bucket.objects.entries()].find(([key]) => key.startsWith("audio/"))[1];
+  assert.equal(
+    audioObject.customMetadata.sefariaReferences,
+    "Siddur Ashkenaz, Weekday, Shacharit | Siddur Ashkenaz, Shabbat, Shacharit"
+  );
+  assert.equal(state.azureCalls, 1);
 });
 
 test("does not persist arbitrary Hebrew audio", async () => {

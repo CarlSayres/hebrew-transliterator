@@ -432,6 +432,25 @@ function audioResponse(body, cacheStatus) {
   });
 }
 
+function cleanSefariaReference(value) {
+  return String(value || "")
+    .normalize("NFC")
+    .replace(/[\0\r\n]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 300);
+}
+
+function mergedSefariaReferences(existing, current) {
+  const references = String(existing || "")
+    .split(" | ")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (current && !references.includes(current)) references.push(current);
+  while (references.join(" | ").length > 1000) references.shift();
+  return references.join(" | ");
+}
+
 export async function handleAudioLexicon(request, env, id) {
   if (request.method !== "GET" || !/^[0-9a-f-]{36}$/i.test(id || "") || !env.AUDIO_BUCKET) {
     return response(404);
@@ -466,19 +485,36 @@ export async function handleAudio(request, env) {
     return response(400);
   }
   const keys = Object.keys(payload || {}).sort();
+  const isLegacyPayload = payload?.schemaVersion === 1 &&
+    keys.length === 5 && keys[0] === "lexicon" && keys[1] === "schemaVersion" &&
+    keys[2] === "sourceType" && keys[3] === "text" && keys[4] === "tzere";
+  const isCurrentPayload = payload?.schemaVersion === 2 &&
+    keys.length === 6 && keys[0] === "lexicon" && keys[1] === "schemaVersion" &&
+    keys[2] === "sourceRef" && keys[3] === "sourceType" && keys[4] === "text" && keys[5] === "tzere";
   const text = canonicalAudioText(payload?.text);
+  const sourceRef = cleanSefariaReference(payload?.sourceRef);
   if (
-    keys.length !== 5 || keys[0] !== "lexicon" || keys[1] !== "schemaVersion" ||
-    keys[2] !== "sourceType" || keys[3] !== "text" || keys[4] !== "tzere" ||
-    payload.schemaVersion !== 1 || !["e", "ei"].includes(payload.tzere) ||
+    (!isLegacyPayload && !isCurrentPayload) || !["e", "ei"].includes(payload.tzere) ||
     !AUDIO_SOURCE_TYPES.has(payload.sourceType) || !text || text.length > MAX_AUDIO_TEXT_LENGTH ||
-    !/[\u05d0-\u05ea]/u.test(text) || !validLexicon(payload.lexicon, text)
+    !/[\u05d0-\u05ea]/u.test(text) || !validLexicon(payload.lexicon, text) ||
+    (isCurrentPayload && ((payload.sourceType === "sefaria" && !sourceRef) || (payload.sourceType === "arbitrary" && sourceRef)))
   ) return response(400);
 
   const cacheKey = await audioCacheKey(text, payload.tzere);
   if (payload.sourceType === "sefaria") {
     const cached = await env.AUDIO_BUCKET.get(cacheKey);
-    if (cached) return audioResponse(cached.body, "HIT");
+    if (cached) {
+      const references = mergedSefariaReferences(cached.customMetadata?.sefariaReferences, sourceRef);
+      if (sourceRef && references !== cached.customMetadata?.sefariaReferences) {
+        const audio = await new Response(cached.body).arrayBuffer();
+        await env.AUDIO_BUCKET.put(cacheKey, audio, {
+          httpMetadata: { contentType: "audio/mpeg" },
+          customMetadata: { ...(cached.customMetadata || {}), sefariaReferences: references }
+        });
+        return audioResponse(audio, "HIT");
+      }
+      return audioResponse(cached.body, "HIT");
+    }
   }
 
   if (!env.SPEECH_RATE_LIMITER) return response(503);
@@ -519,7 +555,13 @@ export async function handleAudio(request, env) {
       try {
         await env.AUDIO_BUCKET.put(cacheKey, audio, {
           httpMetadata: { contentType: "audio/mpeg" },
-          customMetadata: { rules: AUDIO_RULES_VERSION, voice: AUDIO_VOICE, rate: AUDIO_RATE }
+          customMetadata: {
+            rules: AUDIO_RULES_VERSION,
+            voice: AUDIO_VOICE,
+            rate: AUDIO_RATE,
+            tzere: payload.tzere,
+            sefariaReferences: sourceRef
+          }
         });
       } catch {
         console.error(JSON.stringify({ category: "audio_cache_failed", reason: "write" }));
