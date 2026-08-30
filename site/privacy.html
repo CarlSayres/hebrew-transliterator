@@ -29,6 +29,7 @@
 
       <h2>Optional Google Analytics</h2>
       <p>If you consent to Analytics, Google Analytics uses a first-party browser identifier to estimate users and sessions. It receives page and referral information, browser and device information, approximate location, and application events. For a Sefaria name or phrase search, it also receives the normalized text entered in the Sefaria search field, whether the search succeeded, and the displayed result count. Obvious email addresses, URLs, and phone-number-like entries are replaced with <code>[redacted]</code>.</p>
+      <p>Successful Sefaria imports are reported as virtual pages organized under <code>/Sefaria/</code>. Audio generation, listening, and downloads are reported under <code>/Audio/Generated/</code>, <code>/Audio/Listened/</code>, and <code>/Audio/Downloaded/</code>. For Sefaria text, these paths contain the imported Sefaria reference hierarchy. Arbitrary pasted or edited Hebrew is identified only as “Arbitrary Hebrew”; its text is never included in Analytics.</p>
       <p>Google Analytics is not used for advertising personalization. You may accept, reject, or change this optional consent at any time.</p>
       <p><button type="button" onclick="window.zaraz?.showConsentModal()">Review analytics choices</button></p>
 
@@ -39,7 +40,7 @@
       <p>The application never sends the Hebrew transliteration input or transliteration output to Google Analytics or Cloudflare product analytics. It does not intentionally collect names, email addresses, exact street addresses, or account identifiers. The optional Google Analytics browser identifier and Sefaria search reporting are limited to visitors who consent.</p>
 
       <h2>Sefaria requests</h2>
-      <p>When you use the Sefaria search or import controls, your browser sends that request directly to Sefaria. Sefaria handles those requests under its own privacy practices. If you have consented to Analytics, searches made with the “Search name/phrase” control are also reported to Google Analytics as described above; exact-reference imports are not.</p>
+      <p>When you use the Sefaria search or import controls, your browser sends that request directly to Sefaria. Sefaria handles those requests under its own privacy practices. If you have consented to Analytics, searches made with the “Search name/phrase” control and references successfully imported from Sefaria are also reported to Google Analytics as described above.</p>
 
       <h2>Audio</h2>
       <p>When you choose Audio Listen or Audio Download, the site sends the selected Hebrew—or all of the Hebrew when nothing is selected—and a rule-derived pronunciation guide through Cloudflare to Microsoft Azure Speech. Azure creates the audio with the Hila Hebrew voice. The Azure credential remains on the server and is never sent to your browser.</p>

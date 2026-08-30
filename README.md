@@ -49,8 +49,11 @@ product events include geographic fields Cloudflare derives from the request,
 but never include IP addresses, pasted Hebrew, transliteration output, or raw
 Sefaria search terms. After a visitor grants Analytics consent, Google Analytics
 measures users and sessions and receives normalized searches submitted through
-the dedicated Sefaria name/phrase search control. It never receives the Hebrew
-transliteration input or output. The Analytics Engine column map and example
+the dedicated Sefaria name/phrase search control. Successful Sefaria imports
+and audio generation, listening, and downloads are recorded as consent-controlled
+virtual page views organized by Sefaria reference. Arbitrary Hebrew is labeled
+only as such; Google Analytics never receives the Hebrew transliteration input
+or output. The Analytics Engine column map, virtual page paths, and example
 queries are documented in `docs/ANALYTICS_SCHEMA.md`.
 
 Cloudflare's deploy command is:

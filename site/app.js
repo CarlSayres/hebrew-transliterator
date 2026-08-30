@@ -45,6 +45,7 @@
   const lineNumberTools = window.HebrewTransliteratorLineNumbers;
   const selectionAlignmentTools = window.HebrewTransliteratorSelectionAlignment;
   const speechTools = window.HebrewTransliteratorSpeech;
+  const analyticsPageTools = window.HebrewTransliteratorAnalyticsPages;
   const sefariaClient = new window.HebrewTransliteratorSefariaClient.SefariaClient({
     timeoutMs: 9000,
     slowRequestMs: 5000,
@@ -193,6 +194,23 @@
       });
     } catch {
       // Analytics must never interfere with Sefaria search.
+    }
+  }
+
+  function recordVirtualPage(page, reference = "") {
+    if (!page || typeof window.zaraz?.track !== "function") return;
+    const properties = {
+      page_location: `${location.origin}${page.path}`,
+      page_path: page.path,
+      page_title: page.title,
+      content_group: page.path.startsWith("/Audio/") ? "Audio" : "Sefaria"
+    };
+    if (reference) properties.sefaria_reference = reference;
+    try {
+      void window.zaraz.track("page_view", properties);
+      void window.zaraz.track(page.eventName, properties);
+    } catch {
+      // Optional analytics must never interfere with the application.
     }
   }
 
@@ -506,6 +524,12 @@
         throw error;
       }
       const blob = await response.blob();
+      if (response.headers.get("X-Audio-Cache") === "MISS") {
+        recordVirtualPage(
+          analyticsPageTools.audioPage("Generated", prepared.sourceRef),
+          prepared.sourceRef
+        );
+      }
       audioObjectUrl = URL.createObjectURL(blob);
       audioElement = new Audio(audioObjectUrl);
       audioElement.addEventListener("ended", () => setAudioPlaying(false));
@@ -1073,6 +1097,10 @@
       setSefariaStatus(`Imported ${result.ref || trimmed}.${warning}${sefariaProblemWarning()}`);
       renderImportedSource(result);
       recordUsageEvent("sefaria_import_succeeded");
+      recordVirtualPage(
+        analyticsPageTools.sefariaPage(lastImportedSefariaContext.ref),
+        lastImportedSefariaContext.ref
+      );
     } catch (error) {
       setSefariaStatus(sefariaErrorMessage(error));
       if (error?.code !== "cancelled") {
@@ -1756,6 +1784,10 @@
       await prepared.audio.play();
       setAudioPlaying(true);
       recordUsageEvent("audio_listened", prepared.sourceType);
+      recordVirtualPage(
+        analyticsPageTools.audioPage("Listened", prepared.sourceRef),
+        prepared.sourceRef
+      );
     } catch (error) {
       setAudioPlaying(false);
       if (error.name !== "AbortError") {
@@ -1782,6 +1814,10 @@
       link.click();
       link.remove();
       recordUsageEvent("audio_downloaded", prepared.sourceType);
+      recordVirtualPage(
+        analyticsPageTools.audioPage("Downloaded", prepared.sourceRef),
+        prepared.sourceRef
+      );
     } catch (error) {
       if (error.name !== "AbortError") {
         setAudioStatus(error.message || "The audio could not be downloaded.", true);
