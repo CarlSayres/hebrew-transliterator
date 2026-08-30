@@ -354,13 +354,13 @@ function speakableAudioText(value, lexicon) {
   for (const token of tokens) {
     if (/^[\u05d0-\u05ea]/u.test(token)) {
       const parts = token.split("־");
+      const joined = parts.join("").normalize("NFC");
+      const joinedRecognized = recognizedWords.has(joined);
       const speakableParts = parts.filter((part) =>
         /[\u05b0-\u05bb\u05c7]/u.test(part) || recognizedWords.has(part.normalize("NFC"))
       );
-      if (!speakableParts.length) continue;
-      const joined = parts.join("");
-      const words = speakableParts.length === parts.length &&
-        (parts.length === 1 || recognizedWords.has(joined.normalize("NFC")))
+      if (!joinedRecognized && !speakableParts.length) continue;
+      const words = joinedRecognized || (speakableParts.length === parts.length && parts.length === 1)
         ? [joined]
         : speakableParts;
       for (const word of words) {
@@ -387,7 +387,8 @@ function validLexicon(entries, text) {
     return false;
   }
   const textWords = new Set(
-    text.match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*/gu) || []
+    (text.match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*/gu) || [])
+      .map((word) => word.normalize("NFC"))
   );
   return entries.every((entry) => {
     const keys = Object.keys(entry || {}).sort();

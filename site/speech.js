@@ -251,13 +251,14 @@
     for (const token of tokens) {
       if (/^[\u05d0-\u05ea]/u.test(token)) {
         const parts = token.split("־");
+        const joined = parts.join("").normalize("NFC");
+        const joinedRecognized = recognizedWords.has(joined);
         const speakableParts = parts.filter((part) =>
           /[\u05b0-\u05bb\u05c7]/u.test(part) || recognizedWords.has(part.normalize("NFC"))
         );
-        if (!speakableParts.length) continue;
-        const joined = parts.join("");
-        const words = speakableParts.length === parts.length &&
-          (parts.length === 1 || recognizedWords.has(joined.normalize("NFC")) || !lexicon.length)
+        if (!joinedRecognized && !speakableParts.length) continue;
+        const words = joinedRecognized || (speakableParts.length === parts.length &&
+          (parts.length === 1 || !lexicon.length))
           ? [joined]
           : speakableParts;
         for (const word of words) {

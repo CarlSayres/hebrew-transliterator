@@ -103,6 +103,16 @@ test("keeps only genuinely vocalized Hebrew for Azure audio", () => {
     ),
     "זַרְעוֹב֖וֹ".normalize("NFC")
   );
+  assert.equal(
+    speech.speakableHebrewOnly(
+      "בִּן־נוּן֙ יַם־סֽוּף",
+      [
+        { grapheme: "בִּןנוּן֙".normalize("NFC"), phoneme: "bin.ˈnun" },
+        { grapheme: "יַםסֽוּף".normalize("NFC"), phoneme: "jam.ˈsuf" }
+      ]
+    ),
+    "בִּןנוּן֙ יַםסֽוּף".normalize("NFC")
+  );
   assert.equal(speech.vocalizedHebrewOnly("English שלום שּׁ 42"), "");
 });
 

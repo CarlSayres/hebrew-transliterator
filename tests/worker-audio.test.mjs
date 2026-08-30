@@ -139,7 +139,8 @@ test("omits non-Hebrew and unvocalized Hebrew from Azure SSML", async () => {
   );
   assert.equal(result.status, 200);
   assert.ok(state.azureBodies[0].includes("בָּרוּךְ".normalize("NFC")));
-  assert.doesNotMatch(state.azureBodies[0], /English|שלום|42/u);
+  const spokenSentence = state.azureBodies[0].match(/<s>(.*?)<\/s>/u)?.[1] || "";
+  assert.doesNotMatch(spokenSentence, /English|שלום|42/u);
 
   const rejected = await handleAudio(audioRequest("arbitrary", "English שלום 42"), state.env);
   assert.equal(rejected.status, 400);
@@ -177,6 +178,19 @@ test("joins a maqaf compound into one uninterrupted Azure pronunciation unit", a
   assert.equal(result.status, 200);
   assert.ok(state.azureBodies[0].includes("<s>זַרְעוֹב֖וֹ</s>".normalize("NFC")));
   assert.doesNotMatch(state.azureBodies[0], /־/u);
+});
+
+test("accepts canonically normalized maqaf compounds from a full Tanakh chapter", async () => {
+  const state = makeEnv();
+  const text = "בִּן־נוּן֙ יַם־סֽוּף";
+  const lexicon = [
+    { grapheme: "בִּןנוּן֙".normalize("NFC"), phoneme: "bin.ˈnun" },
+    { grapheme: "יַםסֽוּף".normalize("NFC"), phoneme: "jam.ˈsuf" }
+  ];
+  const result = await handleAudio(audioRequest("arbitrary", text, "", lexicon), state.env);
+  assert.equal(result.status, 200);
+  assert.ok(state.azureBodies[0].includes("בִּןנוּן֙".normalize("NFC")));
+  assert.ok(state.azureBodies[0].includes("יַםסֽוּף".normalize("NFC")));
 });
 
 test("serves only a temporary unguessable lexicon object", async () => {
