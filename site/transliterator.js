@@ -1904,6 +1904,10 @@
           }
         }
 
+        if (cluster.base === "ש" && cluster.sheva === "silent" && clusters[index + 1]) {
+          suffix += " ";
+        }
+
         return `${speechBase}${marks.join("")}${suffix}`.normalize("NFC");
       }).join("");
     }
