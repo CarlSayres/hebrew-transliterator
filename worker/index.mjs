@@ -421,6 +421,38 @@ async function audioCacheKey(text, tzere) {
   return `audio/${await sha256Hex(identity)}.mp3`;
 }
 
+function audioDebugKeys(cacheKey) {
+  const hash = cacheKey.slice("audio/".length, -".mp3".length);
+  return {
+    lexicon: `debug/lexicons/${hash}.xml`,
+    ssml: `debug/ssml/${hash}.ssml`
+  };
+}
+
+async function storeAudioDebugArtifacts(env, cacheKey, lexicon, ssml, payload, sourceRef) {
+  const keys = audioDebugKeys(cacheKey);
+  const commonMetadata = {
+    audioKey: cacheKey,
+    sourceType: payload.sourceType,
+    sefariaReference: sourceRef,
+    rules: AUDIO_RULES_VERSION,
+    voice: AUDIO_VOICE,
+    rate: AUDIO_RATE,
+    tzere: payload.tzere,
+    createdAt: new Date().toISOString()
+  };
+  await Promise.all([
+    env.AUDIO_BUCKET.put(keys.lexicon, lexicon, {
+      httpMetadata: { contentType: "application/pls+xml; charset=utf-8" },
+      customMetadata: { ...commonMetadata, artifact: "lexicon" }
+    }),
+    env.AUDIO_BUCKET.put(keys.ssml, ssml, {
+      httpMetadata: { contentType: "application/ssml+xml; charset=utf-8" },
+      customMetadata: { ...commonMetadata, artifact: "ssml" }
+    })
+  ]);
+}
+
 function audioResponse(body, cacheStatus) {
   return new Response(body, {
     status: 200,
@@ -525,9 +557,16 @@ export async function handleAudio(request, env) {
   const lexiconId = crypto.randomUUID();
   const lexiconKey = `lexicons/${lexiconId}.xml`;
   const lexiconUrl = `${new URL(request.url).origin}/api/audio/lexicon/${lexiconId}.xml`;
-  await env.AUDIO_BUCKET.put(lexiconKey, buildLexicon(payload.lexicon), {
+  const lexicon = buildLexicon(payload.lexicon);
+  const ssml = buildSsml(text, lexiconUrl);
+  await env.AUDIO_BUCKET.put(lexiconKey, lexicon, {
     httpMetadata: { contentType: "application/pls+xml; charset=utf-8" }
   });
+  try {
+    await storeAudioDebugArtifacts(env, cacheKey, lexicon, ssml, payload, sourceRef);
+  } catch {
+    console.error(JSON.stringify({ category: "audio_debug_artifact_failed", reason: "write" }));
+  }
 
   try {
     const azureFetch = env.AZURE_SPEECH_FETCH || fetch;
@@ -541,7 +580,7 @@ export async function handleAudio(request, env) {
           "X-Microsoft-OutputFormat": AZURE_OUTPUT_FORMAT,
           "User-Agent": "HebrewTransliterator"
         },
-        body: buildSsml(text, lexiconUrl)
+        body: ssml
       }
     );
     if (!azureResponse.ok) {

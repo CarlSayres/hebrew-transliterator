@@ -8,9 +8,10 @@ The production audio path uses one fixed rendering profile:
 - Pronunciation rules: versioned IPA lexicon generated from the transliterator
 
 The Worker holds the Azure credential, creates a short-lived pronunciation
-lexicon, calls Azure Speech, and deletes the lexicon after synthesis. It never
-logs Hebrew or IPA. Audio made from unchanged Sefaria imports is stored in R2;
-audio made from pasted or edited Hebrew is not stored.
+lexicon for Azure to retrieve, calls Azure Speech, and deletes that serving copy
+after synthesis. For debugging, it also stores the exact lexicon and SSML in R2
+under the `debug/` prefix. Audio made from unchanged Sefaria imports is stored
+in R2; audio made from pasted or edited Hebrew is not stored.
 
 ## Cloudflare setup
 
@@ -37,6 +38,23 @@ Sefaria audio objects store the imported reference in the
 `sefariaReferences` custom-metadata field. If identical text is imported from
 more than one reference, the field keeps a compact ` | `-separated list while
 the audio itself remains shared. Hebrew text is never stored in object metadata.
+
+## Debug artifacts
+
+Every new Azure synthesis attempt stores the exact request artifacts under the
+same content hash used by the corresponding audio key:
+
+```text
+debug/lexicons/<hash>.xml
+debug/ssml/<hash>.ssml
+```
+
+Both objects contain metadata for the audio key, source type, Sefaria reference
+when applicable, rules version, voice, rate, tzere option, and creation time.
+The files themselves contain the Hebrew and IPA submitted for speech, including
+for arbitrary pasted or edited Hebrew. Configure an R2 lifecycle rule for the
+`debug/` prefix to delete these objects after the desired short retention
+period. The audio endpoint continues to work if a debug-artifact write fails.
 
 ## Analytics
 

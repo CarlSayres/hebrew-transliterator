@@ -11,7 +11,11 @@ class MemoryBucket {
     return this.objects.get(key) || null;
   }
   async put(key, body, options = {}) {
-    this.objects.set(key, { body, customMetadata: options.customMetadata || {} });
+    this.objects.set(key, {
+      body,
+      customMetadata: options.customMetadata || {},
+      httpMetadata: options.httpMetadata || {}
+    });
   }
   async delete(key) {
     this.objects.delete(key);
@@ -74,6 +78,15 @@ test("uses fixed Hila settings, stores Sefaria audio, and reuses the cache", asy
   assert.equal(state.points[0].indexes[0], "audio_generated");
   assert.equal(state.points[0].blobs[17], "sefaria");
   assert.equal([...state.bucket.objects.keys()].some((key) => key.startsWith("lexicons/")), false);
+  const debugLexicon = [...state.bucket.objects.entries()].find(([key]) => key.startsWith("debug/lexicons/"));
+  const debugSsml = [...state.bucket.objects.entries()].find(([key]) => key.startsWith("debug/ssml/"));
+  assert.ok(debugLexicon);
+  assert.ok(debugSsml);
+  assert.match(debugLexicon[1].body, /<grapheme>בָּרוּךְ<\/grapheme>/);
+  assert.equal(debugLexicon[1].httpMetadata.contentType, "application/pls+xml; charset=utf-8");
+  assert.equal(debugSsml[1].body, state.azureBodies[0]);
+  assert.equal(debugSsml[1].customMetadata.sefariaReference, "Siddur Ashkenaz, Weekday, Shacharit");
+  assert.equal(debugSsml[1].httpMetadata.contentType, "application/ssml+xml; charset=utf-8");
   const audioObject = [...state.bucket.objects.entries()].find(([key]) => key.startsWith("audio/"))[1];
   assert.equal(audioObject.customMetadata.sefariaReferences, "Siddur Ashkenaz, Weekday, Shacharit");
 
@@ -105,7 +118,11 @@ test("does not persist arbitrary Hebrew audio", async () => {
   await handleAudio(audioRequest("arbitrary"), state.env);
   await handleAudio(audioRequest("arbitrary"), state.env);
   assert.equal(state.azureCalls, 2);
-  assert.equal(state.bucket.objects.size, 0);
+  assert.equal([...state.bucket.objects.keys()].some((key) => key.startsWith("audio/")), false);
+  assert.equal([...state.bucket.objects.keys()].filter((key) => key.startsWith("debug/")).length, 2);
+  const debugObjects = [...state.bucket.objects.entries()].filter(([key]) => key.startsWith("debug/"));
+  assert.ok(debugObjects.every(([, object]) => object.customMetadata.sourceType === "arbitrary"));
+  assert.ok(debugObjects.every(([, object]) => object.customMetadata.sefariaReference === ""));
   assert.deepEqual(state.points.map((point) => point.blobs[17]), ["arbitrary", "arbitrary"]);
 });
 
