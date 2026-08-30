@@ -476,7 +476,8 @@
   function setAudioBusy(isBusy) {
     speechButton.disabled = isBusy;
     speechDownloadButton.disabled = isBusy;
-    if (isBusy) setAudioStatus("Preparing audio with Azure…");
+    audioStatus.classList.toggle("is-busy", isBusy);
+    if (isBusy) setAudioStatus("Preparing audio…");
   }
 
   function setAudioPlaying(playing) {
@@ -508,7 +509,7 @@
     if (response?.status === 429) return "Audio is busy right now. Please wait a minute and try again.";
     if (response?.status === 413) return "That passage is too long for one audio file. Select a shorter portion and try again.";
     if (response?.status === 503) return "Audio is not configured yet. Please try again later.";
-    return "Azure could not create the audio. Please try again in a few minutes.";
+    return "Audio could not be created. Please try again in a few minutes.";
   }
 
   async function prepareAudio(hebrew) {

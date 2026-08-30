@@ -1067,6 +1067,25 @@ textarea:focus {
   color: #9b2c2c;
 }
 
+.audio-status.is-busy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.audio-status.is-busy::before {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  border: 2px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  content: "";
+  animation: sefaria-spin 0.75s linear infinite;
+}
+
 .speech-dialog {
   width: min(560px, calc(100vw - 28px));
   max-height: min(720px, calc(100vh - 28px));
