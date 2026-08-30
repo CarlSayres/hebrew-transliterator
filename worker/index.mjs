@@ -347,14 +347,25 @@ function speakableAudioText(value, lexicon) {
   const recognizedWords = new Set(
     Array.from(lexicon || [], (entry) => String(entry?.grapheme || "").normalize("NFC")).filter(Boolean)
   );
-  const tokens = canonicalAudioText(value)
-    .replace(/־/gu, " ")
-    .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*|[.,!?;:׃–—…]+/gu) || [];
+  const tokens = canonicalAudioText(value).match(
+    /[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*|[.,!?;:׃–—…]+/gu
+  ) || [];
   let result = "";
   for (const token of tokens) {
     if (/^[\u05d0-\u05ea]/u.test(token)) {
-      if (!/[\u05b0-\u05bb\u05c7]/u.test(token) && !recognizedWords.has(token.normalize("NFC"))) continue;
-      result += `${result && !result.endsWith(" ") ? " " : ""}${token}`;
+      const parts = token.split("־");
+      const speakableParts = parts.filter((part) =>
+        /[\u05b0-\u05bb\u05c7]/u.test(part) || recognizedWords.has(part.normalize("NFC"))
+      );
+      if (!speakableParts.length) continue;
+      const joined = parts.join("");
+      const words = speakableParts.length === parts.length &&
+        (parts.length === 1 || recognizedWords.has(joined.normalize("NFC")))
+        ? [joined]
+        : speakableParts;
+      for (const word of words) {
+        result += `${result && !result.endsWith(" ") ? " " : ""}${word}`;
+      }
     } else if (result) {
       result = `${result.trimEnd()}${token} `;
     }

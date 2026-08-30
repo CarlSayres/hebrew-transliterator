@@ -163,6 +163,22 @@ test("keeps a recognized unvocalized word and its IPA lexicon entry", async () =
   assert.match(debugLexicon[1].body, /<grapheme>יהוה<\/grapheme><phoneme>a\.do\.ˈnaj<\/phoneme>/u);
 });
 
+test("joins a maqaf compound into one uninterrupted Azure pronunciation unit", async () => {
+  const state = makeEnv();
+  const result = await handleAudio(
+    audioRequest(
+      "arbitrary",
+      "זַרְעוֹ־ב֖וֹ",
+      "",
+      [{ grapheme: "זַרְעוֹב֖וֹ", phoneme: "zaʁ.ʔo.ˈvo" }]
+    ),
+    state.env
+  );
+  assert.equal(result.status, 200);
+  assert.ok(state.azureBodies[0].includes("<s>זַרְעוֹב֖וֹ</s>".normalize("NFC")));
+  assert.doesNotMatch(state.azureBodies[0], /־/u);
+});
+
 test("serves only a temporary unguessable lexicon object", async () => {
   const bucket = new MemoryBucket();
   const id = "123e4567-e89b-12d3-a456-426614174000";

@@ -1039,6 +1039,25 @@ if (
   });
 }
 
+const maqafAudioLexicon = speech.lexiconEntries("זַרְעוֹ־ב֖וֹ", speechTransliterator);
+const maqafAudioText = speech.speakableHebrewOnly("זַרְעוֹ־ב֖וֹ", maqafAudioLexicon);
+const maqafAudioEntry = maqafAudioLexicon.find((entry) =>
+  entry.grapheme.normalize("NFD") === "זַרְעוֹב֖וֹ".normalize("NFD")
+);
+if (
+  !maqafAudioEntry ||
+  (maqafAudioEntry.phoneme.match(/ˈ/gu) || []).length !== 1 ||
+  maqafAudioText.normalize("NFD") !== "זַרְעוֹב֖וֹ".normalize("NFD")
+) {
+  failures.push({
+    feature: "maqafAudioUnit",
+    input: "זַרְעוֹ־ב֖וֹ",
+    expected: "one joined grapheme with one primary stress",
+    lexicon: maqafAudioLexicon,
+    actual: maqafAudioText
+  });
+}
+
 if (failures.length) {
   console.error("Transliteration test failures:");
   for (const failure of failures) {
@@ -1048,4 +1067,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + pronunciationHebrewCases.length + 3} transliteration tests passed.`);
+console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + pronunciationHebrewCases.length + 4} transliteration tests passed.`);

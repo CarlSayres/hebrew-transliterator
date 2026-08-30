@@ -244,14 +244,25 @@
     const recognizedWords = new Set(
       Array.from(lexicon || [], (entry) => String(entry?.grapheme || "").normalize("NFC")).filter(Boolean)
     );
-    const tokens = canonicalHebrew(text)
-      .replace(/־/gu, " ")
-      .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*|[.,!?;:׃–—…]+/gu) || [];
+    const tokens = canonicalHebrew(text).match(
+      /[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*|[.,!?;:׃–—…]+/gu
+    ) || [];
     let result = "";
     for (const token of tokens) {
       if (/^[\u05d0-\u05ea]/u.test(token)) {
-        if (!/[\u05b0-\u05bb\u05c7]/u.test(token) && !recognizedWords.has(token.normalize("NFC"))) continue;
-        result += `${result && !result.endsWith(" ") ? " " : ""}${token}`;
+        const parts = token.split("־");
+        const speakableParts = parts.filter((part) =>
+          /[\u05b0-\u05bb\u05c7]/u.test(part) || recognizedWords.has(part.normalize("NFC"))
+        );
+        if (!speakableParts.length) continue;
+        const joined = parts.join("");
+        const words = speakableParts.length === parts.length &&
+          (parts.length === 1 || recognizedWords.has(joined.normalize("NFC")) || !lexicon.length)
+          ? [joined]
+          : speakableParts;
+        for (const word of words) {
+          result += `${result && !result.endsWith(" ") ? " " : ""}${word}`;
+        }
       } else if (result) {
         result = `${result.trimEnd()}${token} `;
       }
@@ -394,16 +405,36 @@
 
   function lexiconEntries(text, transliterator) {
     const prepared = canonicalHebrew(text);
-    const words = prepared
-      .replace(/־/gu, " ")
-      .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*/gu) || [];
-    const uniqueWords = [...new Set(words.map((word) => word.normalize("NFC")))];
-    return uniqueWords.map((grapheme) => {
+    const units = prepared.match(
+      /[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*/gu
+    ) || [];
+    const entries = new Map();
+    const wordEntry = (word) => {
+      const grapheme = word.normalize("NFC");
       const rendered = transliterator.transliterateWithAllStressMarks(grapheme);
       const nfd = grapheme.normalize("NFD");
       const preserveFinalH = /ה[^א-ת]*\u05bc[^א-ת]*$/u.test(nfd);
       return { grapheme, phoneme: ipaFromTransliteration(rendered, { preserveFinalH }) };
-    }).filter((entry) => entry.phoneme);
+    };
+    for (const unit of units) {
+      const parts = unit.split("־");
+      const partEntries = parts.map(wordEntry);
+      if (parts.length > 1 && partEntries.every((entry) => entry.phoneme)) {
+        const grapheme = parts.join("").normalize("NFC");
+        const phoneme = partEntries.map((entry, index) => {
+          const value = index < partEntries.length - 1
+            ? entry.phoneme.replace(/[ˈˌ]/gu, "")
+            : entry.phoneme;
+          return value.replace(/^\.+|\.+$/gu, "");
+        }).filter(Boolean).join(".").replace(/\.{2,}/gu, ".");
+        entries.set(grapheme, { grapheme, phoneme });
+      } else {
+        for (const entry of partEntries) {
+          if (entry.phoneme) entries.set(entry.grapheme, entry);
+        }
+      }
+    }
+    return [...entries.values()];
   }
 
   function audioSourceType(currentText, importedText) {
