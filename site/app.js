@@ -465,7 +465,7 @@
 
   function updateSpeechVoiceModeNote() {
     speechVoiceModeNote.textContent = usesHebrewSpeechVoice()
-      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz gadol is forced to patach, while kamatz katan, sh’va na, e/ei, and consonantal v are made explicit."
+      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit, and dagesh is removed from gimel and tav."
       : "English mode: reads the hidden phonetic spelling and follows the e/ei setting.";
   }
 

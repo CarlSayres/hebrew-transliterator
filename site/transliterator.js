@@ -1780,7 +1780,7 @@
         .normalize("NFC");
       const noMarks = stripMarks(word);
       if (noMarks === "יהוה" || noMarks === "יי") {
-        return "אֲדֹנַי";
+        return "אֲדֹנָי";
       }
 
       const clusters = parseClusters(word);
@@ -1865,6 +1865,9 @@
         if (consonantalVav) {
           marks = marks.filter((mark) => mark !== MARKS.DAGESH);
         }
+        if (["ג", "ת"].includes(speechBase)) {
+          marks = marks.filter((mark) => mark !== MARKS.DAGESH);
+        }
         if (nextIsHolamMaterVav && !marks.includes(MARKS.HOLAM)) {
           marks.push(MARKS.HOLAM);
         }
@@ -1872,9 +1875,6 @@
         if (cluster.vowelName === "kamatzKatan") {
           marks = marks.filter((mark) => ![MARKS.QAMATS, MARKS.QAMATS_QATAN].includes(mark));
           suffix += `ו${MARKS.HOLAM}`;
-        } else if (cluster.vowelName === "kamatzGadol") {
-          marks = marks.filter((mark) => ![MARKS.QAMATS, MARKS.QAMATS_QATAN].includes(mark));
-          marks.push(MARKS.PATAH);
         } else if (cluster.sheva === "vocal") {
           marks = marks.filter((mark) => mark !== MARKS.SHEVA);
           marks.push(MARKS.SEGOL);
