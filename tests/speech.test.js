@@ -99,6 +99,14 @@ test("keeps only genuinely vocalized Hebrew for Azure audio", () => {
   assert.equal(speech.vocalizedHebrewOnly("English שלום שּׁ 42"), "");
 });
 
+test("keeps recognized unvocalized words while omitting unknown ones", () => {
+  const known = [{ grapheme: "יהוה", phoneme: "a.do.ˈnaj" }];
+  assert.equal(
+    speech.speakableHebrewOnly("English יהוה שלום בָּרוּךְ", known),
+    "יהוה בָּרוּךְ".normalize("NFC")
+  );
+});
+
 test("converts stressed transliteration to Azure Hebrew IPA", () => {
   assert.equal(speech.ipaFromTransliteration("barúkh"), "ba.ˈʁux");
   assert.equal(speech.ipaFromTransliteration("she'amár"), "ʃe.ʔa.ˈmaʁ");

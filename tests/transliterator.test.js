@@ -1016,6 +1016,29 @@ for (const [input, expected, tzere] of pronunciationHebrewCases) {
   }
 }
 
+const recognizedNiqqudlessLexicon = speech.lexiconEntries(
+  "יהוה שלום אלהינו בָּרוּךְ",
+  speechTransliterator
+);
+const recognizedNiqqudlessGraphemes = recognizedNiqqudlessLexicon.map((entry) => entry.grapheme);
+const recognizedNiqqudlessSpeechText = speech.speakableHebrewOnly(
+  "יהוה שלום אלהינו בָּרוּךְ",
+  recognizedNiqqudlessLexicon
+);
+if (
+  !recognizedNiqqudlessGraphemes.includes("יהוה") ||
+  !recognizedNiqqudlessGraphemes.includes("אלהינו") ||
+  recognizedNiqqudlessGraphemes.includes("שלום") ||
+  recognizedNiqqudlessSpeechText.normalize("NFD") !== "יהוה אלהינו בָּרוּךְ".normalize("NFD")
+) {
+  failures.push({
+    feature: "recognizedNiqqudlessAudio",
+    expected: "יהוה אלהינו בָּרוּךְ",
+    lexicon: recognizedNiqqudlessLexicon,
+    actual: recognizedNiqqudlessSpeechText
+  });
+}
+
 if (failures.length) {
   console.error("Transliteration test failures:");
   for (const failure of failures) {
@@ -1025,4 +1048,4 @@ if (failures.length) {
 }
 
 const styleTestCount = styleCases.reduce((sum, [, styleExamples]) => sum + styleExamples.length, 0);
-console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + pronunciationHebrewCases.length + 2} transliteration tests passed.`);
+console.log(`${cases.length + superPleneHolamCases.length + lexicalInitialSheCases.length + mamForcedKamatzGadolIntegrityCount + styleTestCount + doubledDageshCases.length + levShalemDoubledDageshCases.length + stressMarkCases.length + unicodeNormalizationCases.length + tzereOverrideCases.length + consonantOverrideCases.length + stressCases.length + alignmentCases.length + speechCases.length + pronunciationHebrewCases.length + 3} transliteration tests passed.`);

@@ -446,13 +446,14 @@
   }
 
   function audioPreparation(hebrew) {
-    const text = speechTools.vocalizedHebrewOnly(hebrew);
     const tzere = tzereOverrideRadios.find((radio) => radio.checked)?.value || "e";
     const speechRuleset = speechTools.speechRuleset(
       window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi,
       tzere
     );
     const speechTransliterator = new window.HebrewTransliterator.Transliterator(speechRuleset);
+    const lexicon = speechTools.lexiconEntries(hebrew, speechTransliterator);
+    const text = speechTools.speakableHebrewOnly(hebrew, lexicon);
     const sourceType = speechTools.audioSourceType(
       input.value,
       lastImportedSefariaContext?.text || ""
@@ -462,7 +463,7 @@
       text,
       sourceType,
       sourceRef,
-      lexicon: speechTools.lexiconEntries(text, speechTransliterator),
+      lexicon,
       identity: JSON.stringify({ text, sourceType, sourceRef, tzere })
     };
   }

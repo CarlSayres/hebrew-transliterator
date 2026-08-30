@@ -8,9 +8,11 @@ The production audio path uses one fixed rendering profile:
 - Pronunciation rules: versioned IPA lexicon generated from the transliterator
 
 Before synthesis, the browser and Worker both remove non-Hebrew content and
-Hebrew words that contain no actual vowel point. Dagesh, shin/sin dots, trope,
-and meteg alone do not make a word vocalized. Relevant punctuation is retained
-for pacing, while the displayed source and transliteration remain unchanged.
+unknown Hebrew words that contain no actual vowel point. Unvocalized forms in
+the application's known-pronunciation dictionary are retained with their
+predefined IPA. Dagesh, shin/sin dots, trope, and meteg alone do not otherwise
+make a word vocalized. Relevant punctuation is retained for pacing, while the
+displayed source and transliteration remain unchanged.
 
 The Worker holds the Azure credential, creates a short-lived pronunciation
 lexicon for Azure to retrieve, calls Azure Speech, and deletes that serving copy

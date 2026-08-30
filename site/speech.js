@@ -240,20 +240,27 @@
       .trim();
   }
 
-  function vocalizedHebrewOnly(text) {
+  function speakableHebrewOnly(text, lexicon = []) {
+    const recognizedWords = new Set(
+      Array.from(lexicon || [], (entry) => String(entry?.grapheme || "").normalize("NFC")).filter(Boolean)
+    );
     const tokens = canonicalHebrew(text)
       .replace(/־/gu, " ")
       .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*|[.,!?;:׃–—…]+/gu) || [];
     let result = "";
     for (const token of tokens) {
       if (/^[\u05d0-\u05ea]/u.test(token)) {
-        if (!/[\u05b0-\u05bb\u05c7]/u.test(token)) continue;
+        if (!/[\u05b0-\u05bb\u05c7]/u.test(token) && !recognizedWords.has(token.normalize("NFC"))) continue;
         result += `${result && !result.endsWith(" ") ? " " : ""}${token}`;
       } else if (result) {
         result = `${result.trimEnd()}${token} `;
       }
     }
     return result.trim();
+  }
+
+  function vocalizedHebrewOnly(text) {
+    return speakableHebrewOnly(text);
   }
 
   const ipaVowels = new Map([
@@ -387,7 +394,9 @@
 
   function lexiconEntries(text, transliterator) {
     const prepared = canonicalHebrew(text);
-    const words = prepared.match(/[\u0591-\u05c7\u05d0-\u05ea]+/gu) || [];
+    const words = prepared
+      .replace(/־/gu, " ")
+      .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*/gu) || [];
     const uniqueWords = [...new Set(words.map((word) => word.normalize("NFC")))];
     return uniqueWords.map((grapheme) => {
       const rendered = transliterator.transliterateWithAllStressMarks(grapheme);
@@ -414,6 +423,7 @@
     hebrewVoices,
     canonicalHebrew,
     vocalizedHebrewOnly,
+    speakableHebrewOnly,
     ipaFromTransliteration,
     speechRuleset,
     lexiconEntries,

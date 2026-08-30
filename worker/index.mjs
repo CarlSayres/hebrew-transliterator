@@ -343,14 +343,17 @@ function canonicalAudioText(value) {
     .trim();
 }
 
-function vocalizedAudioText(value) {
+function speakableAudioText(value, lexicon) {
+  const recognizedWords = new Set(
+    Array.from(lexicon || [], (entry) => String(entry?.grapheme || "").normalize("NFC")).filter(Boolean)
+  );
   const tokens = canonicalAudioText(value)
     .replace(/־/gu, " ")
     .match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*|[.,!?;:׃–—…]+/gu) || [];
   let result = "";
   for (const token of tokens) {
     if (/^[\u05d0-\u05ea]/u.test(token)) {
-      if (!/[\u05b0-\u05bb\u05c7]/u.test(token)) continue;
+      if (!/[\u05b0-\u05bb\u05c7]/u.test(token) && !recognizedWords.has(token.normalize("NFC"))) continue;
       result += `${result && !result.endsWith(" ") ? " " : ""}${token}`;
     } else if (result) {
       result = `${result.trimEnd()}${token} `;
@@ -372,7 +375,9 @@ function validLexicon(entries, text) {
   if (!Array.isArray(entries) || entries.length < 1 || entries.length > 1000) {
     return false;
   }
-  const textWords = new Set(text.match(/[\u0591-\u05c7\u05d0-\u05ea]+/gu) || []);
+  const textWords = new Set(
+    text.match(/[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*/gu) || []
+  );
   return entries.every((entry) => {
     const keys = Object.keys(entry || {}).sort();
     return keys.length === 2 && keys[0] === "grapheme" && keys[1] === "phoneme" &&
@@ -539,7 +544,7 @@ export async function handleAudio(request, env) {
   const isCurrentPayload = payload?.schemaVersion === 2 &&
     keys.length === 6 && keys[0] === "lexicon" && keys[1] === "schemaVersion" &&
     keys[2] === "sourceRef" && keys[3] === "sourceType" && keys[4] === "text" && keys[5] === "tzere";
-  const text = vocalizedAudioText(payload?.text);
+  const text = speakableAudioText(payload?.text, payload?.lexicon);
   const sourceRef = cleanSefariaReference(payload?.sourceRef);
   if (
     (!isLegacyPayload && !isCurrentPayload) || !["e", "ei"].includes(payload.tzere) ||

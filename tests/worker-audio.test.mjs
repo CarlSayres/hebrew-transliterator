@@ -22,7 +22,12 @@ class MemoryBucket {
   }
 }
 
-function audioRequest(sourceType = "sefaria", text = "בָּרוּךְ", sourceRef = "Siddur Ashkenaz, Weekday, Shacharit") {
+function audioRequest(
+  sourceType = "sefaria",
+  text = "בָּרוּךְ",
+  sourceRef = "Siddur Ashkenaz, Weekday, Shacharit",
+  lexicon = [{ grapheme: "בָּרוּךְ", phoneme: "ba.ˈʁux" }]
+) {
   const request = new Request("https://hebrewtransliterator.com/api/audio", {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: "https://hebrewtransliterator.com" },
@@ -32,7 +37,7 @@ function audioRequest(sourceType = "sefaria", text = "בָּרוּךְ", sourceR
       sourceRef: sourceType === "sefaria" ? sourceRef : "",
       text,
       tzere: "ei",
-      lexicon: [{ grapheme: "בָּרוּךְ", phoneme: "ba.ˈʁux" }]
+      lexicon
     })
   });
   Object.defineProperty(request, "cf", { value: { country: "US" } });
@@ -138,6 +143,24 @@ test("omits non-Hebrew and unvocalized Hebrew from Azure SSML", async () => {
 
   const rejected = await handleAudio(audioRequest("arbitrary", "English שלום 42"), state.env);
   assert.equal(rejected.status, 400);
+});
+
+test("keeps a recognized unvocalized word and its IPA lexicon entry", async () => {
+  const state = makeEnv();
+  const result = await handleAudio(
+    audioRequest(
+      "arbitrary",
+      "English יהוה שלום",
+      "",
+      [{ grapheme: "יהוה", phoneme: "a.do.ˈnaj" }]
+    ),
+    state.env
+  );
+  assert.equal(result.status, 200);
+  assert.match(state.azureBodies[0], /<s>יהוה<\/s>/u);
+  assert.doesNotMatch(state.azureBodies[0], /English|שלום/u);
+  const debugLexicon = [...state.bucket.objects.entries()].find(([key]) => key.startsWith("debug/lexicons/"));
+  assert.match(debugLexicon[1].body, /<grapheme>יהוה<\/grapheme><phoneme>a\.do\.ˈnaj<\/phoneme>/u);
 });
 
 test("serves only a temporary unguessable lexicon object", async () => {
