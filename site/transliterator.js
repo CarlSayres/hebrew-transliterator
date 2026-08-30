@@ -1828,6 +1828,15 @@
           hasMark(clusters[index + 1], MARKS.HOLAM) &&
           shouldSkipMater(clusters, index + 1)
         );
+        const isSilentFinalKamatzHe = Boolean(
+          cluster.base === "ה" &&
+          index + 1 === clusters.length &&
+          clusters[index - 1]?.vowelName === "kamatzGadol" &&
+          cluster.marks.every((mark) => {
+            const code = mark.codePointAt(0);
+            return code === 0x05af || code === 0x05c4 || code === 0x05c5;
+          })
+        );
         const isSilentYodInAvSuffix = Boolean(
           cluster.base === "י" &&
           !getVowelMark(cluster) &&
@@ -1848,6 +1857,9 @@
           return "";
         }
         if (isHolamMaterVav) {
+          return "";
+        }
+        if (isSilentFinalKamatzHe) {
           return "";
         }
         if (consonantalVav) {
