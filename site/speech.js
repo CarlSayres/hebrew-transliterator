@@ -222,12 +222,16 @@
     return ruleset;
   }
 
-  function ssmlDiagnostic() {
-    return [
-      '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">',
-      '<phoneme alphabet="ipa" ph="təˈmeɪtoʊ">banana</phoneme>',
-      "</speak>"
-    ].join("");
+  function hebrewForSpeech(text) {
+    return String(text || "")
+      .normalize("NFD")
+      .replace(/[\u0591-\u05af\u05bd\u05c4\u05c5]/g, "")
+      .replace(/[\u0590-\u05ff]+/g, (word) => {
+        const base = word.replace(/[\u0591-\u05c7]/g, "");
+        return base === "יהוה" || base === "יי" ? "אֲדֹנָי" : word;
+      })
+      .replace(/\u05c3/g, ":")
+      .normalize("NFC");
   }
 
   return {
@@ -238,6 +242,6 @@
     phoneticize,
     phoneticizeWord,
     rulesetForTzere,
-    ssmlDiagnostic
+    hebrewForSpeech
   };
 });

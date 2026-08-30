@@ -1074,6 +1074,14 @@ textarea:focus {
   color: var(--text);
 }
 
+.speech-voice-note {
+  min-height: 1.3em;
+  margin: -3px 0 2px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .speech-rate-heading {
   display: flex;
   justify-content: space-between;
@@ -1083,48 +1091,6 @@ textarea:focus {
 .speech-settings-form input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
-}
-
-.ssml-diagnostic {
-  margin-top: 7px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 12px;
-  background: var(--surface-warm);
-}
-
-.ssml-diagnostic h3,
-.ssml-diagnostic p {
-  margin: 0;
-}
-
-.ssml-diagnostic h3 {
-  font-size: 0.95rem;
-}
-
-.ssml-diagnostic p {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
-.ssml-test-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 10px;
-}
-
-.ssml-test-actions .secondary-button,
-.ssml-test-actions .result-button {
-  min-width: 0;
-  padding: 7px 10px;
-  font-size: 0.8rem;
-}
-
-.speech-test-status:empty {
-  display: none;
 }
 
 @media (max-width: 760px) {

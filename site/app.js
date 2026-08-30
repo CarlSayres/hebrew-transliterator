@@ -16,12 +16,9 @@
   const speechSettingsButton = document.getElementById("speechSettingsButton");
   const speechSettingsDialog = document.getElementById("speechSettingsDialog");
   const speechVoiceSelect = document.getElementById("speechVoiceSelect");
+  const speechVoiceModeNote = document.getElementById("speechVoiceModeNote");
   const speechRate = document.getElementById("speechRate");
   const speechRateValue = document.getElementById("speechRateValue");
-  const ssmlTestButton = document.getElementById("ssmlTestButton");
-  const ssmlWorkedButton = document.getElementById("ssmlWorkedButton");
-  const ssmlFallbackButton = document.getElementById("ssmlFallbackButton");
-  const ssmlTestStatus = document.getElementById("ssmlTestStatus");
   const sefariaQuery = document.getElementById("sefariaQuery");
   const sefariaImportButton = document.getElementById("sefariaImportButton");
   const sefariaSearchButton = document.getElementById("sefariaSearchButton");
@@ -133,9 +130,7 @@
       chet: chetOverride?.value || "",
       khaf: khafOverride?.value || "",
       speechVoice: speechVoiceSelect?.value || "",
-      speechRate: Number(speechRate?.value) || 0.85,
-      speechSsmlVoice: speechSsmlVoiceKey,
-      speechSsmlSupported
+      speechRate: Number(speechRate?.value) || 0.85
     };
     const secure = location.protocol === "https:" ? "; Secure" : "";
     document.cookie = `${preferencesCookieName}=${encodeURIComponent(JSON.stringify(preferences))}; Max-Age=${preferencesCookieMaxAge}; Path=/; SameSite=Lax${secure}`;
@@ -171,12 +166,6 @@
     if (restoredRate >= 0.6 && restoredRate <= 1.2) {
       speechRate.value = String(restoredRate);
     }
-    speechSsmlVoiceKey = String(preferences.speechSsmlVoice || "");
-    speechSsmlSupported = preferences.speechSsmlSupported === true
-      ? true
-      : preferences.speechSsmlSupported === false
-        ? false
-        : null;
     updateSpeechRateLabel();
   }
 
@@ -218,8 +207,6 @@
   let transliterator = new window.HebrewTransliterator.Transliterator(rulesets[0]);
   let availableSpeechVoices = [];
   let preferredSpeechVoiceKey = "";
-  let speechSsmlVoiceKey = "";
-  let speechSsmlSupported = null;
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
   let activeSefariaController = null;
@@ -417,6 +404,10 @@
   }
 
   function speechTextForHebrew(hebrew) {
+    const voice = selectedSpeechVoice();
+    if (/^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")) {
+      return speechTools.hebrewForSpeech(hebrew);
+    }
     const tzere = tzereOverrideRadios.find((radio) => radio.checked)?.value || "e";
     const speechRuleset = speechTools.rulesetForTzere(
       window.HebrewRulesets.speechEnglish || window.HebrewRulesets.modernSefardi,
@@ -447,58 +438,47 @@
     speechRateValue.textContent = `${Number(speechRate.value).toFixed(2)}×`;
   }
 
-  function updateSsmlTestStatus() {
-    const selectedKey = speechVoiceSelect.value || "__default_en__";
-    if (selectedKey !== speechSsmlVoiceKey || speechSsmlSupported === null) {
-      ssmlTestStatus.textContent = "This voice has not been verified for IPA/SSML.";
-      return;
-    }
-    ssmlTestStatus.textContent = speechSsmlSupported
-      ? "You marked this voice as supporting IPA/SSML."
-      : "You marked this voice as fallback-only; IPA/SSML will not be assumed.";
+  function updateSpeechVoiceModeNote() {
+    const voice = selectedSpeechVoice();
+    speechVoiceModeNote.textContent = /^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")
+      ? "Hebrew mode: reads the vocalized Hebrew directly; the e/ei setting does not apply."
+      : "English mode: reads the hidden phonetic spelling and follows the e/ei setting.";
   }
 
   function populateSpeechVoices() {
     const voices = window.speechSynthesis?.getVoices?.() || [];
-    availableSpeechVoices = voices.filter((voice) => /^en(?:[-_]|$)/i.test(voice.lang));
+    availableSpeechVoices = voices.filter((voice) => /^(?:en|he|iw)(?:[-_]|$)/i.test(voice.lang));
     const desired = speechVoiceSelect.value || preferredSpeechVoiceKey;
     speechVoiceSelect.replaceChildren();
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "Browser default (English)";
+    defaultOption.textContent = "Browser default (English phonetic)";
     speechVoiceSelect.append(defaultOption);
 
-    for (const voice of availableSpeechVoices) {
-      const option = document.createElement("option");
-      option.value = speechVoiceKey(voice);
-      option.textContent = `${voice.name} (${voice.lang})${voice.localService ? " — local" : ""}`;
-      speechVoiceSelect.append(option);
+    const groups = [
+      { label: "English — phonetic spelling", pattern: /^en(?:[-_]|$)/i },
+      { label: "Hebrew — vocalized Hebrew", pattern: /^(?:he|iw)(?:[-_]|$)/i }
+    ];
+    for (const group of groups) {
+      const matchingVoices = availableSpeechVoices.filter((voice) => group.pattern.test(voice.lang));
+      if (!matchingVoices.length) {
+        continue;
+      }
+      const optionGroup = document.createElement("optgroup");
+      optionGroup.label = group.label;
+      for (const voice of matchingVoices) {
+        const option = document.createElement("option");
+        option.value = speechVoiceKey(voice);
+        option.textContent = `${voice.name} (${voice.lang})${voice.localService ? " — local" : ""}`;
+        optionGroup.append(option);
+      }
+      speechVoiceSelect.append(optionGroup);
     }
     speechVoiceSelect.value = hasSelectValue(speechVoiceSelect, desired) ? desired : "";
     if (availableSpeechVoices.length) {
       preferredSpeechVoiceKey = speechVoiceSelect.value;
     }
-    updateSsmlTestStatus();
-  }
-
-  function playSsmlDiagnostic() {
-    stopSpeech();
-    const session = speechSession;
-    const utterance = new SpeechSynthesisUtterance(speechTools.ssmlDiagnostic());
-    configureUtterance(utterance);
-    setSpeechButtonState(true);
-    utterance.addEventListener("end", () => {
-      if (speechSession === session) {
-        setSpeechButtonState(false);
-      }
-    });
-    utterance.addEventListener("error", () => {
-      if (speechSession === session) {
-        setSpeechButtonState(false);
-      }
-    });
-    window.speechSynthesis.speak(utterance);
-    ssmlTestStatus.textContent = "Listen for “tomato” (IPA supported) or “banana” (fallback only).";
+    updateSpeechVoiceModeNote();
   }
 
   function setSpeechButtonState(speaking) {
@@ -1791,24 +1771,11 @@
   });
   speechVoiceSelect.addEventListener("change", () => {
     preferredSpeechVoiceKey = speechVoiceSelect.value;
-    updateSsmlTestStatus();
+    updateSpeechVoiceModeNote();
     savePreferences();
   });
   speechRate.addEventListener("input", updateSpeechRateLabel);
   speechRate.addEventListener("change", savePreferences);
-  ssmlTestButton.addEventListener("click", playSsmlDiagnostic);
-  ssmlWorkedButton.addEventListener("click", () => {
-    speechSsmlVoiceKey = speechVoiceSelect.value || "__default_en__";
-    speechSsmlSupported = true;
-    updateSsmlTestStatus();
-    savePreferences();
-  });
-  ssmlFallbackButton.addEventListener("click", () => {
-    speechSsmlVoiceKey = speechVoiceSelect.value || "__default_en__";
-    speechSsmlSupported = false;
-    updateSsmlTestStatus();
-    savePreferences();
-  });
 
   if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
     speechButton.disabled = true;
