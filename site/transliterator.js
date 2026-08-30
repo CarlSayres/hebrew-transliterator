@@ -1817,7 +1817,14 @@
           !hasShuruk(cluster) &&
           !shouldSkipMater(clusters, index)
         );
-        const speechBase = consonantalVav ? "ב" : cluster.base;
+        const isFinalPatachChet = Boolean(
+          cluster.base === "ח" &&
+          index + 1 === clusters.length &&
+          clusters[index - 1]?.vowelName === "patach" &&
+          !getVowelMark(cluster) &&
+          !hasMark(cluster, MARKS.SHEVA)
+        );
+        const speechBase = consonantalVav ? "ב" : (isFinalPatachChet ? "ך" : cluster.base);
         const isHolamMaterVav = Boolean(
           cluster.base === "ו" &&
           hasMark(cluster, MARKS.HOLAM) &&

@@ -419,11 +419,7 @@
       tzere
     );
     const speechTransliterator = new window.HebrewTransliterator.Transliterator(speechRuleset);
-    const voice = selectedSpeechVoice();
-    if (/^(?:he|iw)(?:[-_]|$)/i.test(voice?.lang || "")) {
-      return speechTransliterator.pronunciationHebrew(hebrew, { tzere });
-    }
-    return speechTools.phoneticize(speechTransliterator.transliterate(hebrew));
+    return speechTransliterator.pronunciationHebrew(hebrew, { tzere });
   }
 
   function speechVoiceKey(voice) {
@@ -437,7 +433,7 @@
   }
 
   function usesHebrewSpeechVoice() {
-    return /^(?:he|iw)(?:[-_]|$)/i.test(selectedSpeechVoice()?.lang || "");
+    return Boolean(selectedSpeechVoice());
   }
 
   function showHebrewSpeechDebug(text) {
@@ -455,7 +451,7 @@
   function configureUtterance(utterance) {
     const voice = selectedSpeechVoice();
     utterance.voice = voice;
-    utterance.lang = voice?.lang || "en-US";
+    utterance.lang = voice?.lang || "he-IL";
     utterance.rate = Number(speechRate.value) || 0.85;
   }
 
@@ -465,43 +461,37 @@
 
   function updateSpeechVoiceModeNote() {
     speechVoiceModeNote.textContent = usesHebrewSpeechVoice()
-      ? "Hebrew mode: reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit, and dagesh is removed from gimel and tav."
-      : "English mode: reads the hidden phonetic spelling and follows the e/ei setting.";
+      ? "Reads rule-adjusted Hebrew; kamatz katan, sh’va na, e/ei, and consonantal v are made explicit, and dagesh is removed from gimel and tav."
+      : "No Hebrew speech voice is available in this browser.";
   }
 
   function populateSpeechVoices() {
     const voices = window.speechSynthesis?.getVoices?.() || [];
-    availableSpeechVoices = voices.filter((voice) => /^(?:en|he|iw)(?:[-_]|$)/i.test(voice.lang));
+    availableSpeechVoices = speechTools.hebrewVoices(voices);
     const desired = speechVoiceSelect.value || preferredSpeechVoiceKey;
     speechVoiceSelect.replaceChildren();
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "Browser default (English phonetic)";
-    speechVoiceSelect.append(defaultOption);
+    const hasHebrewVoices = availableSpeechVoices.length > 0;
+    speechButton.hidden = !hasHebrewVoices;
+    speechSettingsButton.hidden = !hasHebrewVoices;
+    if (!hasHebrewVoices) {
+      if (speechSpeaking) {
+        stopSpeech();
+      }
+      speechSettingsDialog.close?.();
+      updateSpeechVoiceModeNote();
+      return;
+    }
 
-    const groups = [
-      { label: "English — phonetic spelling", pattern: /^en(?:[-_]|$)/i },
-      { label: "Hebrew — vocalized Hebrew", pattern: /^(?:he|iw)(?:[-_]|$)/i }
-    ];
-    for (const group of groups) {
-      const matchingVoices = availableSpeechVoices.filter((voice) => group.pattern.test(voice.lang));
-      if (!matchingVoices.length) {
-        continue;
-      }
-      const optionGroup = document.createElement("optgroup");
-      optionGroup.label = group.label;
-      for (const voice of matchingVoices) {
-        const option = document.createElement("option");
-        option.value = speechVoiceKey(voice);
-        option.textContent = `${voice.name} (${voice.lang})${voice.localService ? " — local" : ""}`;
-        optionGroup.append(option);
-      }
-      speechVoiceSelect.append(optionGroup);
+    for (const voice of availableSpeechVoices) {
+      const option = document.createElement("option");
+      option.value = speechVoiceKey(voice);
+      option.textContent = `${voice.name} (${voice.lang})${voice.localService ? " — local" : ""}`;
+      speechVoiceSelect.append(option);
     }
-    speechVoiceSelect.value = hasSelectValue(speechVoiceSelect, desired) ? desired : "";
-    if (availableSpeechVoices.length) {
-      preferredSpeechVoiceKey = speechVoiceSelect.value;
-    }
+    speechVoiceSelect.value = hasSelectValue(speechVoiceSelect, desired)
+      ? desired
+      : speechVoiceKey(availableSpeechVoices[0]);
+    preferredSpeechVoiceKey = speechVoiceSelect.value;
     updateSpeechVoiceModeNote();
   }
 

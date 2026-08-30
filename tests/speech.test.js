@@ -65,3 +65,17 @@ test("makes the speech ruleset follow the selected tzere pronunciation", () => {
   assert.equal(eRuleset.exceptions.exactWords.word, "Elohenu");
   assert.equal(eiRuleset.exceptions.exactWords.word, "Eloheinu");
 });
+
+test("offers only Hebrew speech voices", () => {
+  const voices = [
+    { name: "English", lang: "en-US" },
+    { name: "Hebrew modern", lang: "he-IL" },
+    { name: "Hebrew legacy", lang: "iw_IL" },
+    { name: "French", lang: "fr-FR" }
+  ];
+  assert.deepEqual(
+    speech.hebrewVoices(voices).map((voice) => voice.name),
+    ["Hebrew modern", "Hebrew legacy"]
+  );
+  assert.deepEqual(speech.hebrewVoices([]), []);
+});

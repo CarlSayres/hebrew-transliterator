@@ -222,6 +222,12 @@
     return ruleset;
   }
 
+  function hebrewVoices(voices) {
+    return Array.from(voices || []).filter((voice) =>
+      /^(?:he|iw)(?:[-_]|$)/i.test(String(voice?.lang || ""))
+    );
+  }
+
   return {
     prepareText,
     chunks,
@@ -229,6 +235,7 @@
     sourceForTargetSelection,
     phoneticize,
     phoneticizeWord,
-    rulesetForTzere
+    rulesetForTzere,
+    hebrewVoices
   };
 });
