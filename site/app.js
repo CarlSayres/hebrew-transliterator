@@ -277,6 +277,12 @@
 
   const sampleText = "בָּרוּךְ שֶׁאָמַר וְהָיָה הָעוֹלָם, בָּרוּךְ הוּא, בָּרוּךְ עֹשֶׂה בְרֵאשִׁית, בָּרוּךְ אוֹמֵר וְעוֹשֶׂה, בָּרוּךְ גּוֹזֵר וּמְקַיֵּם, בָּרוּךְ מְרַחֵם עַל הָאָֽרֶץ, בָּרוּךְ מְרַחֵם עַל הַבְּרִיּוֹת, בָּרוּךְ מְשַׁלֵּם שָׂכָר טוֹב לִירֵאָיו, בָּרוּךְ חַי לָעַד וְקַיָּם לָנֶֽצַח, בָּרוּךְ פּוֹדֶה וּמַצִּיל, בָּרוּךְ שְׁמוֹ: בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵֽינוּ מֶֽלֶךְ הָעוֹלָם הָאֵל הָאָב הָרַחֲמָן הַמְּהֻלָּל בְּפִי עַמּוֹ מְשֻׁבָּח וּמְפֹאָר בִּלְשׁוֹן חֲסִידָיו וַעֲבָדָיו וּבְשִׁירֵי דָוִד עַבְדֶּֽךָ, נְהַלֶּלְךָ יְהֹוָה אֱלֹהֵֽינוּ בִּשְׁבָחוֹת וּבִזְמִירוֹת נְגַדֶּלְךָ וּנְשַׁבֵּחֲךָ וּנְפָאֶרְךָ וְנַזְכִּיר שִׁמְךָ וְנַמְלִיכְךָ מַלְכֵּֽנוּ אֱלֹהֵֽינוּ, יָחִיד, חֵי הָעוֹלָמִים, מֶֽלֶךְ מְשֻׁבָּח וּמְפֹאָר עֲדֵי עַד שְׁמוֹ הַגָּדוֹל: בָּרוּךְ אַתָּה יְהֹוָה מֶֽלֶךְ מְהֻלָּל בַּתִּשְׁבָּחוֹת:";
 
+  function resizeHebrewInputToContent() {
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
+    syncHebrewHighlightScroll();
+  }
+
   function updateOutput() {
     stopAudio();
     clearPreparedAudio();
@@ -285,6 +291,7 @@
       stressMarkToggle?.checked ? "stressMarks" : "text"
     );
     renderAlignedOutput();
+    resizeHebrewInputToContent();
     clearLinkedHighlights();
     updateTransliterationNotice();
   }
@@ -1764,6 +1771,11 @@
   if (typeof ResizeObserver === "function") {
     new ResizeObserver(syncHebrewHighlightScroll).observe(input);
   }
+  let inputResizeFrame = 0;
+  window.addEventListener("resize", () => {
+    window.cancelAnimationFrame(inputResizeFrame);
+    inputResizeFrame = window.requestAnimationFrame(resizeHebrewInputToContent);
+  });
 
   hebrewCopyButton.addEventListener("click", () => {
     void copyText(input.value, hebrewCopyButton, "Copy", "hebrew_copied");

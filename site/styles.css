@@ -272,6 +272,7 @@ h1 {
 .editor-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  align-items: start;
   gap: clamp(12px, 2vw, 20px);
 }
 
@@ -676,6 +677,8 @@ h1 {
 }
 
 .panel {
+  align-self: start;
+  width: 100%;
   min-height: clamp(360px, 52vh, 560px);
   display: flex;
   flex-direction: column;
@@ -714,15 +717,17 @@ textarea,
 
 .hebrew-editor {
   position: relative;
-  display: flex;
   min-height: clamp(300px, 44vh, 470px);
 }
 
 .hebrew-editor textarea {
+  display: block;
   position: relative;
   z-index: 1;
-  flex: 1;
-  min-height: 100%;
+  height: auto;
+  min-height: clamp(300px, 44vh, 470px);
+  overflow: hidden;
+  resize: none;
   background: transparent;
 }
 
