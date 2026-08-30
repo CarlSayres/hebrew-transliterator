@@ -1,14 +1,17 @@
 :root {
   color-scheme: light;
-  --bg: #f7f5ef;
-  --surface: #fffefa;
-  --surface-warm: #f4efe4;
-  --text: #24211c;
-  --muted: #6d675d;
-  --line: #d8d1c4;
-  --accent: #146b63;
-  --accent-strong: #0d514b;
-  --focus: #c27803;
+  --bg: #f6f6f3;
+  --surface: #ffffff;
+  --surface-warm: #f1f5f6;
+  --text: #26323d;
+  --muted: #65717b;
+  --line: #d6dde1;
+  --accent: #28758a;
+  --accent-strong: #193f5f;
+  --accent-soft: #e8f1f3;
+  --focus: #b57b19;
+  --shadow-soft: 0 10px 32px rgb(25 63 95 / 7%);
+  --shadow-panel: 0 18px 52px rgb(25 63 95 / 9%);
 }
 
 * {
@@ -18,7 +21,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background: linear-gradient(180deg, #fbfaf7 0, var(--bg) 300px);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -130,7 +133,9 @@ h1 {
   margin: 0;
   font-size: clamp(2rem, 5vw, 4.25rem);
   line-height: 1;
-  font-weight: 750;
+  color: var(--accent-strong);
+  font-weight: 720;
+  letter-spacing: -0.035em;
 }
 
 .intro-text {
@@ -154,6 +159,11 @@ h1 {
   align-items: end;
   gap: clamp(10px, 1.5vw, 14px);
   flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, white);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 72%);
+  box-shadow: 0 8px 24px rgb(25 63 95 / 5%);
 }
 
 .style-controls {
@@ -181,7 +191,7 @@ h1 {
 .style-picker select {
   min-width: 136px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 7px;
   padding: 6px 24px 6px 9px;
   background: #ffffff;
   color: var(--text);
@@ -214,7 +224,7 @@ h1 {
   width: 68px;
   min-width: 68px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 7px;
   padding: 4px 22px 4px 8px;
   background: #ffffff;
   color: var(--text);
@@ -280,15 +290,15 @@ h1 {
   margin-bottom: clamp(12px, 2vw, 18px);
   padding: clamp(12px, 1.5vw, 16px);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
-  box-shadow: 0 10px 30px rgba(46, 39, 25, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 
 .sefaria-label {
   display: block;
   margin-bottom: 8px;
-  color: var(--muted);
+  color: var(--accent-strong);
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -324,10 +334,10 @@ h1 {
 }
 
 .sefaria-start-button {
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
   border-radius: 999px;
   padding: 3px 9px;
-  background: #ffffff;
+  background: var(--accent-soft);
   color: var(--accent-strong);
   cursor: pointer;
   font: inherit;
@@ -335,7 +345,7 @@ h1 {
 
 .sefaria-start-button:hover {
   border-color: var(--accent);
-  background: var(--surface-warm);
+  background: color-mix(in srgb, var(--accent-soft) 72%, white);
 }
 
 .sefaria-start-button:disabled {
@@ -352,14 +362,15 @@ h1 {
 .sefaria-input {
   min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 10px 12px;
   background: #ffffff;
   color: var(--text);
 }
 
 .sefaria-input:focus {
-  outline: 3px solid color-mix(in srgb, var(--focus) 28%, transparent);
+  border-color: var(--accent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 20%, transparent);
   outline-offset: 0;
 }
 
@@ -525,7 +536,7 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 3px 8px;
-  background: #ffffff;
+  background: var(--accent-soft);
   color: var(--accent-strong);
   cursor: pointer;
   font: inherit;
@@ -572,21 +583,23 @@ h1 {
 
 .result-button {
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 7px;
   padding: 5px 8px;
   background: #ffffff;
   color: var(--text);
   cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
 }
 
 .result-button:hover {
   border-color: var(--accent);
+  background: var(--accent-soft);
   color: var(--accent-strong);
 }
 
 .folder-button {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  background: color-mix(in srgb, var(--surface-warm) 72%, white);
+  background: var(--accent-soft);
 }
 
 .result-card {
@@ -596,7 +609,7 @@ h1 {
   min-width: 0;
   padding: 8px 10px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: #ffffff;
 }
 
@@ -683,16 +696,16 @@ h1 {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
-  box-shadow: 0 18px 60px rgba(46, 39, 25, 0.08);
+  box-shadow: var(--shadow-panel);
   overflow: hidden;
 }
 
 .panel-label {
   display: block;
   padding: 14px 16px 10px;
-  color: var(--muted);
+  color: var(--accent-strong);
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -814,6 +827,7 @@ textarea:focus {
   justify-content: space-between;
   gap: 12px;
   border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-warm) 44%, white);
 }
 
 .output-actions {
@@ -833,12 +847,13 @@ textarea:focus {
 
 .secondary-button,
 .icon-button {
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  background: var(--accent);
+  border: 1px solid var(--accent-strong);
+  border-radius: 7px;
+  background: var(--accent-strong);
   color: white;
   cursor: pointer;
   font-weight: 700;
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
 }
 
 .site-footer {
@@ -1041,12 +1056,22 @@ textarea:focus {
 
 .secondary-button:hover,
 .icon-button:hover {
-  background: var(--accent-strong);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 .quiet-icon-button {
   background: #ffffff;
   color: var(--accent-strong);
+}
+
+.secondary-button:focus-visible,
+.icon-button:focus-visible,
+.result-button:focus-visible,
+.sefaria-start-button:focus-visible,
+.sefaria-breadcrumb-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 32%, transparent);
+  outline-offset: 2px;
 }
 
 .audio-status {
