@@ -1755,7 +1755,11 @@
 
     pronunciationHebrew(text, options = {}) {
       const tzere = options.tzere === "ei" ? "ei" : "e";
-      return splitInput(text).map((token) => {
+      const speechInput = String(text || "")
+        .replace(/[ \t]*\{\s*[פס]\s*\}[ \t]*/gu, " ")
+        .replace(/[ \t]{2,}/g, " ")
+        .trim();
+      return splitInput(speechInput).map((token) => {
         if (token.type === "maqaf") {
           return " ";
         }
@@ -1863,6 +1867,22 @@
             return code === 0x05af || code === 0x05c4 || code === 0x05c5;
           })
         );
+        const isSilentFinalAlef = Boolean(
+          cluster.base === "א" &&
+          index + 1 === clusters.length &&
+          !getVowelMark(cluster) &&
+          !hasMark(cluster, MARKS.SHEVA) &&
+          cluster.marks.every((mark) => {
+            const code = mark.codePointAt(0);
+            return code === 0x05af || code === 0x05c4 || code === 0x05c5;
+          })
+        );
+        const nextIsSilentFinalAlef = Boolean(
+          clusters[index + 1]?.base === "א" &&
+          index + 2 === clusters.length &&
+          !getVowelMark(clusters[index + 1]) &&
+          !hasMark(clusters[index + 1], MARKS.SHEVA)
+        );
         const isSilentYodInAvSuffix = Boolean(
           cluster.base === "י" &&
           !getVowelMark(cluster) &&
@@ -1888,11 +1908,17 @@
         if (isSilentFinalKamatzHe) {
           return "";
         }
+        if (isSilentFinalAlef) {
+          return "";
+        }
         if (consonantalVav) {
           marks = marks.filter((mark) => mark !== MARKS.DAGESH);
         }
         if (["ג", "ת", "ק"].includes(speechBase)) {
           marks = marks.filter((mark) => mark !== MARKS.DAGESH);
+        }
+        if (nextIsSilentFinalAlef && cluster.sheva === "silent") {
+          marks = marks.filter((mark) => mark !== MARKS.SHEVA);
         }
         if (nextIsHolamMaterVav && !marks.includes(MARKS.HOLAM)) {
           marks.push(MARKS.HOLAM);
