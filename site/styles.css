@@ -84,10 +84,6 @@ select {
   width: 100%;
 }
 
-.site-heading-block .powered-by-sefaria {
-  margin-left: auto;
-}
-
 .site-icon-link {
   display: inline-flex;
   border-radius: 9px;
@@ -294,6 +290,22 @@ h1 {
   background: var(--surface);
 }
 
+.sefaria-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.sefaria-browse-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.sefaria-panel-heading .sefaria-start-row {
+  margin-bottom: 0;
+}
+
 .sefaria-label {
   display: block;
   margin-bottom: 8px;
@@ -306,7 +318,6 @@ h1 {
   display: inline-flex;
   flex: 0 0 auto;
   border-radius: 6px;
-  margin-top: 2px;
 }
 
 .powered-by-sefaria img {
