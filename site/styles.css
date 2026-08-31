@@ -1,16 +1,16 @@
 :root {
   color-scheme: light;
-  --bg: #f2f1fa;
+  --bg: #f3f3f3;
   --surface: #ffffff;
   --surface-warm: #f2f1fa;
   --text: #141619;
   --muted: #2c2e3a;
   --line: #b3b4bd;
-  --accent: #0a21c0;
-  --accent-strong: #050a44;
-  --accent-hover: #081ba0;
+  --accent: #38a31e;
+  --accent-strong: #2c6536;
+  --accent-hover: #2c6536;
   --accent-soft: #b3b4bd;
-  --focus: #0a21c0;
+  --focus: #2c6536;
 }
 
 * {
