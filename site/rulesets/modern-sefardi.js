@@ -175,18 +175,67 @@
     "מִשְׂגָּב": true,
     "מִשְׂגַּבִּים": true,
     "מִצְוָה": true,
-    "מִצְוֹת": true
+    "מִצְוֹת": true,
+    // Lexical/hifil forms in Lev Shalem: the initial he is not the article.
+    "הַזְכָּרַת": true,
+    "הַגְבָּהַת": true,
+    "הַכְנָסַת": true,
+    "הַשְׁכִּיבֵנוּ": true,
+    "הַשְׁתָּא": true,
+    "הַנְחִילֵנוּ": true,
+    "הַסְתִּירֵם": true,
+    // Reviewed Lev Shalem lexical/assimilated forms. Preserve the general
+    // hiriq-prefix rule for true prefixes such as מִלְמָעְלָה.
+    "מִתְנַשְּׂאִים": true,
+    "מִשְׁאֲלוֹת": true,
+    "מִשְׁאֲלוֹתֵינוּ": true,
+    "מִשְׁאֲלִין": true,
+    "מִשְׁפְּחוֹתֵיהֶם": true,
+    "מִשְׁפַּחְתָּהּ": true,
+    "מִשְׁפַּתְתָּהּ": true,
+    "מִשְׁפַּתְתּוֹ": true,
+    "מִשְׂגַּבֵּנוּ": true,
+    "מִתְפַּלְלִים": true,
+    "מִשְׁכְּבוֹתֵיהֶם": true,
+    "מִתְעַנִּין": true,
+    "מִתְיַחֲדִין": true,
+    "מִתְעַבְּרִין": true,
+    "מִתְעַטְּרִין": true,
+    "מִתְעַטֵּף": true,
+    "מִקְצֵה": true,
+    "בִמְנוּחָתֵנוּ": true,
+    "בִשְׁמַיָּא": true,
+    "בִרְצוֹנְךָ": true,
+    "בִגְדֵיהֶם": true,
+    "בִשְׁמֶךָ": true,
+    "בִנְדִיבִים": true,
+    "בִגְבוּרַת": true,
+    "בִגְבוּרֹתָיו": true,
+    "בִמְצוֹלֹת": true,
+    "בִלְתּוֹ": true,
+    "בִטְנְךָ": true,
+    "בִפְתִילַת": true,
+    "בִרְכָתֶךָ": true,
+    "בִשְׁמוֹ": true,
+    "בִשְׁמִי": true
   };
   Object.assign(silentInitialPrefixSheva, window.HebrewMorphhbSilentInitialMemSheva || {});
   Object.assign(silentInitialPrefixSheva, window.HebrewWikidataSilentInitialMemSheva || {});
   Object.assign(silentInitialPrefixSheva, window.HebrewOtherPrefixSilentInitialSheva || {});
   const lexicalInitialShe = normalizeLookup(window.HebrewLexicalInitialShe || {});
   const forcedKamatzGadol = normalizeLookup(window.HebrewMamForcedKamatzGadol || {});
+  // Siddur Aramaic not present in the Tanakh-derived MAM table.
+  forcedKamatzGadol["עָלְמִין".normalize("NFD")] = [0];
 
   // Some Sefaria Tanakh forms omit the meteg that would explicitly mark a
   // kamatz as gadol before a vocal sh'va. Keep this list narrow so genuine
   // kamatz-katan forms such as חָכְמָה continue to follow the general rule.
   const missingMetegKamatzSheva = {
+    // Reviewed אמרו family: vocal sh'va is a separate decision from the
+    // MAM gadol-only table. Do not inherit this map through arbitrary prefixes.
+    "אָמְרוּ": true,
+    "שֶׁאָמְרוּ": true,
+    "וְשֶׁאָמְרוּ": true,
     "שָׁרְצוּ": true,
     "נָפְלוּ": true,
     "גָּבְרוּ": true,
@@ -225,12 +274,67 @@
     "פָּתְחוּ": true,
     "שָׁבְרָה": true,
     "שָׁכְרוּ": true,
-    "תֵּחָלְצוּ": true
+    "תֵּחָלְצוּ": true,
+    // Supplied Lev Shalem volumes print these as qamatz gadol followed by
+    // sh'va na even where the source text lacks a meteg.
+    "דְּעָסְקִין": true,
+    "דְעָלְמָא": true,
+    "וְיִכָּנְסוּ": true,
+    "וּפָתְחוּ": true,
+    "וְשֶׁנִּתְפָּרְשׁוּ": true,
+    "וְתִתְפָּרְקוּן": true,
+    "יָקְרוּ": true,
+    "צָדְקוּ": true,
+    "קָפְאוּ": true,
+    "שֶׁיִּכָּנְסוּ": true,
+    "שֶׁיִּמָּלְאוּ": true,
+    "שֶׁמָּסְרוּ": true,
+    "תִכָּלְמִי": true,
+    "יֵחָלְצוּן": true,
+    "מָלְאָה": true,
+    "נָשְׂאוּ": true,
+    "גָּדְלוּ": true,
+    "הָרְשָׁעִים": true,
+    "הִשָּׁמְרוּ": true,
+    "עָמְקוּ": true,
+    "כָשְׁלוּ": true,
+    "לָרְעֵבִים": true,
+    "שָׁמְרוּ": true,
+    "וְשָׁמְרוּ": true,
+    "הָרְחוֹקִים": true,
+    "בָּרְחוֹב": true,
+    "וְהִנָּשְׂאוּ": true,
+    "וַיְגָרְשֵׁהוּ": true,
+    "חָפְרוּ": true,
+    "יָדְעוּ": true,
+    "לָבְשׁוּ": true,
+    "שֶׁבָּטְחוּ": true,
+    "שָׁמְעָה": true,
+    "שָׁמְעוּ": true
+  };
+
+  const silentShevaByWord = {
+    // Narrow morphological/lexical exceptions. A broad suffix rule changes
+    // many valid sh'va-na forms after long vowels.
+    "אוּקִימְנָא": [4],
+    "אֹהַבְךָ": [2],
+    "חִיָּתְנִי": [2],
+    "תַּחְגֹּרְנָה": [3],
+    "נַחֲלַתְכֶם": [3],
+    "יִשָּׂאוּנְךָ": [4],
+    "לַחְפֹּר": [1],
+    "בַּרְתּוֹתָא": [1]
   };
 
   const phraseCapitalization = {
     "אַתָּה": "Atah",
     "אַתָּה": "Atah"
+  };
+
+  const lexicalInitialHey = {
+    // Daniel 5:7,16,29: Aramaic noun, not Hebrew article + mem.
+    // Preserve existing pronunciation pending a separate Aramaic review.
+    "הַמְנִיכָא": true
   };
 
   const stressOverrides = {
@@ -247,6 +351,8 @@
   normalizeLookup(exactWords);
   normalizeLookup(silentInitialPrefixSheva);
   normalizeLookup(missingMetegKamatzSheva);
+  normalizeLookup(silentShevaByWord);
+  normalizeLookup(lexicalInitialHey);
   normalizeLookup(phraseCapitalization);
   normalizeLookup(stressOverrides);
   normalizeLookup(stressRuleWords);
@@ -311,8 +417,10 @@
       niqqudless,
       silentInitialPrefixSheva,
       lexicalInitialShe,
+      lexicalInitialHey,
       forcedKamatzGadol,
       missingMetegKamatzSheva,
+      silentShevaByWord,
       phraseCapitalization,
       stressOverrides,
       stressRuleWords

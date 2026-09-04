@@ -1,6 +1,6 @@
 {
   "title": "Genesis transliteration snapshots",
-  "generatedAt": "2026-08-29T23:21:11.943Z",
+  "generatedAt": "2026-09-04T22:11:13.889Z",
   "sourceDownloadedAt": "2026-05-24T00:28:54.640Z",
   "rows": [
     {
@@ -1659,9 +1659,9 @@
       "verse": 13,
       "hebrew": "וַיֹּ֨אמֶר אֱלֹהִ֜ים לְנֹ֗חַ קֵ֤ץ כׇּל־בָּשָׂר֙ בָּ֣א לְפָנַ֔י כִּֽי־מָלְאָ֥ה הָאָ֛רֶץ חָמָ֖ס מִפְּנֵיהֶ֑ם וְהִנְנִ֥י מַשְׁחִיתָ֖ם אֶת־הָאָֽרֶץ׃",
       "outputs": {
-        "modernSefardi": "Vayomer Elohim lenoaḥ ketz kol-basar ba lefanai ki-mal·ah ha·aretz ḥamas mipeneihem vehineni mashḥitam et-ha·aretz:",
-        "levShalem": "Vayomer Elohim l'noaḥ keitz kol basar ba l'fanai ki mal·ah ha-aretz ḥamas mi-p'neihem v'hin'ni mashḥitam et ha-aretz:",
-        "mishkanTefilah": "Vayomer Elohim l'noach keitz kol-basar ba l'fanai ki-mal-ah ha-aretz chamas mip'neihem v'hin'ni mashchitam et-ha-aretz:"
+        "modernSefardi": "Vayomer Elohim lenoaḥ ketz kol-basar ba lefanai ki-male·ah ha·aretz ḥamas mipeneihem vehineni mashḥitam et-ha·aretz:",
+        "levShalem": "Vayomer Elohim l'noaḥ keitz kol basar ba l'fanai ki mal'ah ha-aretz ḥamas mi-p'neihem v'hin'ni mashḥitam et ha-aretz:",
+        "mishkanTefilah": "Vayomer Elohim l'noach keitz kol-basar ba l'fanai ki-mal'ah ha-aretz chamas mip'neihem v'hin'ni mashchitam et-ha-aretz:"
       }
     },
     {
@@ -2055,9 +2055,9 @@
       "verse": 3,
       "hebrew": "וַיָּשֻׁ֧בוּ הַמַּ֛יִם מֵעַ֥ל הָאָ֖רֶץ הָל֣וֹךְ וָשׁ֑וֹב וַיַּחְסְר֣וּ הַמַּ֔יִם מִקְצֵ֕ה חֲמִשִּׁ֥ים וּמְאַ֖ת יֽוֹם׃",
       "outputs": {
-        "modernSefardi": "Vayashuvu hamayim me·al ha·aretz halokh vashov vayaḥseru hamayim miketzeh ḥamishim um·at yom:",
-        "levShalem": "Vayashuvu ha-mayim mei-al ha-aretz halokh va-shov vayaḥs'ru ha-mayim mi-k'tzeih ḥamishim u-m·at yom:",
-        "mishkanTefilah": "Vayashuvu hamayim mei-al ha-aretz haloch vashov vayachs'ru hamayim mik'tzeih chamishim um-at yom:"
+        "modernSefardi": "Vayashuvu hamayim me·al ha·aretz halokh vashov vayaḥseru hamayim miktzeh ḥamishim um·at yom:",
+        "levShalem": "Vayashuvu ha-mayim mei-al ha-aretz halokh va-shov vayaḥs'ru ha-mayim miktzeih ḥamishim u-m·at yom:",
+        "mishkanTefilah": "Vayashuvu hamayim mei-al ha-aretz haloch vashov vayachs'ru hamayim miktzeih chamishim um-at yom:"
       }
     },
     {
@@ -3309,9 +3309,9 @@
       "verse": 2,
       "hebrew": "וְאֶֽעֶשְׂךָ֙ לְג֣וֹי גָּד֔וֹל וַאֲבָ֣רֶכְךָ֔ וַאֲגַדְּלָ֖ה שְׁמֶ֑ךָ וֶהְיֵ֖ה בְּרָכָֽה׃",
       "outputs": {
-        "modernSefardi": "Ve·e·eskha legoy gadol va·avarekhkha va·agadelah shemekha vehyeh berakhah:",
-        "levShalem": "V'e·eskha l'goy gadol va-avarekh·kha va-agad'lah sh'mekha vehyeh b'rakhah:",
-        "mishkanTefilah": "V'e-escha l'goy gadol va-avarechcha va-agad'lah sh'mecha vehyeih b'rachah:"
+        "modernSefardi": "Ve·e·eskha legoy gadol va·avarekhekha va·agadelah shemekha vehyeh berakhah:",
+        "levShalem": "V'e·eskha l'goy gadol va-avarekh'kha va-agad'lah sh'mekha vehyeh b'rakhah:",
+        "mishkanTefilah": "V'e-escha l'goy gadol va-avarech'cha va-agad'lah sh'mecha vehyeih b'rachah:"
       }
     },
     {
@@ -4882,9 +4882,9 @@
       "verse": 19,
       "hebrew": "כִּ֣י יְדַעְתִּ֗יו לְמַ֩עַן֩ אֲשֶׁ֨ר יְצַוֶּ֜ה אֶת־בָּנָ֤יו וְאֶת־בֵּיתוֹ֙ אַחֲרָ֔יו וְשָֽׁמְרוּ֙ דֶּ֣רֶךְ יְהֹוָ֔ה לַעֲשׂ֥וֹת צְדָקָ֖ה וּמִשְׁפָּ֑ט לְמַ֗עַן הָבִ֤יא יְהֹוָה֙ עַל־אַבְרָהָ֔ם אֵ֥ת אֲשֶׁר־דִּבֶּ֖ר עָלָֽיו׃",
       "outputs": {
-        "modernSefardi": "Ki yedatiav lema·an asher yetzaveh et-banav ve·et-beito aḥarav veshamru derekh Adonai la·asot tzedakah umishpat lema·an havi Adonai al-avraham et asher-diber alav:",
-        "levShalem": "Ki y'datiav l'ma·an asher y'tzaveh et banav v'et beito aḥarav v'shamru derekh Adonai la-asot tz'dakah u-mishpat l'ma·an havi Adonai al avraham eit asher diber alav:",
-        "mishkanTefilah": "Ki y'datiav l'ma-an asher y'tzaveh et-banav v'et-beito acharav v'shamru derech Adonai la-asot tz'dakah umishpat l'ma-an havi Adonai al-avraham eit asher-diber alav:"
+        "modernSefardi": "Ki yedatiav lema·an asher yetzaveh et-banav ve·et-beito aḥarav veshameru derekh Adonai la·asot tzedakah umishpat lema·an havi Adonai al-avraham et asher-diber alav:",
+        "levShalem": "Ki y'datiav l'ma·an asher y'tzaveh et banav v'et beito aḥarav v'sham'ru derekh Adonai la-asot tz'dakah u-mishpat l'ma·an havi Adonai al avraham eit asher diber alav:",
+        "mishkanTefilah": "Ki y'datiav l'ma-an asher y'tzaveh et-banav v'et-beito acharav v'sham'ru derech Adonai la-asot tz'dakah umishpat l'ma-an havi Adonai al-avraham eit asher-diber alav:"
       }
     },
     {
@@ -5124,9 +5124,9 @@
       "verse": 8,
       "hebrew": "הִנֵּה־נָ֨א לִ֜י שְׁתֵּ֣י בָנ֗וֹת אֲשֶׁ֤ר לֹֽא־יָדְעוּ֙ אִ֔ישׁ אוֹצִֽיאָה־נָּ֤א אֶתְהֶן֙ אֲלֵיכֶ֔ם וַעֲשׂ֣וּ לָהֶ֔ן כַּטּ֖וֹב בְּעֵינֵיכֶ֑ם רַ֠ק לָֽאֲנָשִׁ֤ים הָאֵל֙ אַל־תַּעֲשׂ֣וּ דָבָ֔ר כִּֽי־עַל־כֵּ֥ן בָּ֖אוּ בְּצֵ֥ל קֹרָתִֽי׃",
       "outputs": {
-        "modernSefardi": "Hineh-na li shtei vanot asher lo-yad·u ish otzi·ah-na ethen aleikhem va·asu lahen katov be·eineikhem rak la·anashim ha·el al-ta·asu davar ki-al-ken ba·u betzel korati:",
-        "levShalem": "Hineih na li shtei vanot asher lo yad·u ish otzi·ah na et·hen aleikhem va-asu la-hen ka-tov b'eineikhem rak la-anashim ha·eil al ta·asu davar ki al kein ba·u b'tzeil korati:",
-        "mishkanTefilah": "Hineih-na li shtei vanot asher lo-yad-u ish otzi-ah-na ethen aleichem va-asu lahen katov b'eineichem rak la-anashim ha-el al-ta-asu davar ki-al-kein ba-u b'tzeil korati:"
+        "modernSefardi": "Hineh-na li shtei vanot asher lo-yade·u ish otzi·ah-na ethen aleikhem va·asu lahen katov be·eineikhem rak la·anashim ha·el al-ta·asu davar ki-al-ken ba·u betzel korati:",
+        "levShalem": "Hineih na li shtei vanot asher lo yad'u ish otzi·ah na et·hen aleikhem va-asu la-hen ka-tov b'eineikhem rak la-anashim ha·eil al ta·asu davar ki al kein ba·u b'tzeil korati:",
+        "mishkanTefilah": "Hineih-na li shtei vanot asher lo-yad'u ish otzi-ah-na ethen aleichem va-asu lahen katov b'eineichem rak la-anashim ha-el al-ta-asu davar ki-al-kein ba-u b'tzeil korati:"
       }
     },
     {
@@ -6213,9 +6213,9 @@
       "verse": 17,
       "hebrew": "כִּֽי־בָרֵ֣ךְ אֲבָרֶכְךָ֗ וְהַרְבָּ֨ה אַרְבֶּ֤ה אֶֽת־זַרְעֲךָ֙ כְּכוֹכְבֵ֣י הַשָּׁמַ֔יִם וְכַח֕וֹל אֲשֶׁ֖ר עַל־שְׂפַ֣ת הַיָּ֑ם וְיִרַ֣שׁ זַרְעֲךָ֔ אֵ֖ת שַׁ֥עַר אֹיְבָֽיו׃",
       "outputs": {
-        "modernSefardi": "Ki-varekh avarekhkha veharbah arbeh et-zar·akha kekhokhevei hashamayim vekhaḥol asher al-sefat hayam veyirash zar·akha et sha·ar oyevav:",
-        "levShalem": "Ki vareikh avarekh·kha v'harbah arbeh et zar·akha k'khokh'vei ha-shamayim v'khaḥol asher al s'fat ha-yam v'yirash zar·akha eit sha·ar oy'vav:",
-        "mishkanTefilah": "Ki-vareich avarechcha v'harbah arbeh et-zar-acha k'choch'vei hashamayim v'chachol asher al-s'fat hayam v'yirash zar-acha eit sha-ar oy'vav:"
+        "modernSefardi": "Ki-varekh avarekhekha veharbah arbeh et-zar·akha kekhokhevei hashamayim vekhaḥol asher al-sefat hayam veyirash zar·akha et sha·ar oyevav:",
+        "levShalem": "Ki vareikh avarekh'kha v'harbah arbeh et zar·akha k'khokh'vei ha-shamayim v'khaḥol asher al s'fat ha-yam v'yirash zar·akha eit sha·ar oy'vav:",
+        "mishkanTefilah": "Ki-vareich avarech'cha v'harbah arbeh et-zar-acha k'choch'vei hashamayim v'chachol asher al-s'fat hayam v'yirash zar-acha eit sha-ar oy'vav:"
       }
     },
     {
@@ -7786,9 +7786,9 @@
       "verse": 15,
       "hebrew": "וְכׇל־הַבְּאֵרֹ֗ת אֲשֶׁ֤ר חָֽפְרוּ֙ עַבְדֵ֣י אָבִ֔יו בִּימֵ֖י אַבְרָהָ֣ם אָבִ֑יו סִתְּמ֣וּם פְּלִשְׁתִּ֔ים וַיְמַלְא֖וּם עָפָֽר׃",
       "outputs": {
-        "modernSefardi": "Vekhol-habe·erot asher ḥafru avdei aviav bimei avraham aviav sitemum pelishtim vayemal·um afar:",
-        "levShalem": "V'khol ha-b'eirot asher ḥafru avdei aviav bimei avraham aviav sit'mum p'lish·tim vay'mal·um afar:",
-        "mishkanTefilah": "V'chol-hab'eirot asher chafru avdei aviav bimei avraham aviav sit'mum p'lishtim vay'mal-um afar:"
+        "modernSefardi": "Vekhol-habe·erot asher ḥaferu avdei aviav bimei avraham aviav sitemum pelishtim vayemal·um afar:",
+        "levShalem": "V'khol ha-b'eirot asher ḥaf'ru avdei aviav bimei avraham aviav sit'mum p'lish·tim vay'mal·um afar:",
+        "mishkanTefilah": "V'chol-hab'eirot asher chaf'ru avdei aviav bimei avraham aviav sit'mum p'lishtim vay'mal-um afar:"
       }
     },
     {
@@ -7819,9 +7819,9 @@
       "verse": 18,
       "hebrew": "וַיָּ֨שׇׁב יִצְחָ֜ק וַיַּחְפֹּ֣ר ׀ אֶת־בְּאֵרֹ֣ת הַמַּ֗יִם אֲשֶׁ֤ר חָֽפְרוּ֙ בִּימֵי֙ אַבְרָהָ֣ם אָבִ֔יו וַיְסַתְּמ֣וּם פְּלִשְׁתִּ֔ים אַחֲרֵ֖י מ֣וֹת אַבְרָהָ֑ם וַיִּקְרָ֤א לָהֶן֙ שֵׁמ֔וֹת כַּשֵּׁמֹ֕ת אֲשֶׁר־קָרָ֥א לָהֶ֖ן אָבִֽיו׃",
       "outputs": {
-        "modernSefardi": "Vayashov yitzḥak vayaḥpor  et-be·erot hamayim asher ḥafru bimei avraham aviav vayesatemum pelishtim aḥarei mot avraham vayikra lahen shemot kashemot asher-kara lahen aviav:",
-        "levShalem": "Vayashov yitzḥak vayaḥpor  et b'eirot ha-mayim asher ḥafru bimei avraham aviav vay'sat'mum p'lish·tim aḥarei mot avraham vayikra la-hen sheimot ka-sheimot asher kara la-hen aviav:",
-        "mishkanTefilah": "Vayashov yitzchak vayachpor  et-b'eirot hamayim asher chafru bimei avraham aviav vay'sat'mum p'lishtim acharei mot avraham vayikra lahen sheimot kasheimot asher-kara lahen aviav:"
+        "modernSefardi": "Vayashov yitzḥak vayaḥpor  et-be·erot hamayim asher ḥaferu bimei avraham aviav vayesatemum pelishtim aḥarei mot avraham vayikra lahen shemot kashemot asher-kara lahen aviav:",
+        "levShalem": "Vayashov yitzḥak vayaḥpor  et b'eirot ha-mayim asher ḥaf'ru bimei avraham aviav vay'sat'mum p'lish·tim aḥarei mot avraham vayikra la-hen sheimot ka-sheimot asher kara la-hen aviav:",
+        "mishkanTefilah": "Vayashov yitzchak vayachpor  et-b'eirot hamayim asher chaf'ru bimei avraham aviav vay'sat'mum p'lishtim acharei mot avraham vayikra lahen sheimot kasheimot asher-kara lahen aviav:"
       }
     },
     {
@@ -8050,9 +8050,9 @@
       "verse": 4,
       "hebrew": "וַעֲשֵׂה־לִ֨י מַטְעַמִּ֜ים כַּאֲשֶׁ֥ר אָהַ֛בְתִּי וְהָבִ֥יאָה לִּ֖י וְאֹכֵ֑לָה בַּעֲב֛וּר תְּבָרֶכְךָ֥ נַפְשִׁ֖י בְּטֶ֥רֶם אָמֽוּת׃",
       "outputs": {
-        "modernSefardi": "Va·aseh-li mat·amim ka·asher ahavti vehavi·ah li ve·okhelah ba·avur tevarekhkha nafshi beterem amut:",
-        "levShalem": "Va-aseih li mat·amim ka-asher ahavti v'havi·ah li v'okheilah ba-avur t'varekh·kha nafshi b'terem amut:",
-        "mishkanTefilah": "Va-aseih-li mat-amim ka-asher ahavti v'havi-ah li v'ocheilah ba-avur t'varechcha nafshi b'terem amut:"
+        "modernSefardi": "Va·aseh-li mat·amim ka·asher ahavti vehavi·ah li ve·okhelah ba·avur tevarekhekha nafshi beterem amut:",
+        "levShalem": "Va-aseih li mat·amim ka-asher ahavti v'havi·ah li v'okheilah ba-avur t'varekh'kha nafshi b'terem amut:",
+        "mishkanTefilah": "Va-aseih-li mat-amim ka-asher ahavti v'havi-ah li v'ocheilah ba-avur t'varech'cha nafshi b'terem amut:"
       }
     },
     {
@@ -8116,9 +8116,9 @@
       "verse": 10,
       "hebrew": "וְהֵבֵאתָ֥ לְאָבִ֖יךָ וְאָכָ֑ל בַּעֲבֻ֛ר אֲשֶׁ֥ר יְבָרֶכְךָ֖ לִפְנֵ֥י מוֹתֽוֹ׃",
       "outputs": {
-        "modernSefardi": "Veheveta le·avikha ve·akhal ba·avur asher yevarekhkha lifnei moto:",
-        "levShalem": "V'heiveita l'avikha v'akhal ba-avur asher y'varekh·kha lifnei moto:",
-        "mishkanTefilah": "V'heiveita l'avicha v'achal ba-avur asher y'varechcha lifnei moto:"
+        "modernSefardi": "Veheveta le·avikha ve·akhal ba·avur asher yevarekhekha lifnei moto:",
+        "levShalem": "V'heiveita l'avikha v'akhal ba-avur asher y'varekh'kha lifnei moto:",
+        "mishkanTefilah": "V'heiveita l'avicha v'achal ba-avur asher y'varech'cha lifnei moto:"
       }
     },
     {
@@ -8281,9 +8281,9 @@
       "verse": 25,
       "hebrew": "וַיֹּ֗אמֶר הַגִּ֤שָׁה לִּי֙ וְאֹֽכְלָה֙ מִצֵּ֣יד בְּנִ֔י לְמַ֥עַן תְּבָֽרֶכְךָ֖ נַפְשִׁ֑י וַיַּגֶּשׁ־לוֹ֙ וַיֹּאכַ֔ל וַיָּ֧בֵא ל֦וֹ יַ֖יִן וַיֵּֽשְׁתְּ׃",
       "outputs": {
-        "modernSefardi": "Vayomer hagishah li ve·okhelah mitzeid beni lema·an tevarekhkha nafshi vayagesh-lo vayokhal vayave lo yayin vayesht:",
-        "levShalem": "Vayomer ha-gishah li v'okh'lah mi-tzeid b'ni l'ma·an t'varekh·kha nafshi vayagesh lo vayokhal vayavei lo yayin vayesh·t:",
-        "mishkanTefilah": "Vayomer hagishah li v'och'lah mitzeid b'ni l'ma-an t'varechcha nafshi vayagesh-lo vayochal vayavei lo yayin vayeisht:"
+        "modernSefardi": "Vayomer hagishah li ve·okhelah mitzeid beni lema·an tevarekhekha nafshi vayagesh-lo vayokhal vayave lo yayin vayesht:",
+        "levShalem": "Vayomer ha-gishah li v'okh'lah mi-tzeid b'ni l'ma·an t'varekh'kha nafshi vayagesh lo vayokhal vayavei lo yayin vayesh·t:",
+        "mishkanTefilah": "Vayomer hagishah li v'och'lah mitzeid b'ni l'ma-an t'varech'cha nafshi vayagesh-lo vayochal vayavei lo yayin vayeisht:"
       }
     },
     {
@@ -12560,9 +12560,9 @@
       "verse": 22,
       "hebrew": "וַיָּ֙שׇׁב֙ אֶל־יְהוּדָ֔ה וַיֹּ֖אמֶר לֹ֣א מְצָאתִ֑יהָ וְגַ֨ם אַנְשֵׁ֤י הַמָּקוֹם֙ אָֽמְר֔וּ לֹא־הָיְתָ֥ה בָזֶ֖ה קְדֵשָֽׁה׃",
       "outputs": {
-        "modernSefardi": "Vayashov el-yehudah vayomer lo metza·tiha vegam anshei hamakom amru lo-hayetah vazeh kedeshah:",
-        "levShalem": "Vayashov el y'hudah vayomer lo m'tza·tiha v'gam anshei ha-makom amru lo haitah vazeh k'deishah:",
-        "mishkanTefilah": "Vayashov el-y'hudah vayomer lo m'tza-tiha v'gam anshei hamakom amru lo-hay'tah vazeh k'deishah:"
+        "modernSefardi": "Vayashov el-yehudah vayomer lo metza·tiha vegam anshei hamakom ameru lo-hayetah vazeh kedeshah:",
+        "levShalem": "Vayashov el y'hudah vayomer lo m'tza·tiha v'gam anshei ha-makom am'ru lo haitah vazeh k'deishah:",
+        "mishkanTefilah": "Vayashov el-y'hudah vayomer lo m'tza-tiha v'gam anshei hamakom am'ru lo-hay'tah vazeh k'deishah:"
       }
     },
     {
@@ -14034,9 +14034,9 @@
       "verse": 23,
       "hebrew": "וְהֵם֙ לֹ֣א יָֽדְע֔וּ כִּ֥י שֹׁמֵ֖עַ יוֹסֵ֑ף כִּ֥י הַמֵּלִ֖יץ בֵּינֹתָֽם׃",
       "outputs": {
-        "modernSefardi": "Vehem lo yad·u ki shomea yosef ki hamelitz beinotam:",
-        "levShalem": "V'heim lo yad·u ki shomeia yoseif ki ha-meilitz beinotam:",
-        "mishkanTefilah": "V'heim lo yad-u ki shomeia yoseif ki hameilitz beinotam:"
+        "modernSefardi": "Vehem lo yade·u ki shomea yosef ki hamelitz beinotam:",
+        "levShalem": "V'heim lo yad'u ki shomeia yoseif ki ha-meilitz beinotam:",
+        "mishkanTefilah": "V'heim lo yad'u ki shomeia yoseif ki hameilitz beinotam:"
       }
     },
     {
@@ -14474,9 +14474,9 @@
       "verse": 25,
       "hebrew": "וַיָּכִ֙ינוּ֙ אֶת־הַמִּנְחָ֔ה עַד־בּ֥וֹא יוֹסֵ֖ף בַּֽצׇּהֳרָ֑יִם כִּ֣י שָֽׁמְע֔וּ כִּי־שָׁ֖ם יֹ֥אכְלוּ לָֽחֶם׃",
       "outputs": {
-        "modernSefardi": "Vayakhinu et-haminḥah ad-bo yosef batzohorayim ki sham·u ki-sham yokhlu laḥem:",
-        "levShalem": "Vayakhinu et ha-minḥah ad bo yoseif ba-tzohorayim ki sham·u ki sham yokhlu la-ḥem:",
-        "mishkanTefilah": "Vayachinu et-haminchah ad-bo yoseif batzohorayim ki sham-u ki-sham yochlu lachem:"
+        "modernSefardi": "Vayakhinu et-haminḥah ad-bo yosef batzohorayim ki shame·u ki-sham yokhlu laḥem:",
+        "levShalem": "Vayakhinu et ha-minḥah ad bo yoseif ba-tzohorayim ki sham'u ki sham yokhlu la-ḥem:",
+        "mishkanTefilah": "Vayachinu et-haminchah ad-bo yoseif batzohorayim ki sham'u ki-sham yochlu lachem:"
       }
     },
     {
@@ -15860,9 +15860,9 @@
       "verse": 21,
       "hebrew": "וְאֶ֨ת־הָעָ֔ם הֶעֱבִ֥יר אֹת֖וֹ לֶעָרִ֑ים מִקְצֵ֥ה גְבוּל־מִצְרַ֖יִם וְעַד־קָצֵֽהוּ׃",
       "outputs": {
-        "modernSefardi": "Ve·et-ha·am he·evir oto le·arim miketzeh gevul-mitzrayim ve·ad-katzehu:",
-        "levShalem": "V'et ha-am he-evir oto le-arim mi-k'tzeih g'vul mitzrayim v'ad katzeihu:",
-        "mishkanTefilah": "V'et-ha-am he-evir oto le-arim mik'tzeih g'vul-mitzrayim v'ad-katzeihu:"
+        "modernSefardi": "Ve·et-ha·am he·evir oto le·arim miktzeh gevul-mitzrayim ve·ad-katzehu:",
+        "levShalem": "V'et ha-am he-evir oto le-arim miktzeih g'vul mitzrayim v'ad katzeihu:",
+        "mishkanTefilah": "V'et-ha-am he-evir oto le-arim miktzeih g'vul-mitzrayim v'ad-katzeihu:"
       }
     },
     {

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createHash } from "node:crypto";
 
 import { handleAudio, handleAudioLexicon } from "../worker/index.mjs";
 
@@ -115,6 +116,32 @@ test("adds another Sefaria reference to shared cached-audio metadata", async () 
     audioObject.customMetadata.sefariaReferences,
     "Siddur Ashkenaz, Weekday, Shacharit | Siddur Ashkenaz, Shabbat, Shacharit"
   );
+  assert.equal(state.azureCalls, 1);
+});
+
+test("pronunciation rules v2 bypass old audio without deleting it", async () => {
+  const state = makeEnv();
+  const identity = JSON.stringify({
+    text: "בָּרוּךְ".normalize("NFC"), voice: "he-IL-HilaNeural",
+    rate: "-60%", tzere: "ei", rules: "ipa-v1",
+    format: "audio-24khz-48kbitrate-mono-mp3"
+  });
+  const oldKey = `audio/${createHash("sha256").update(identity).digest("hex")}.mp3`;
+  await state.bucket.put(oldKey, new Uint8Array([1]), {
+    customMetadata: { rules: "ipa-v1" }
+  });
+  const first = await handleAudio(audioRequest(), state.env);
+  assert.equal(first.status, 200);
+  assert.equal(first.headers.get("X-Audio-Cache"), "MISS");
+  assert.equal(state.azureCalls, 1);
+  assert.ok(state.bucket.objects.has(oldKey));
+  const newAudio = [...state.bucket.objects.entries()].filter(
+    ([key]) => key.startsWith("audio/") && key !== oldKey
+  );
+  assert.equal(newAudio.length, 1);
+  assert.equal(newAudio[0][1].customMetadata.rules, "ipa-v2");
+  const second = await handleAudio(audioRequest(), state.env);
+  assert.equal(second.headers.get("X-Audio-Cache"), "HIT");
   assert.equal(state.azureCalls, 1);
 });
 

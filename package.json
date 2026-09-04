@@ -4,7 +4,7 @@
   "private": true,
   "description": "Hebrew transliteration web application",
   "scripts": {
-    "test": "node --test tests/transliterator.test.js tests/genesis-snapshot.test.js tests/line-numbers.test.js tests/selection-alignment.test.js tests/speech.test.js tests/sefaria-client.test.js tests/sefaria-results.test.js tests/analytics-pages.test.js tests/worker-events.test.mjs tests/worker-feedback.test.mjs tests/worker-audio.test.mjs",
+    "test": "node --test tests/transliterator.test.js tests/siddur-rule-interactions.test.js tests/genesis-snapshot.test.js tests/line-numbers.test.js tests/selection-alignment.test.js tests/speech.test.js tests/sefaria-client.test.js tests/sefaria-results.test.js tests/analytics-pages.test.js tests/worker-events.test.mjs tests/worker-feedback.test.mjs tests/worker-audio.test.mjs",
     "deploy": "npx wrangler deploy"
   }
 }

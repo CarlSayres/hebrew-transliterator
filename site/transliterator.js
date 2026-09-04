@@ -262,7 +262,13 @@
   }
 
   function hasShuruk(cluster) {
-    return cluster.base === "ו" && hasMark(cluster, MARKS.DAGESH) && !getVowelMark(cluster) && !hasMark(cluster, MARKS.SHEVA);
+    return Boolean(
+      cluster &&
+      cluster.base === "ו" &&
+      hasMark(cluster, MARKS.DAGESH) &&
+      !getVowelMark(cluster) &&
+      !hasMark(cluster, MARKS.SHEVA)
+    );
   }
 
   function hasPatach(cluster) {
@@ -781,8 +787,10 @@
         BEGAD_KEFAT.has(clusters[index + 1].base) &&
         !hasMark(clusters[index + 1], MARKS.DAGESH)
       );
+      const finalFormBase = (base) => ({ "ך": "כ", "ם": "מ", "ן": "נ", "ף": "פ", "ץ": "צ" })[base] || base;
       const firstOfIdenticalLetters = Boolean(
-        clusters[index + 1] && clusters[index + 1].base === cluster.base
+        clusters[index + 1] &&
+        finalFormBase(clusters[index + 1].base) === finalFormBase(cluster.base)
       );
 
       // Intrinsic evidence on the sh'va-bearing consonant remains decisive.
@@ -799,7 +807,7 @@
       // In the ָיְ sequence, yod completes the ay diphthong. Its sh'va is
       // silent, but the yod does not turn the preceding kamatz into qatan.
       if (
-        cluster.base === "י" &&
+        ["י", "ו"].includes(cluster.base) &&
         previous &&
         hasMark(previous, MARKS.QAMATS)
       ) {
@@ -864,11 +872,14 @@
             clusters[index + 1]?.base === "כ" &&
             hasMark(clusters[index + 1], MARKS.SEGOL) &&
             ["ם", "ן"].includes(clusters[index + 2]?.base) &&
-            clusters[index + 2]?.wordFinal
+            clusters[index + 2]?.wordFinal &&
+            // Patach in לְבַבְכֶם does not license vocal sh'va. Keep the
+            // kamatz contrast and the earlier intrinsic vocal rules intact.
+            !(previous && hasPatach(previous))
           )
         );
       const followsInitialPrefix =
-        index === 1 &&
+        (index === 1 || followsStackedArticle(clusters, index, ruleset)) &&
         previous &&
         isIgnoredInitialPrefix(previous, ruleset);
       const followsVavPatachYod = followsVavPatachYodPrefix(clusters, index);
@@ -881,6 +892,31 @@
 
       cluster.sheva = vocal ? "vocal" : "silent";
     });
+  }
+
+  function followsStackedArticle(clusters, index, ruleset) {
+    if (
+      index !== 2 || clusters[0]?.base !== "ו" ||
+      !hasMark(clusters[0], MARKS.SHEVA) ||
+      clusters[1]?.base !== "ה" || !hasPatach(clusters[1]) ||
+      clusters[index]?.base !== "מ"
+    ) {
+      return false;
+    }
+    const stem = clusterLookupKey(clusters, 1);
+    // Conjunctive vav must not turn lexical ה (including Aramaic nouns)
+    // or an already reviewed silent-prefix form into a Hebrew article.
+    return !ruleset?.exceptions?.lexicalInitialHey?.[stem] &&
+      !ruleset?.exceptions?.silentInitialPrefixSheva?.[stem];
+  }
+
+  function shePrefixStemStart(clusters) {
+    const index = clusters[0]?.base === "ו" &&
+      hasMark(clusters[0], MARKS.SHEVA) ? 1 : 0;
+    const prefix = clusters[index];
+    return prefix?.base === "ש" && hasSegol(prefix) &&
+      hasMark(prefix, MARKS.SHIN_DOT) && !prefix.lexicalInitialShe
+      ? index + 1 : 0;
   }
 
   function applyMissingMetegKamatzSheva(clusters, word, ruleset) {
@@ -900,7 +936,18 @@
 
   function applyForcedKamatzGadol(clusters, word, ruleset) {
     const cleaned = stripTropeAndMeteg(word);
-    const indices = ruleset.exceptions.forcedKamatzGadol?.[cleaned];
+    let indices = ruleset.exceptions.forcedKamatzGadol?.[cleaned];
+    if (!Array.isArray(indices)) {
+      const start = shePrefixStemStart(clusters);
+      const inherited = start && ruleset.exceptions.forcedKamatzGadol?.[
+        clusterLookupKey(clusters, start)
+      ];
+      if (Array.isArray(inherited)) {
+        // Inherit only existing pointed-stem evidence, and only its kamatz
+        // positions. This map does not establish vocal sh'va.
+        indices = inherited.map((index) => index + start);
+      }
+    }
     if (!Array.isArray(indices)) {
       return;
     }
@@ -922,6 +969,18 @@
       clusters[2]?.base !== clusters[1].base
     ) {
       clusters[1].sheva = "silent";
+    }
+  }
+
+  function applyForcedSilentShevas(clusters, word, ruleset) {
+    const indices = ruleset.exceptions.silentShevaByWord?.[stripTropeAndMeteg(word)];
+    if (!Array.isArray(indices)) {
+      return;
+    }
+    for (const index of indices) {
+      if (clusters[index] && hasMark(clusters[index], MARKS.SHEVA)) {
+        clusters[index].sheva = "silent";
+      }
     }
   }
 
@@ -1016,7 +1075,15 @@
       return true;
     }
 
-    if (previous.base === "י" && clusters[index - 2]?.vowelName === "hiriq") {
+    if (
+      previous.base === "י" &&
+      // A yod with its own vowel is consonantal, not the mater completing
+      // the preceding hiriq. Only a vowel-less, sh'va-less yod makes that
+      // hiriq long for purposes of the following sh'va.
+      !getVowelMark(previous) &&
+      !hasMark(previous, MARKS.SHEVA) &&
+      clusters[index - 2]?.vowelName === "hiriq"
+    ) {
       return true;
     }
 
@@ -1827,6 +1894,7 @@
       if (this.ruleset.exceptions.silentInitialPrefixSheva?.[cleaned]) {
         forceSilentInitialPrefixSheva(clusters);
       }
+      applyForcedSilentShevas(clusters, word, this.ruleset);
 
       const kolKafIndex = (() => {
         if (clusters.length < 2) {
@@ -2283,6 +2351,7 @@
       if (this.ruleset.exceptions.silentInitialPrefixSheva?.[cleaned]) {
         forceSilentInitialPrefixSheva(wordClusters);
       }
+      applyForcedSilentShevas(wordClusters, word, this.ruleset);
       if ((format === "stressMarks" || format === "stressMarksAll") && stressOverride?.vowelFromEnd) {
         return stressMarkedVowelGroup(transliterateClusters(wordClusters, this.ruleset), stressOverride);
       }
@@ -2308,6 +2377,7 @@
       MARKS,
       adjustedVowelOut,
       applyForcedKamatzGadol,
+      applyForcedSilentShevas,
       applyMissingMetegKamatzSheva,
       assignStress,
       classifyShevas,
