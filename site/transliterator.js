@@ -174,6 +174,31 @@
       clusters[clusters.length - 1].wordFinal = true;
     }
 
+    // A sin's upper-left dot is sometimes printed once for both the sin dot
+    // and a holam haser. Infer the shared vowel on a non-final sin that has
+    // no other vowel or sh'va. The principal contrasting spelling is a sin
+    // before shuruk, as in עָשׂוּ, where the sin closes the preceding syllable.
+    for (let index = 0; index < clusters.length - 1; index += 1) {
+      const cluster = clusters[index];
+      const next = clusters[index + 1];
+      const hasExplicitVowel = cluster.marks.some((mark) => VOWEL_MARKS.has(mark));
+      const nextHasExplicitVowel = next.marks.some((mark) => VOWEL_MARKS.has(mark));
+      const nextIsShuruk =
+        next.base === "ו" &&
+        next.marks.includes(MARKS.DAGESH) &&
+        !nextHasExplicitVowel &&
+        !next.marks.includes(MARKS.SHEVA);
+      if (
+        cluster.base === "ש" &&
+        cluster.marks.includes(MARKS.SIN_DOT) &&
+        !hasExplicitVowel &&
+        !cluster.marks.includes(MARKS.SHEVA) &&
+        !nextIsShuruk
+      ) {
+        cluster.marks.push(MARKS.HOLAM_HASER);
+      }
+    }
+
     return clusters;
   }
 

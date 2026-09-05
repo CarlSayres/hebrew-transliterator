@@ -88,6 +88,19 @@ test("qamatz before vav-sh'va forms a closed av syllable", () => {
   checkCases([["הַמָּוְתָה", "Ha-movtah"]]);
 });
 
+test("a lone sin dot can also supply holam haser", () => {
+  checkCases([
+    ["וַיֶּחֱשׂף", "Vayeḥesof"],
+    ["שׂנֵא", "Sonei"],
+    ["שׂבַע", "Sova"],
+    ["לַעֲשׂת", "La-asot"],
+    ["שַׂר", "Sar"],
+    ["יִשְׂרָאֵל", "Yisra·eil"],
+    ["עָשׂוּ", "Asu"],
+    ["תָּפַשׂ", "Tafas"]
+  ]);
+});
+
 test("incomplete suffix shapes do not crash sh'va classification", () => {
   assert.doesNotThrow(() => engine.transliterate("אָבְנְ"));
 });
@@ -156,7 +169,8 @@ test("audio lexicon uses corrected classifications and retains the tzere choice"
       ["שֶׁאָמְרוּ", "ʃe.ʔa.me.ˈʁu"],
       ["לְבַבְכֶם", "le.vav.ˈxem"],
       ["וְהַמְרַחֵם", tzere === "ei" ? "ve.ha.me.ʁa.ˈxejm" : "ve.ha.me.ʁa.ˈxem"],
-      ["וְקִיַּמְתָּֽנוּ", "ve.ki.jam.ˈta.nu"]
+      ["וְקִיַּמְתָּֽנוּ", "ve.ki.jam.ˈta.nu"],
+      ["וַיֶּחֱשׂף", "va.je.xe.ˈsof"]
     ]) {
       const entries = speech.lexiconEntries(input, audioEngine);
       assert.equal(entries.length, 1);
