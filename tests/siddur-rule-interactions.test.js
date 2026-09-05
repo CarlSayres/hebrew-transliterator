@@ -88,6 +88,16 @@ test("qamatz before vav-sh'va forms a closed av syllable", () => {
   checkCases([["הַמָּוְתָה", "Ha-movtah"]]);
 });
 
+test("final yod-vav after hiriq is iv rather than iav", () => {
+  checkCases([
+    ["זִיו", "Ziv"],
+    ["פִּיו", "Piv"],
+    ["אָחִיו", "Aḥiv"],
+    ["אָבִיו", "Aviv"],
+    ["עָלָיו", "Alav"]
+  ]);
+});
+
 test("a lone sin dot can also supply holam haser", () => {
   checkCases([
     ["וַיֶּחֱשׂף", "Vayeḥesof"],
@@ -170,7 +180,8 @@ test("audio lexicon uses corrected classifications and retains the tzere choice"
       ["לְבַבְכֶם", "le.vav.ˈxem"],
       ["וְהַמְרַחֵם", tzere === "ei" ? "ve.ha.me.ʁa.ˈxejm" : "ve.ha.me.ʁa.ˈxem"],
       ["וְקִיַּמְתָּֽנוּ", "ve.ki.jam.ˈta.nu"],
-      ["וַיֶּחֱשׂף", "va.je.xe.ˈsof"]
+      ["וַיֶּחֱשׂף", "va.je.xe.ˈsof"],
+      ["זִיו", "ˈziv"]
     ]) {
       const entries = speech.lexiconEntries(input, audioEngine);
       assert.equal(entries.length, 1);

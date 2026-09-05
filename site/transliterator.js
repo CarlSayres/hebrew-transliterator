@@ -1721,7 +1721,14 @@
       }
 
       if (isFinalYodVav(clusters, index)) {
-        add(output.endsWith("a") ? "v" : "av", cluster.primaryStress);
+        // Final יו after hiriq is long i plus consonantal v (זִיו, פִּיו,
+        // אָחִיו, אָבִיו). After qamatz it is the -av ending (עָלָיו).
+        add(
+          clusters[index - 1]?.vowelName === "hiriq"
+            ? "v"
+            : (output.endsWith("a") ? "v" : "av"),
+          cluster.primaryStress
+        );
         return;
       }
 
