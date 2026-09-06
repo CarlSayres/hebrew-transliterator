@@ -173,6 +173,14 @@ test("omits non-Hebrew and unvocalized Hebrew from Azure SSML", async () => {
   assert.equal(rejected.status, 400);
 });
 
+test("reports an oversized audio passage as too long", async () => {
+  const state = makeEnv();
+  const text = "בָּרוּךְ ".repeat(1200);
+  const result = await handleAudio(audioRequest("arbitrary", text), state.env);
+  assert.equal(result.status, 413);
+  assert.equal(state.azureCalls, 0);
+});
+
 test("keeps a recognized unvocalized word and its IPA lexicon entry", async () => {
   const state = makeEnv();
   const result = await handleAudio(

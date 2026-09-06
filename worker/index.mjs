@@ -558,9 +558,12 @@ export async function handleAudio(request, env) {
     keys[2] === "sourceRef" && keys[3] === "sourceType" && keys[4] === "text" && keys[5] === "tzere";
   const text = speakableAudioText(payload?.text, payload?.lexicon);
   const sourceRef = cleanSefariaReference(payload?.sourceRef);
+  if (text.length > MAX_AUDIO_TEXT_LENGTH || (Array.isArray(payload?.lexicon) && payload.lexicon.length > 1000)) {
+    return response(413);
+  }
   if (
     (!isLegacyPayload && !isCurrentPayload) || !["e", "ei"].includes(payload.tzere) ||
-    !AUDIO_SOURCE_TYPES.has(payload.sourceType) || !text || text.length > MAX_AUDIO_TEXT_LENGTH ||
+    !AUDIO_SOURCE_TYPES.has(payload.sourceType) || !text ||
     !/[\u05d0-\u05ea]/u.test(text) || !validLexicon(payload.lexicon, text) ||
     (isCurrentPayload && ((payload.sourceType === "sefaria" && !sourceRef) || (payload.sourceType === "arbitrary" && sourceRef)))
   ) return response(400);
