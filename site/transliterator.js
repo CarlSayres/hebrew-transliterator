@@ -715,7 +715,7 @@
       return false;
     }
 
-    const allowedPrefixLetters = new Set(["ו", "ב", "כ", "ל", "מ", "ה", "ש"]);
+    const allowedPrefixLetters = new Set(["ו", "ב", "כ", "ל", "מ", "ה", "ש", "ד"]);
     return clusters.slice(0, index).every((cluster) => allowedPrefixLetters.has(cluster.base));
   }
 
@@ -734,6 +734,7 @@
         const finalKha = cluster.base === "ך" && index === clusters.length - 1;
         const katan =
           vowel === MARKS.QAMATS_QATAN ||
+          (cluster.forceKamatzKatan && !hasStressMarker(cluster)) ||
           (
             !cluster.forceKamatzGadol &&
             (
@@ -836,6 +837,14 @@
         previous &&
         hasMark(previous, MARKS.QAMATS)
       ) {
+        cluster.sheva = "silent";
+        return;
+      }
+
+      // Lev Shalem's explicit qamatz-qatan evidence closes this syllable.
+      // It is applied only after the intrinsic rules: a sh'va with dagesh,
+      // the second of consecutive sh'vas, or identical letters stays vocal.
+      if (previous?.forceKamatzKatan) {
         cluster.sheva = "silent";
         return;
       }
@@ -962,6 +971,7 @@
   function applyForcedKamatzGadol(clusters, word, ruleset) {
     const cleaned = stripTropeAndMeteg(word);
     let indices = ruleset.exceptions.forcedKamatzGadol?.[cleaned];
+    let preserveExistingStress = false;
     if (!Array.isArray(indices)) {
       const start = shePrefixStemStart(clusters);
       const inherited = start && ruleset.exceptions.forcedKamatzGadol?.[
@@ -974,14 +984,41 @@
       }
     }
     if (!Array.isArray(indices)) {
+      indices = ruleset.exceptions.levShalemForcedKamatzGadol?.[cleaned];
+      preserveExistingStress = Array.isArray(indices);
+    }
+    if (!Array.isArray(indices)) {
       return;
     }
 
     for (const index of indices) {
       const cluster = clusters[index];
-      if (cluster && hasMark(cluster, MARKS.QAMATS)) {
+      if (
+        cluster &&
+        hasMark(cluster, MARKS.QAMATS) &&
+        !(preserveExistingStress && hasStressMarker(cluster))
+      ) {
         cluster.forceKamatzGadol = true;
         cluster.forceKamatzGadolFromMam = true;
+      }
+    }
+  }
+
+  function applyForcedKamatzKatan(clusters, word, ruleset) {
+    const cleaned = stripTropeAndMeteg(word);
+    const indices = ruleset.exceptions.forcedKamatzKatan?.[cleaned];
+    if (!Array.isArray(indices)) {
+      return;
+    }
+
+    for (const index of indices) {
+      const cluster = clusters[index];
+      if (
+        cluster &&
+        hasMark(cluster, MARKS.QAMATS) &&
+        !hasStressMarker(cluster)
+      ) {
+        cluster.forceKamatzKatan = true;
       }
     }
   }
@@ -1920,6 +1957,7 @@
       assignStress(clusters);
       applyMissingMetegKamatzSheva(clusters, word, this.ruleset);
       applyForcedKamatzGadol(clusters, word, this.ruleset);
+      applyForcedKamatzKatan(clusters, word, this.ruleset);
       classifyShevas(clusters, this.ruleset);
       applyForcedSilentShevas(clusters, word, this.ruleset);
       classifyVowels(clusters, this.ruleset);
@@ -2378,6 +2416,7 @@
       }
       applyMissingMetegKamatzSheva(wordClusters, word, this.ruleset);
       applyForcedKamatzGadol(wordClusters, word, this.ruleset);
+      applyForcedKamatzKatan(wordClusters, word, this.ruleset);
       classifyShevas(wordClusters, this.ruleset);
       applyForcedSilentShevas(wordClusters, word, this.ruleset);
       classifyVowels(wordClusters, this.ruleset);
@@ -2411,6 +2450,7 @@
       MARKS,
       adjustedVowelOut,
       applyForcedKamatzGadol,
+      applyForcedKamatzKatan,
       applyForcedSilentShevas,
       applyMissingMetegKamatzSheva,
       assignStress,

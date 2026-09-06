@@ -224,6 +224,12 @@
   Object.assign(silentInitialPrefixSheva, window.HebrewOtherPrefixSilentInitialSheva || {});
   const lexicalInitialShe = normalizeLookup(window.HebrewLexicalInitialShe || {});
   const forcedKamatzGadol = normalizeLookup(window.HebrewMamForcedKamatzGadol || {});
+  const levShalemForcedKamatzGadol = normalizeLookup(
+    window.HebrewLevShalemForcedKamatzGadol || {}
+  );
+  const forcedKamatzKatan = normalizeLookup(
+    window.HebrewLevShalemForcedKamatzKatan || {}
+  );
   // Siddur Aramaic not present in the Tanakh-derived MAM table.
   forcedKamatzGadol["עָלְמִין".normalize("NFD")] = [0];
   // Siddurim can omit the conjunction from the MAM-attested
@@ -424,6 +430,8 @@
       lexicalInitialShe,
       lexicalInitialHey,
       forcedKamatzGadol,
+      levShalemForcedKamatzGadol,
+      forcedKamatzKatan,
       missingMetegKamatzSheva,
       silentShevaByWord,
       phraseCapitalization,

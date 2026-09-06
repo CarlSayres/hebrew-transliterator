@@ -152,6 +152,7 @@ function loadTransliterator() {
     "site/rulesets/other-prefix-silent-initial-sheva.js",
     "site/rulesets/lexical-initial-she.js",
     "site/rulesets/mam-forced-kamatz-gadol.js",
+    "site/rulesets/lev-shalem-forced-kamatz.js",
     "site/rulesets/modern-sefardi.js",
     "site/transliterator.js"
   ]) {

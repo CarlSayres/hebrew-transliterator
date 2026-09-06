@@ -135,6 +135,91 @@ test("an unprefixed Siddur form inherits MAM kamatz evidence from its attested s
   ]);
 });
 
+test("Mahzor rules cover Aramaic kol without changing Biblical vav qatan", () => {
+  checkCases([
+    ["דְּכָל", "D'khol"],
+    ["וָחֳלָיִים", "Va-ḥolayim"],
+    ["וָחֳלָיִם", "Voḥolayim"],
+    ["וׇחֳלָיִם", "Voḥolayim"]
+  ]);
+});
+
+test("Mahzor explicit qamatz-qatan evidence corrects ordinary Sefaria qamatz", () => {
+  checkCases([
+    ["תִּקְפָּץ", "Tikpotz"],
+    ["וְלִמְחָל", "V'limḥol"],
+    ["זְכָר", "Z'khor"],
+    ["וְכָתְבֵנוּ", "V'khotveinu"],
+    ["וּגְדָל", "U-g'dol"],
+    ["וּלְעָבְדוֹ", "U-l·ovdo"],
+    ["בְּצָרְכֵי", "B'tzorkhei"],
+    ["לְעָבְדֶךָ", "L'ovdekha"],
+    ["בְּעָמְדֵנוּ", "B'omdeinu"],
+    ["לְעָבְדְךָ", "L'ovd'kha"],
+    ["וּזְכָר", "U-z'khor"],
+    ["בְּמָלְכֶךָ", "B'molkhekha"],
+    ["נַעֲבָדְךָ", "Na·avodkha"],
+    ["כָּתְבֵנוּ", "Kotveinu"],
+    ["יַעֲמָס", "Ya·amos"],
+    ["בְּשָׁכְבֵנוּ", "B'shokhveinu"],
+    ["בְּצָרְכֵיהֶם", "B'tzorkheihem"],
+    ["תִּשְׁמָר", "Tishmor"],
+    ["לְחָק", "L'ḥok"],
+    ["וּמִגְּעָר", "U-mig'or"],
+    ["בְּרָב", "B'rov"],
+    ["בְּעָמְדָן", "B'omdan"],
+    ["בְּקָרְבָתָם", "B'korvatam"],
+    ["חָרְבוֹת", "Ḥorvot"],
+    ["יִזְכָּר", "Yizkor"],
+    ["תִּזְכָּר", "Tizkor"],
+    ["פָּקְדֵנוּ", "Pokdeinu"],
+    ["וַיָּקָם", "Vayakom"]
+  ]);
+});
+
+test("Mahzor ordinary-qamatz evidence corrects false closed-syllable readings", () => {
+  checkCases([
+    ["חָסְרָה", "Ḥasrah"],
+    ["שֶׁנָּתְנוּ", "She-natnu"],
+    ["בְּהִצָּדְקוֹ", "B'hitzadko"],
+    ["גָּזְרָה", "Gazrah"],
+    ["בְּהִמָּצְאוֹ", "B'himatz·o"],
+    ["דָרְשֵׁנִי", "Darsheini"],
+    ["שֶׁסָּמְרוּ", "She-samru"],
+    ["וְתֵחָתְמִי", "V'teiḥatmi"],
+    ["שֶׁמָסְרוּ", "She-masru"],
+    ["יִכָּמְרוּ", "Yikamru"],
+    ["מָצְאוּהוּ", "Matz·uhu"],
+    ["וְחָדְלָה", "V'ḥadlah"],
+    ["בָּאֳנִיָּה", "Ba-oniyah"],
+    ["יִוָּשְׁעוּ", "Yivash·u"]
+  ]);
+});
+
+test("forced qamatz qatan never silences an intrinsically vocal sh'va", () => {
+  for (const [word, shvaIndex] of [
+    ["כָּבְּרָה", 1],       // dagesh
+    ["כָּבְבְרָה", 2],     // second consecutive sh'va
+    ["כָּבְבָה", 1]        // identical letters
+  ]) {
+    const clusters = internals.parseClusters(word);
+    clusters[0].forceKamatzKatan = true;
+    internals.classifyShevas(clusters, rules);
+    assert.equal(clusters[shvaIndex].sheva, "vocal", word);
+  }
+});
+
+test("explicit source stress and qamatz qatan remain authoritative", () => {
+  checkCases([
+    ["אָכְלָה", "Akhlah"],
+    ["אׇכְלָה", "Okhlah"],
+    ["אָֽכְלָה", "Akhlah"],
+    ["וְכָֽתְבֵנוּ", "V'khat'veinu"],
+    ["גָּזְרָה", "Gazrah"],
+    ["גָּֽזְרָה", "Gaz'rah"]
+  ]);
+});
+
 test("patach before bet and chem/chen does not trigger the vocal suffix shortcut", () => {
   checkCases([
     ["לְבַבְכֶם", "L'vavkhem"], ["לְבַבְכֶ֖ם", "L'vavkhem"],
