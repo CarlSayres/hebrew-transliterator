@@ -73,7 +73,8 @@ test("siddur-only silent sh'va decisions stay narrow", () => {
     ["אוּקִימְנָא", "Ukimna"], ["אֹהַבְךָ", "Ohavkha"],
     ["תַּחְגֹּרְנָה", "Taḥgornah"], ["נַחֲלַתְכֶם", "Naḥalatkhem"],
     ["יִשָּׂאוּנְךָ", "Yisa·unkha"], ["לַחְפֹּר", "Laḥpor"],
-    ["בַּרְתּוֹתָא", "Bartota"]
+    ["בַּרְתּוֹתָא", "Bartota"],
+    ["וּפָקְדֵֽנוּ", "U-fokdeinu"]
   ]);
 });
 
@@ -125,6 +126,13 @@ test("reviewed missing-meteg forms retain gadol plus vocal sh'va", () => {
 
 test("siddur Aramaic can supply kamatz evidence without changing sh'va", () => {
   checkCases([["עָלְמִין", "Almin"]]);
+});
+
+test("an unprefixed Siddur form inherits MAM kamatz evidence from its attested stem", () => {
+  checkCases([
+    ["יִכָּלְמוּ", "Yikalmu"],
+    ["וְיִכָּלְמוּ", "V'yikalmu"]
+  ]);
 });
 
 test("patach before bet and chem/chen does not trigger the vocal suffix shortcut", () => {
@@ -181,7 +189,8 @@ test("audio lexicon uses corrected classifications and retains the tzere choice"
       ["וְהַמְרַחֵם", tzere === "ei" ? "ve.ha.me.ʁa.ˈxejm" : "ve.ha.me.ʁa.ˈxem"],
       ["וְקִיַּמְתָּֽנוּ", "ve.ki.jam.ˈta.nu"],
       ["וַיֶּחֱשׂף", "va.je.xe.ˈsof"],
-      ["זִיו", "ˈziv"]
+      ["זִיו", "ˈziv"],
+      ["וּפָקְדֵֽנוּ", tzere === "ei" ? "u.fok.ˈdej.nu" : "u.fok.ˈde.nu"]
     ]) {
       const entries = speech.lexiconEntries(input, audioEngine);
       assert.equal(entries.length, 1);

@@ -226,6 +226,9 @@
   const forcedKamatzGadol = normalizeLookup(window.HebrewMamForcedKamatzGadol || {});
   // Siddur Aramaic not present in the Tanakh-derived MAM table.
   forcedKamatzGadol["עָלְמִין".normalize("NFD")] = [0];
+  // Siddurim can omit the conjunction from the MAM-attested
+  // וְיִכָּלְמוּ while retaining the same pointed stem.
+  forcedKamatzGadol["יִכָּלְמוּ".normalize("NFD")] = [1];
 
   // Some Sefaria Tanakh forms omit the meteg that would explicitly mark a
   // kamatz as gadol before a vocal sh'va. Keep this list narrow so genuine
@@ -323,7 +326,9 @@
     "נַחֲלַתְכֶם": [3],
     "יִשָּׂאוּנְךָ": [4],
     "לַחְפֹּר": [1],
-    "בַּרְתּוֹתָא": [1]
+    "בַּרְתּוֹתָא": [1],
+    // Lev Shalem explicitly prints qamatz qatan plus silent sh'va here.
+    "וּפָקְדֵנוּ": [2]
   };
 
   const phraseCapitalization = {

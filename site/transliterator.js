@@ -1921,6 +1921,7 @@
       applyMissingMetegKamatzSheva(clusters, word, this.ruleset);
       applyForcedKamatzGadol(clusters, word, this.ruleset);
       classifyShevas(clusters, this.ruleset);
+      applyForcedSilentShevas(clusters, word, this.ruleset);
       classifyVowels(clusters, this.ruleset);
       classifyShevas(clusters, this.ruleset);
       if (this.ruleset.exceptions.silentInitialPrefixSheva?.[cleaned]) {
@@ -2378,6 +2379,7 @@
       applyMissingMetegKamatzSheva(wordClusters, word, this.ruleset);
       applyForcedKamatzGadol(wordClusters, word, this.ruleset);
       classifyShevas(wordClusters, this.ruleset);
+      applyForcedSilentShevas(wordClusters, word, this.ruleset);
       classifyVowels(wordClusters, this.ruleset);
       classifyShevas(wordClusters, this.ruleset);
       if (this.ruleset.exceptions.silentInitialPrefixSheva?.[cleaned]) {
