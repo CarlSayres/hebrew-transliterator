@@ -126,7 +126,7 @@ node .\parser\scripts\stacked-prefix-audit.js
 node .\parser\scripts\all-sheva-audit.js
 ```
 
-The ignored reports `parser/reports/stacked-prefix-audit.md` and `parser/reports/all-sheva-audit.md` catalog MorphHB prefix chains and every sh'va classification respectively. They distinguish automatically provable rule violations from structural exceptions such as final sh'va and qamatz-yod.
+The ignored reports `parser/reports/stacked-prefix-audit.md` and `parser/reports/all-sheva-audit.md` catalog MorphHB prefix chains and every sh'va classification respectively. They distinguish automatically provable rule violations from structural exceptions such as final sh'va and qamatz-yod. The all-sh'va report also inventories conjunction-only initial `וּ` followed by a MorphHB lexical boundary and a lexical segment beginning with sh'va. MorphHB proves the morpheme boundary but does not encode sh'va na versus sh'va nah, so the inventory is a queue for comparison with an external pronunciation source rather than an automatic correction list. Lev Shalem's enlarged-sh'va notation confirms that the `וּבְנֵי` family retains silent sh'va (`uv-nei`); other candidates retain the normal conjunctive-shuruk rule unless independent evidence establishes an exception.
 
 The MAM kamatz–sh'va audit is rebuilt with:
 

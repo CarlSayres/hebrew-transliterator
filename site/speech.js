@@ -400,7 +400,6 @@
       doubleDageshChazak: false,
       maqafSeparator: " "
     };
-    ruleset.output.vocalShevaAfterInitialShuruk = true;
     return ruleset;
   }
 

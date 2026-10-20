@@ -85,6 +85,27 @@ test("final letter forms participate in the identical-letter rule", () => {
   ]);
 });
 
+test("conjunctive shuruk keeps the following sh'va silent, including uvnei", () => {
+  const expectedByStyle = {
+    modernSefardi: ["Uv·nei", "Uv·neihem"],
+    levShalem: ["U-v'nei", "U-v'neihem"],
+    mishkanTefilah: ["Uv-nei", "Uv-neihem"]
+  };
+  for (const candidate of window.HebrewRulesets.all) {
+    const candidateEngine = new Transliterator(candidate);
+    for (const [index, input] of ["וּבְנֵי", "וּבְנֵיהֶם"].entries()) {
+      const clusters = internals.parseClusters(input);
+      internals.classifyShevas(clusters, candidate);
+      assert.equal(clusters[1].sheva, "silent", `${candidate.id}: ${input} classification`);
+      assert.equal(
+        candidateEngine.transliterate(input),
+        expectedByStyle[candidate.id][index],
+        `${candidate.id}: ${input}`
+      );
+    }
+  }
+});
+
 test("qamatz before vav-sh'va forms a closed av syllable", () => {
   checkCases([["הַמָּוְתָה", "Ha-movtah"]]);
 });
@@ -275,6 +296,7 @@ test("audio lexicon uses corrected classifications and retains the tzere choice"
       ["וְקִיַּמְתָּֽנוּ", "ve.ki.jam.ˈta.nu"],
       ["וַיֶּחֱשׂף", "va.je.xe.ˈsof"],
       ["זִיו", "ˈziv"],
+      ["וּבְנֵי", "uv.ˈnej"],
       ["וּפָקְדֵֽנוּ", tzere === "ei" ? "u.fok.ˈdej.nu" : "u.fok.ˈde.nu"]
     ]) {
       const entries = speech.lexiconEntries(input, audioEngine);
