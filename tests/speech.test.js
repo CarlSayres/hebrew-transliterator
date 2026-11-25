@@ -62,7 +62,7 @@ test("makes the speech ruleset follow the selected tzere pronunciation", () => {
   const eRuleset = speech.rulesetForTzere(base, "e");
   const eiRuleset = speech.rulesetForTzere(base, "ei");
   assert.equal(eRuleset.vowels.tzere, "e");
-  assert.equal(eRuleset.exceptions.exactWords.word, "Elohenu");
+  assert.equal(eRuleset.exceptions.exactWords.word, "Eloheinu");
   assert.equal(eiRuleset.exceptions.exactWords.word, "Eloheinu");
 });
 
@@ -136,4 +136,36 @@ test("classifies only unchanged imported text as Sefaria audio", () => {
   assert.equal(speech.audioSourceType("4. שְׁמַע יִשְׂרָאֵל", imported), "sefaria");
   assert.equal(speech.audioSourceType("שְׁמַע יִשְׂרָאֵל!", imported), "arbitrary");
   assert.equal(speech.audioSourceType(imported, ""), "arbitrary");
+});
+
+test("prepares the entire marked word from Genesis 35:22 for Azure", () => {
+  const { loadTransliterator } = require("../scripts/genesis-audit");
+  const engine = loadTransliterator();
+  const t = new engine.HebrewTransliterator.Transliterator(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, "e"));
+  const verses = require("./fixtures/genesis/source.json").chapters[34].verses;
+  const word = verses[21].hebrew.split(/\s+/u).find((token) => token.includes("\u034f"));
+  const prepared = speech.prepareAzureHebrew(word, t);
+  assert.equal(prepared.lexicon.length, 1);
+  assert.match(prepared.lexicon[0].grapheme, /ל$/u);
+  assert.match(prepared.lexicon[0].phoneme, /el$/u);
+  assert.deepEqual(prepared, speech.prepareAzureHebrew(word.replace("\u034f", ""), t));
+
+  const prepare = (text) => speech.prepareAzureHebrew(text, t);
+  assert.match(prepare("אֱלֹהֵינוּ").lexicon[0].phoneme, /hej/);
+  assert.match(prepare("בֵּן").lexicon[0].phoneme, /ben/);
+  assert.equal(prepare("י״י").text, prepare("יי").text);
+  assert.equal(prepare('י"י').text, prepare("ה׳").text);
+  assert.equal(prepare("הקב״ה").text, prepare("הַקָּדוֹשׁ בָּרוּךְ הוּא").text);
+  assert.equal(prepare("ב״ה").text, "");
+});
+
+test("distinguishes an unmatched selection from no selection, including beside a divine name", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const t = new engine.HebrewTransliterator.Transliterator(engine.HebrewRulesets.levShalem);
+  for (const source of ["ה׳ hello", "hello ׳ה", "לַה׳ hello", "שָׁלוֹם hello"]) {
+    const { text, segments } = t.transliterateWithAlignment(source);
+    const start = text.toLowerCase().indexOf("hello");
+    assert.equal(speech.sourceForTargetSelection(source, segments, { start, end: start + 5 }), "");
+    assert.equal(speech.sourceForTargetSelection(source, segments, { start, end: start }), null);
+  }
 });

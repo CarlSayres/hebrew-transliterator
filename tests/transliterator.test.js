@@ -966,11 +966,11 @@ const speechERuleset = speech.rulesetForTzere(
 );
 const speechETransliterator = new context.window.HebrewTransliterator.Transliterator(speechERuleset);
 const speechETzere = speech.phoneticize(speechETransliterator.transliterate("אֱלֹהֵינוּ"));
-if (speechETzere !== "eh-loh-heh-noo") {
+if (speechETzere !== "eh-loh-hay-noo") {
   failures.push({
     feature: "speechTzere",
     input: "אֱלֹהֵינוּ",
-    expected: "eh-loh-heh-noo",
+    expected: "eh-loh-hay-noo",
     actual: speechETzere
   });
 }

@@ -32,7 +32,10 @@
 
   function isCommentaryRef(ref, categories = []) {
     const categoryList = Array.isArray(categories) ? categories : [categories];
-    return /\bon\b/i.test(String(ref || "")) || /Commentary/i.test(categoryList.join(" "));
+    const title = String(ref || "").split(",")[0];
+    const target = title.split(/\s+on\s+/i)[1] || "";
+    return /Commentary/i.test(categoryList.join(" ")) || isTanakhRef(target) ||
+      /^(Pirkei Avot|Siddur|Machzor|Haggadah)\b/i.test(target);
   }
 
   function schemaNodeName(node) {
@@ -55,7 +58,7 @@
       return true;
     }
 
-    return isTanakhRef(ref) || isLiturgyRef(ref, categories);
+    return isTanakhRef(ref) || /^Pirkei Avot(?:\s|$)/i.test(ref) || isLiturgyRef(ref, categories);
   }
 
   function resultRank(result, query = "") {

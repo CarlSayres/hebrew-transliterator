@@ -64,11 +64,13 @@ npx wrangler deploy
 
 ## Test
 
-Run the transliterator and audit tests:
+Run the application, Worker, and Genesis regression tests with:
 
 ```powershell
-node --test tests\*.test.js
+npm test
 ```
+
+The optional browser suite uses Playwright and installed Chrome or Edge. Run `npm run test:browser` with Playwright available to Node. Set `BROWSER_CHANNEL=msedge` to use Edge. The suite uses local responses for Sefaria and audio.
 
 The deployment roadmap is maintained in `DEPLOYMENT_PLAN.md`.
 

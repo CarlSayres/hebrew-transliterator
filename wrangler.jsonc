@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "hebrew-transliterator",
   "compatibility_date": "2026-08-25",
-  "main": "./worker/index.mjs",
+  "main": "./worker/entry.mjs",
   "keep_vars": true,
   "assets": {
     "directory": "./site",
@@ -21,6 +21,10 @@
       "bucket_name": "hebrew-transliterator-audio"
     }
   ],
+  "durable_objects": {
+    "bindings": [{ "name": "AUDIO_COORDINATOR", "class_name": "AudioCoordinator" }]
+  },
+  "migrations": [{ "tag": "audio-coordinator-v1", "new_sqlite_classes": ["AudioCoordinator"] }],
   "ratelimits": [
     {
       "name": "FEEDBACK_RATE_LIMITER",

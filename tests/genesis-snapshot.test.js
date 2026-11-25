@@ -1,3 +1,4 @@
+const assert = require("node:assert/strict");
 const fs = require("fs");
 const path = require("path");
 const {
@@ -49,3 +50,16 @@ if (failures.length) {
 }
 
 console.log(`${actual.rows.length} Genesis snapshot rows passed.`);
+
+// Stress marks decorate the exact spelling selected by the user, including prefix hyphens.
+const engine = loadTransliterator();
+for (const style of engine.HebrewRulesets.all) {
+  const trans = new engine.HebrewTransliterator.Transliterator(style);
+  for (const chapter of source.chapters) {
+    for (const verse of chapter.verses) {
+      const marked = trans.transliterateWithStressMarks(verse.hebrew).normalize("NFD").replace(/\u0301/g, "");
+      assert.equal(marked, trans.transliterate(verse.hebrew).normalize("NFD"),
+        style.name + " Genesis " + chapter.chapter + ":" + verse.verse);
+    }
+  }
+}

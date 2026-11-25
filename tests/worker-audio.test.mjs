@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createHash } from "node:crypto";
 
-import { handleAudio, handleAudioLexicon } from "../worker/index.mjs";
+import { AudioQueue, handleAudio, handleAudioLexicon } from "../worker/index.mjs";
 
 class MemoryBucket {
   constructor() {
@@ -50,13 +50,20 @@ function makeEnv() {
   const points = [];
   const azureBodies = [];
   let azureCalls = 0;
-  return {
+  const queues = new Map();
+  const state = {
     bucket,
     points,
     azureBodies,
     get azureCalls() { return azureCalls; },
     env: {
       AUDIO_BUCKET: bucket,
+      AUDIO_COORDINATOR: {
+        getByName(name) {
+          if (!queues.has(name)) queues.set(name, new AudioQueue(state.env));
+          return { fetch: (url, init) => queues.get(name).fetch(new Request(url, init)) };
+        }
+      },
       AZURE_SPEECH_KEY: "test-key",
       AZURE_SPEECH_REGION: "eastus",
       SPEECH_RATE_LIMITER: { async limit() { return { success: true }; } },
@@ -71,6 +78,7 @@ function makeEnv() {
       }
     }
   };
+  return state;
 }
 
 test("uses fixed Hila settings, stores Sefaria audio, and reuses the cache", async () => {
@@ -243,4 +251,29 @@ test("serves only a temporary unguessable lexicon object", async () => {
   );
   assert.equal(result.status, 200);
   assert.equal(await result.text(), "<lexicon/>");
+});
+
+test("serializes simultaneous generation and metadata updates by recording", async () => {
+  const state = makeEnv();
+  const read = (ref) => handleAudio(audioRequest("sefaria", "בָּרוּךְ", ref), state.env);
+  const results = await Promise.all(["A", "B", "C"].map(read));
+  assert.deepEqual(results.map((r) => r.headers.get("X-Audio-Cache")).sort(), ["HIT", "HIT", "MISS"]);
+  await Promise.all(["D", "E"].map(read));
+  const object = [...state.bucket.objects].find(([key]) => key.startsWith("audio/"))[1];
+  assert.deepEqual(object.customMetadata.sefariaReferences.split(" | ").sort(), ["A", "B", "C", "D", "E"]);
+  assert.equal(state.azureCalls, 1);
+  assert.equal(state.points.length, 1);
+});
+
+test("caches each IPA pronunciation separately and retries a failed synthesis", async () => {
+  const state = makeEnv();
+  const fetch = state.env.AZURE_SPEECH_FETCH;
+  state.env.AZURE_SPEECH_FETCH = async () => new Response(null, { status: 503 });
+  assert.equal((await handleAudio(audioRequest(), state.env)).status, 502);
+  state.env.AZURE_SPEECH_FETCH = fetch;
+  await handleAudio(audioRequest(), state.env);
+  const changed = () => audioRequest("sefaria", "בָּרוּךְ", "Example", [{ grapheme: "בָּרוּךְ", phoneme: "ˈba.ʁux" }]);
+  assert.equal((await handleAudio(changed(), state.env)).headers.get("X-Audio-Cache"), "MISS");
+  assert.equal((await handleAudio(changed(), state.env)).headers.get("X-Audio-Cache"), "HIT");
+  assert.equal(state.azureCalls, 2);
 });

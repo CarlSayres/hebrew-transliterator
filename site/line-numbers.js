@@ -16,19 +16,28 @@
     return match ? Number.parseInt(match[2], 10) : 1;
   }
 
+  function numberAt(start, index) {
+    if (Array.isArray(start) && index < start.length) return start[index];
+    return (Number.isInteger(start) && start > 0 ? start : 1) + index;
+  }
+
   function add(text, start = 1) {
-    const first = Number.isInteger(start) && start > 0 ? start : 1;
     return String(text || "")
       .split("\n")
-      .map((line, index) => `${first + index}. ${line}`)
+      .map((line, index) => {
+        const number = numberAt(start, index);
+        return number === null ? line : number + ". " + line;
+      })
       .join("\n");
   }
 
   function remove(text, start = 1) {
-    const first = Number.isInteger(start) && start > 0 ? start : 1;
     return String(text || "")
       .split("\n")
-      .map((line, index) => line.replace(new RegExp(`^\\s*${first + index}\\.\\s?`), ""))
+      .map((line, index) => {
+        const number = numberAt(start, index);
+        return number === null ? line : line.replace(new RegExp("^\\s*" + number + "\\.\\s?"), "");
+      })
       .join("\n");
   }
 

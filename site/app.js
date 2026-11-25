@@ -220,6 +220,7 @@
   let sefariaNavigationStack = [];
   let currentSefariaResults = null;
   let activeSefariaController = null;
+  let editorRevision = 0;
   let sefariaProblemDuringRequest = false;
   let lastSefariaSearch = "";
   let lastImportedSefariaContext = null;
@@ -231,7 +232,7 @@
   let audioCacheIdentity = "";
   let audioRequest = null;
   let audioRequestController = null;
-  let speechSelectionSnapshot = "";
+  let speechSelectionSnapshot = null;
 
   const liturgySearchAliases = [
     {
@@ -287,7 +288,7 @@
   function updateOutput() {
     stopAudio();
     clearPreparedAudio();
-    speechSelectionSnapshot = "";
+    speechSelectionSnapshot = null;
     currentAlignment = transliterator.transliterateWithAlignment(
       input.value,
       stressMarkToggle?.checked ? "stressMarks" : "text"
@@ -392,7 +393,7 @@
             start: input.selectionStart,
             end: input.selectionEnd
           })
-        : "";
+        : null;
       const indexes = selectionAlignmentTools.matchingIndexes(
         currentAlignment.segments,
         input.selectionStart,
@@ -422,8 +423,8 @@
       return;
     }
 
-    if (speechSelectionSnapshot) return;
-    speechSelectionSnapshot = "";
+    if (speechSelectionSnapshot !== null) return;
+    speechSelectionSnapshot = null;
     clearLinkedHighlights();
   }
 
@@ -464,7 +465,7 @@
       sourceType,
       sourceRef,
       lexicon,
-      identity: JSON.stringify({ text, sourceType, sourceRef, tzere })
+      identity: JSON.stringify({ text, sourceType, sourceRef, tzere, lexicon })
     };
   }
 
@@ -515,7 +516,7 @@
   async function prepareAudio(hebrew) {
     const prepared = audioPreparation(hebrew);
     if (!prepared.text || !prepared.lexicon.length) {
-      throw new Error("Enter vocalized Hebrew before creating audio.");
+      throw new Error("Select or enter vocalized Hebrew to create audio.");
     }
     if (audioElement && audioCacheIdentity === prepared.identity && audioObjectUrl) {
       return { ...prepared, audio: audioElement };
@@ -638,7 +639,7 @@
 
   function setLineNumberAvailability(result) {
     const supported = supportsLineNumbers(result);
-    lineNumberStart = supported ? lineNumberTools.startFromRef(result?.ref) : 1;
+    lineNumberStart = supported ? (result.verseNumbers || lineNumberTools.startFromRef(result.ref)) : 1;
     lineNumbersToggle.checked = supported;
     lineNumbersControl.hidden = !supported;
   }
@@ -675,47 +676,22 @@
     return JSON.parse(JSON.stringify(ruleset));
   }
 
-  function capitalizeFirst(value) {
-    return value ? value[0].toUpperCase() + value.slice(1) : value;
-  }
-
-  function replaceLiteral(value, from, to) {
-    return from && from !== to ? value.split(from).join(to) : value;
-  }
-
-  function replaceStyleSound(value, from, to) {
-    return replaceLiteral(
-      replaceLiteral(value, capitalizeFirst(from), capitalizeFirst(to)),
-      from,
-      to
-    );
-  }
-
-  function remapExceptionTable(table, mapper) {
-    return Object.fromEntries(
-      Object.entries(table || {}).map(([key, value]) => [key, mapper(value)])
-    );
-  }
-
   function remapStyleSensitiveExceptions(ruleset, selectedRuleset, chetValue, khafValue) {
-    const baseChet = selectedRuleset.consonants?.["ח"];
-    const baseKhaf = selectedRuleset.consonants?.["כ"]?.plain;
-
-    const mapper = (value) => {
-      let next = value;
-      next = replaceStyleSound(next, baseKhaf, khafValue);
-      if (baseChet !== baseKhaf) {
-        next = replaceStyleSound(next, baseChet, chetValue);
+    const baseChet = selectedRuleset.consonants["ח"];
+    const baseKhaf = selectedRuleset.consonants["כ"].plain;
+    if (baseChet === chetValue && baseKhaf === khafValue) return;
+    const sounds = new RegExp([baseKhaf, baseChet].join("|"), "gi");
+    for (const table of ["exactWords", "niqqudless", "phraseCapitalization"]) {
+      for (const [word, value] of Object.entries(ruleset.exceptions[table])) {
+        const letters = Array.from(word).filter((letter) => "חכך".includes(letter));
+        let index = 0;
+        ruleset.exceptions[table][word] = value.replace(sounds, (sound) => {
+          const chet = baseChet === baseKhaf ? letters[index++] === "ח" : sound.toLowerCase() === baseChet;
+          const replacement = chet ? chetValue : khafValue;
+          return sound[0] === sound[0].toUpperCase() ? replacement[0].toUpperCase() + replacement.slice(1) : replacement;
+        });
       }
-      return next;
-    };
-
-    ruleset.exceptions = {
-      ...(ruleset.exceptions || {}),
-      exactWords: remapExceptionTable(ruleset.exceptions?.exactWords, mapper),
-      niqqudless: remapExceptionTable(ruleset.exceptions?.niqqudless, mapper),
-      phraseCapitalization: remapExceptionTable(ruleset.exceptions?.phraseCapitalization, mapper)
-    };
+    }
   }
 
   function currentRuleset() {
@@ -950,6 +926,7 @@
     input.scrollTop = 0;
     input.focus();
     window.requestAnimationFrame(() => {
+      if (input.value !== text || document.activeElement !== input) return;
       input.setSelectionRange(0, 0);
       input.scrollTop = 0;
       window.scrollTo({ top: 0, left: 0 });
@@ -971,16 +948,6 @@
     link.rel = "noopener noreferrer";
     link.textContent = "View on Sefaria";
     sefariaImportSource.appendChild(link);
-    const versionSource = safeExternalUrl(result.versionSource);
-    if (versionSource) {
-      sefariaImportSource.append(document.createTextNode(" · "));
-      const versionLink = document.createElement("a");
-      versionLink.href = versionSource;
-      versionLink.target = "_blank";
-      versionLink.rel = "noopener noreferrer";
-      versionLink.textContent = "Version source";
-      sefariaImportSource.appendChild(versionLink);
-    }
   }
 
   function currentFeedbackContext() {
@@ -989,10 +956,10 @@
       return null;
     }
     return {
-      query,
-      ref: lastImportedSefariaContext?.ref || "",
-      versionTitle: lastImportedSefariaContext?.versionTitle || "",
-      text: lastImportedSefariaContext?.text || ""
+      query: query.slice(0, 100),
+      ref: lastImportedSefariaContext?.ref.slice(0, 300) || "",
+      versionTitle: lastImportedSefariaContext?.versionTitle.slice(0, 300) || "",
+      text: lastImportedSefariaContext?.text.slice(0, 20000) || ""
     };
   }
 
@@ -1059,6 +1026,9 @@
         })
       });
       if (!response.ok) {
+        if (response.status === 413) {
+          throw new Error("The feedback is too long. Shorten the message or uncheck the imported context.");
+        }
         if (response.status === 429) {
           throw new Error("Too many feedback messages were sent recently. Please wait a minute and try again.");
         }
@@ -1084,6 +1054,7 @@
     }
 
     const controller = beginSefariaRequest();
+    const initialRevision = editorRevision;
     setSefariaStatus(`Importing ${trimmed}...`);
     sefariaImportSource.textContent = "";
 
@@ -1110,12 +1081,17 @@
           quality: window.HebrewTransliteratorSefariaClient.textQuality(payload.text)
         };
       }
+      if (controller.signal.aborted) return;
+      if (editorRevision !== initialRevision) {
+        setSefariaStatus("The Hebrew changed during import. Your edits were kept.");
+        return;
+      }
       setLineNumberAvailability(result);
       insertImportedText(lineNumbersToggle.checked ? addLineNumbers(result.text) : result.text);
       lastImportedSefariaContext = {
         ref: result.ref || trimmed,
         versionTitle: result.versionTitle || "",
-        text: result.text.slice(0, 20000)
+        text: result.text
       };
       setHebrewSourceHeading(lastImportedSefariaContext.ref);
       const warning = result.quality?.status === "unvocalized"
@@ -1131,6 +1107,7 @@
         lastImportedSefariaContext.ref
       );
     } catch (error) {
+      if (activeSefariaController !== controller) return;
       setSefariaStatus(sefariaErrorMessage(error));
       if (error?.code !== "cancelled") {
         recordUsageEvent("sefaria_import_failed");
@@ -1205,18 +1182,6 @@
       ? categories
       : String(categories).split(/[>/]/).map((category) => category.trim()).filter(Boolean);
     return { ref, categories: normalizedCategories, source, ...meta };
-  }
-
-  function safeExternalUrl(value) {
-    if (!value) {
-      return "";
-    }
-    try {
-      const url = new URL(value, "https://www.sefaria.org");
-      return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
-    } catch {
-      return "";
-    }
   }
 
   function shortRefLabel(ref) {
@@ -1310,6 +1275,7 @@
       setSefariaStatus(`This is a collection rather than a directly importable text. Use “View on Sefaria” to browse all of its sections.${sefariaProblemWarning()}`);
       renderImportedSource(result);
     } catch (error) {
+      if (activeSefariaController !== controller) return;
       setSefariaStatus(sefariaErrorMessage(error));
     } finally {
       finishSefariaRequest(controller);
@@ -1340,6 +1306,7 @@
         }
       }, { preserveStack: true });
     } catch (error) {
+      if (activeSefariaController !== controller) return;
       setSefariaStatus(sefariaErrorMessage(error));
     } finally {
       finishSefariaRequest(controller);
@@ -1621,17 +1588,6 @@
       link.textContent = "Sefaria";
       link.setAttribute("aria-label", `View ${result.ref} on Sefaria`);
       actions.appendChild(link);
-      const versionSource = safeExternalUrl(result.versionSource);
-      if (versionSource) {
-        const versionLink = document.createElement("a");
-        versionLink.className = "sefaria-source-link";
-        versionLink.href = versionSource;
-        versionLink.target = "_blank";
-        versionLink.rel = "noopener noreferrer";
-        versionLink.textContent = "Version";
-        versionLink.setAttribute("aria-label", `View the source for ${result.versionTitle || result.ref}`);
-        actions.appendChild(versionLink);
-      }
       card.appendChild(actions);
       resultHost.appendChild(card);
     }
@@ -1691,6 +1647,10 @@
 
     const catalogKey = sefariaCatalog.keyForQuery(trimmed);
     if (catalogKey && !sefariaCatalog.requiresValidation(catalogKey)) {
+      if (activeSefariaController) {
+        activeSefariaController.abort();
+        finishSefariaRequest(activeSefariaController);
+      }
       sefariaImportSource.textContent = "";
       const catalogResults = sefariaCatalog.resultsForKey(catalogKey);
       const label = sefariaCatalog.collectionLabels[catalogKey];
@@ -1739,6 +1699,9 @@
           ...queryTerms.map((term) => searchWrapper(term, 12, controller.signal))
         ];
       const settledSearches = await Promise.allSettled(searches);
+      if (controller.signal.aborted) {
+        throw new window.HebrewTransliteratorSefariaClient.SefariaRequestError("Request cancelled.", "cancelled");
+      }
       const searchErrors = settledSearches.filter((result) => result.status === "rejected");
       const successfulSearchCount = settledSearches.length - searchErrors.length;
       const remoteResults = settledSearches.flatMap((result) =>
@@ -1772,6 +1735,7 @@
         displayedResultCount
       );
     } catch (error) {
+      if (activeSefariaController !== controller) return;
       setSefariaStatus(sefariaErrorMessage(error));
       if (error?.code !== "cancelled") {
         recordUsageEvent("sefaria_search_failed");
@@ -1783,6 +1747,7 @@
   }
 
   input.addEventListener("input", () => {
+    editorRevision += 1;
     setHebrewSourceHeading();
     updateOutput();
   });
@@ -1809,7 +1774,7 @@
   });
 
   speechButton.addEventListener("pointerdown", (event) => {
-    speechSelectionSnapshot ||= selectedHebrewForSpeech();
+    speechSelectionSnapshot ??= selectedHebrewForSpeech();
     event.preventDefault();
   });
   speechButton.addEventListener("click", async () => {
@@ -1817,7 +1782,7 @@
       stopAudio();
       return;
     }
-    const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
+    const hebrew = speechSelectionSnapshot ?? selectedHebrewForSpeech() ?? input.value;
     try {
       const prepared = await prepareAudio(hebrew);
       await prepared.audio.play();
@@ -1836,11 +1801,11 @@
   });
 
   speechDownloadButton.addEventListener("pointerdown", (event) => {
-    speechSelectionSnapshot ||= selectedHebrewForSpeech();
+    speechSelectionSnapshot ??= selectedHebrewForSpeech();
     event.preventDefault();
   });
   speechDownloadButton.addEventListener("click", async () => {
-    const hebrew = speechSelectionSnapshot || selectedHebrewForSpeech() || input.value;
+    const hebrew = speechSelectionSnapshot ?? selectedHebrewForSpeech() ?? input.value;
     try {
       const prepared = await prepareAudio(hebrew);
       const link = document.createElement("a");
@@ -1894,6 +1859,7 @@
   });
 
   sampleButton.addEventListener("click", () => {
+    editorRevision += 1;
     lastImportedSefariaContext = null;
     setHebrewSourceHeading();
     setLineNumberAvailability(null);

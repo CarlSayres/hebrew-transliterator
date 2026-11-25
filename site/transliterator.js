@@ -2134,26 +2134,14 @@
         const lamedHeyApostropheSuffix = this.lamedHeyApostropheDivineNameSuffix(tokens, index);
         const heyApostropheSuffix = this.heyApostropheDivineNameSuffix(tokens, index);
         const apostropheHeyPrefix = this.apostropheHeyDivineNamePrefix(tokens, index);
-        if (lamedHeyApostropheSuffix !== null) {
-          appendAligned(
-            `Ladonai${lamedHeyApostropheSuffix}`,
-            tokens[index].sourceStart,
-            tokens[index + 1].sourceEnd
-          );
-          index += 1;
-        } else if (heyApostropheSuffix !== null) {
-          appendAligned(
-            `Adonai${heyApostropheSuffix}`,
-            tokens[index].sourceStart,
-            tokens[index + 1].sourceEnd
-          );
+        if (lamedHeyApostropheSuffix !== null || heyApostropheSuffix !== null) {
+          const name = lamedHeyApostropheSuffix !== null ? "Ladonai" : "Adonai";
+          appendAligned(name, tokens[index].sourceStart, tokens[index + 1].sourceStart + 1);
+          output += lamedHeyApostropheSuffix ?? heyApostropheSuffix;
           index += 1;
         } else if (apostropheHeyPrefix !== null) {
-          appendAligned(
-            `${apostropheHeyPrefix}Adonai`,
-            tokens[index].sourceStart,
-            tokens[index + 1].sourceEnd
-          );
+          output += apostropheHeyPrefix;
+          appendAligned("Adonai", tokens[index].sourceEnd - 1, tokens[index + 1].sourceEnd);
           index += 1;
         } else if (this.startsMaqafGroup(tokens, index)) {
           const group = this.collectMaqafGroup(tokens, index);
@@ -2429,9 +2417,16 @@
         return stressMarkedVowelGroup(transliterateClusters(wordClusters, this.ruleset), stressOverride);
       }
       if (format === "stressMarks" && !shouldShowStressMarksForClusters(wordClusters, stressOverride)) {
-        return transliterateClusters(wordClusters, this.ruleset);
+        return exact || transliterateClusters(wordClusters, this.ruleset);
       }
-      return transliterateClusters(wordClusters, this.ruleset, format);
+      const rendered = transliterateClusters(wordClusters, this.ruleset, format);
+      if (exact && useRuleStress) {
+        // Keep the style's spelling and transfer the accent by vowel group.
+        const nuclei = rendered.match(/[aeiou][aeiou\u0301]*/gi) || [];
+        const stressed = nuclei.findIndex((nucleus) => nucleus.includes("\u0301"));
+        return stressed < 0 ? exact : stressMarkedVowelGroup(exact, { vowelFromEnd: nuclei.length - stressed });
+      }
+      return rendered;
     }
 
     shouldPreserveUnvocalizedWord(word) {

@@ -99,3 +99,9 @@ test("excludes fuzzy book-level matches unless the query names that book", () =>
   ], "Genesis");
   assert.deepEqual(bookResults.map((result) => result.ref), ["Genesis"]);
 });
+
+test("includes Avot and named liturgy on a subject while excluding commentary", () => {
+  assert.equal(isImportableSearchResult({ ref: "Pirkei Avot 2:1", source: "exact" }), true);
+  assert.equal(isImportableSearchResult({ ref: "Siddur Ashkenaz, Blessings on the Torah", source: "schemaLeaf" }), true);
+  assert.equal(isImportableSearchResult({ ref: "Bartenura on Pirkei Avot 2:1", source: "name" }), false);
+});

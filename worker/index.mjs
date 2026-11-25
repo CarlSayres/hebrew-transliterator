@@ -36,6 +36,8 @@ const AUDIO_RATE = "-60%";
 const AUDIO_RULES_VERSION = "ipa-v7";
 const AZURE_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
 const MAX_AUDIO_TEXT_LENGTH = 8000;
+// JSON escaping requires at most six bytes per UTF-16 code unit.
+const MAX_FEEDBACK_BODY_BYTES = 26_000 * 6;
 const MAX_AUDIO_BODY_LENGTH = 120000;
 
 function response(status, headers = {}) {
@@ -117,7 +119,7 @@ export async function handleFeedback(request, env) {
   }
 
   const contentLength = Number(request.headers.get("Content-Length") || 0);
-  if (contentLength > 26000) {
+  if (contentLength > MAX_FEEDBACK_BODY_BYTES) {
     console.warn(JSON.stringify({ category: "feedback_rejected", reason: "size" }));
     return feedbackResponse(413);
   }
@@ -128,7 +130,7 @@ export async function handleFeedback(request, env) {
   } catch {
     return feedbackResponse(400);
   }
-  if (rawPayload.length > 26000) {
+  if (new TextEncoder().encode(rawPayload).byteLength > MAX_FEEDBACK_BODY_BYTES) {
     return feedbackResponse(413);
   }
 
@@ -443,9 +445,10 @@ async function sha256Hex(value) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-async function audioCacheKey(text, tzere) {
+async function audioCacheKey(text, tzere, entries) {
   const identity = JSON.stringify({
     text,
+    pronunciation: entries.map(({ grapheme, phoneme }) => [grapheme.normalize("NFC"), phoneme]).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0),
     voice: AUDIO_VOICE,
     rate: AUDIO_RATE,
     tzere,
@@ -569,7 +572,47 @@ export async function handleAudio(request, env) {
     (isCurrentPayload && ((payload.sourceType === "sefaria" && !sourceRef) || (payload.sourceType === "arbitrary" && sourceRef)))
   ) return response(400);
 
-  const cacheKey = await audioCacheKey(text, payload.tzere);
+  const cacheKey = await audioCacheKey(text, payload.tzere, payload.lexicon);
+  const job = { cacheKey, text, payload, sourceRef };
+  const rateKey = request.headers.get("CF-Connecting-IP") || "unknown";
+  let result;
+  if (payload.sourceType === "sefaria") {
+    const cached = await env.AUDIO_BUCKET.get(cacheKey);
+    const existingRefs = cached?.customMetadata?.sefariaReferences;
+    if (cached && (!sourceRef || existingRefs?.split(" | ").includes(sourceRef))) {
+      return audioResponse(cached.body, "HIT");
+    }
+    if (!env.AUDIO_COORDINATOR) return response(503);
+    const coordinator = env.AUDIO_COORDINATOR.getByName(cacheKey);
+    result = await coordinator.fetch("https://audio.internal/", {
+      method: "POST",
+      body: JSON.stringify({ ...job, rateKey })
+    });
+  } else {
+    result = await generateAudio(job, env, rateKey);
+  }
+  if (result.ok && result.headers.get("X-Audio-Cache") === "MISS") {
+    writeUsagePoint("audio_generated", payload.sourceType, request, env);
+  }
+  return result;
+}
+
+// Each instance serves one content hash. Serialize both generation and reference updates.
+export class AudioQueue {
+  constructor(env) {
+    this.env = env;
+    this.tail = Promise.resolve();
+  }
+
+  async fetch(request) {
+    const job = await request.json();
+    const result = this.tail.then(() => generateAudio(job, this.env, job.rateKey));
+    this.tail = result.then(() => {}, () => {});
+    return result;
+  }
+}
+
+async function generateAudio({ cacheKey, text, payload, sourceRef }, env, rateKey) {
   if (payload.sourceType === "sefaria") {
     const cached = await env.AUDIO_BUCKET.get(cacheKey);
     if (cached) {
@@ -587,7 +630,6 @@ export async function handleAudio(request, env) {
   }
 
   if (!env.SPEECH_RATE_LIMITER) return response(503);
-  const rateKey = request.headers.get("CF-Connecting-IP") || "unknown";
   const rateResult = await env.SPEECH_RATE_LIMITER.limit({ key: rateKey });
   if (!rateResult.success) return response(429);
 
@@ -627,7 +669,6 @@ export async function handleAudio(request, env) {
     }
     const audio = await azureResponse.arrayBuffer();
     if (!audio.byteLength) return response(502);
-    writeUsagePoint("audio_generated", payload.sourceType, request, env);
     if (payload.sourceType === "sefaria") {
       try {
         await env.AUDIO_BUCKET.put(cacheKey, audio, {

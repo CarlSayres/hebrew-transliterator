@@ -1,12 +1,13 @@
 (function (root, factory) {
-  const api = factory();
+  const numbers = typeof module === "object" && module.exports ? require("./line-numbers") : root.HebrewTransliteratorLineNumbers;
+  const api = factory(numbers);
   if (typeof module === "object" && module.exports) {
     module.exports = api;
   }
   if (root) {
     root.HebrewTransliteratorSefariaClient = api;
   }
-})(typeof window !== "undefined" ? window : globalThis, function () {
+})(typeof window !== "undefined" ? window : globalThis, function (numbers) {
   const DEFAULT_TIMEOUT_MS = 9000;
   const DEFAULT_SLOW_REQUEST_MS = 5000;
   const DEFAULT_CACHE_TTL_MS = 10 * 60 * 1000;
@@ -26,6 +27,7 @@
 
   function cleanText(value) {
     return String(value || "")
+      .replace(/<\/?(?:br|p|div|li|hr)\b[^>]*>/gi, " ")
       .replace(/<[^>]*>/g, "")
       .replace(/&(nbsp|thinsp|ensp|emsp|hairsp);|&#160;|&#xA0;/gi, " ")
       .replace(/&amp;/gi, "&")
@@ -84,12 +86,34 @@
     return depth > 1 && indexes.length < depth - 1;
   }
 
+  function passageText(value, ref, categories) {
+    const numbered = categories?.includes("Tanakh") || /^Pirkei Avot\b/i.test(ref);
+    if (!numbered) return { text: flattenText(value) };
+    const lines = [];
+    const verseNumbers = [];
+    const chapters = Array.isArray(value) && value.some(Array.isArray) ? value : [value];
+    const firstVerse = numbers.startFromRef(ref);
+    chapters.forEach((chapter, chapterIndex) => {
+      const start = chapterIndex === 0 ? firstVerse : 1;
+      const verses = Array.isArray(chapter) ? chapter : [chapter];
+      verses.forEach((verse, index) => {
+        const text = flattenText(verse);
+        if (!text) return;
+        text.split("\n").forEach((line, lineIndex) => {
+          lines.push(line);
+          verseNumbers.push(lineIndex === 0 ? start + index : null);
+        });
+      });
+    });
+    return { text: lines.join("\n"), verseNumbers };
+  }
+
   function v3Payload(data, fallbackRef) {
     const versions = Array.isArray(data?.versions) ? data.versions : [];
     const version = versions.find((candidate) => candidate?.language === "he" || candidate?.actualLanguage === "he") || versions[0];
-    const text = flattenText(version?.text || data?.text || data?.he);
+    const value = version?.text || data?.text || data?.he;
     return {
-      text,
+      ...passageText(value, data?.ref || fallbackRef, data?.categories),
       ref: data?.ref || fallbackRef,
       heRef: data?.heRef || "",
       categories: Array.isArray(data?.categories) ? data.categories : [],
@@ -101,7 +125,7 @@
 
   function v1Payload(data, fallbackRef) {
     return {
-      text: flattenText(data?.he || data?.text),
+      ...passageText(data?.he || data?.text, data?.ref || fallbackRef, data?.categories),
       ref: data?.ref || fallbackRef,
       heRef: data?.heRef || "",
       categories: Array.isArray(data?.categories) ? data.categories : [],
@@ -180,8 +204,9 @@
       if (cached !== undefined) {
         return Promise.resolve(cached);
       }
-      if (options.useCache !== false && this.pendingRequests.has(key)) {
-        return this.pendingRequests.get(key);
+      const pending = this.pendingRequests.get(key);
+      if (options.useCache !== false && pending && pending.signal === parentSignal) {
+        return pending.request;
       }
 
       const request = this.performRequestJson(url, options)
@@ -192,13 +217,13 @@
           return data;
         })
         .finally(() => {
-          if (this.pendingRequests.get(key) === request) {
+          if (this.pendingRequests.get(key)?.request === request) {
             this.pendingRequests.delete(key);
           }
         });
 
       if (options.useCache !== false) {
-        this.pendingRequests.set(key, request);
+        this.pendingRequests.set(key, { signal: parentSignal, request });
       }
       return request;
     }
@@ -373,6 +398,7 @@
         sourceUrl: referenceInfo.sourceUrl,
         excerpt: excerptFromText(payload.text),
         quality,
+        valid: quality.status !== "missing" && quality.status !== "unvocalized",
         availability: quality.status === "missing" || quality.status === "unvocalized" ? "unavailable" : "import"
       };
     }

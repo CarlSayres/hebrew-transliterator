@@ -83,7 +83,7 @@
       !Number.isInteger(offsets.end) ||
       offsets.start === offsets.end
     ) {
-      return "";
+      return null;
     }
 
     const start = Math.min(offsets.start, offsets.end);
@@ -203,22 +203,6 @@
     const ruleset = JSON.parse(JSON.stringify(baseRuleset || {}));
     const selected = tzere === "e" ? "e" : "ei";
     ruleset.vowels = { ...(ruleset.vowels || {}), tzere: selected };
-    if (selected !== "e") {
-      return ruleset;
-    }
-
-    const remap = (table) => Object.fromEntries(
-      Object.entries(table || {}).map(([key, value]) => [
-        key,
-        String(value).replace(/Ei/g, "E").replace(/ei/g, "e")
-      ])
-    );
-    ruleset.exceptions = {
-      ...(ruleset.exceptions || {}),
-      exactWords: remap(ruleset.exceptions?.exactWords),
-      niqqudless: remap(ruleset.exceptions?.niqqudless),
-      phraseCapitalization: remap(ruleset.exceptions?.phraseCapitalization)
-    };
     return ruleset;
   }
 
@@ -230,6 +214,7 @@
 
   function canonicalHebrew(text) {
     return String(text || "")
+      .replace(/\u034f/gu, "")
       .normalize("NFC")
       .replace(/[ \t]*\{\s*[פס]\s*\}[ \t]*/gu, " ")
       .split("\n")
@@ -241,10 +226,15 @@
   }
 
   function azurePronunciationText(text) {
-    return canonicalHebrew(text).replace(/[׳'’]?[א-ת][א-ת\p{M}]*[׳'’]?/gu, (word) => {
+    return canonicalHebrew(text).replace(/[׳'’]?[א-ת][א-ת\p{M}]*(?:[״"׳'’](?=[א-ת])[א-ת][א-ת\p{M}]*)*[׳'’]?/gu, (word) => {
       const spelling = word.replace(/\p{M}/gu, "").replace(/['’]/gu, "׳");
       switch (spelling.replace(/^׳|׳$/gu, "")) {
+        case "הקב״ה":
+        case 'הקב"ה':
+          return "הַקָּדוֹשׁ בָּרוּךְ הוּא";
         case "יהוה":
+        case "י״י":
+        case 'י"י':
         case "יי":
         case "ה":
           return "אֲדֹנָי";
@@ -262,6 +252,7 @@
         case "ומיהוה":
           return "וּמֵאֲדֹנָי";
         default:
+          if (/[א-ת][״"׳][א-ת]/u.test(spelling)) return " ";
           return spelling === "לה׳" ? "לַדֹנָי" : word;
       }
     }).normalize("NFC");

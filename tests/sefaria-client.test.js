@@ -160,6 +160,7 @@ test("does not offer unvocalized Hebrew as directly importable", async () => {
   });
 
   const result = await client.validateResult({ ref: "Genesis 1:1" });
+  assert.equal(result.valid, false);
   assert.equal(result.availability, "unavailable");
   assert.equal(result.quality.status, "unvocalized");
   assert.equal(textQuality("English only").status, "missing");
@@ -326,4 +327,39 @@ test("removes Masora circles from Sefaria text while preserving accent segol", (
     "בְּכָל־לְבָבְ֒ךָ"
   );
   assert.equal(cleanText("כָל&#x5AF;"), "כָל");
+});
+
+test("cross-chapter labels retain chapter boundaries and skip missing verses", () => {
+  const api = require("../site/sefaria-client");
+  const numbers = require("../site/line-numbers");
+  const ref = "Genesis 1:31–2:3";
+  const chapters = [["last"], ["first", "", "third"]];
+  const common = { ref, categories: ["Tanakh"] };
+  for (const passage of [
+    api.v3Payload({ ...common, versions: [{ language: "he", text: chapters }] }, ref),
+    api.v1Payload({ ...common, he: chapters }, ref)
+  ]) {
+    assert.deepEqual(passage.verseNumbers, [31, 1, 3]);
+    const numbered = numbers.add(passage.text, passage.verseNumbers);
+    assert.equal(numbered, "31. last\n1. first\n3. third");
+    assert.equal(numbers.remove(numbered, passage.verseNumbers), passage.text);
+  }
+  assert.equal(api.cleanText("שְׁמַע<br/>יִשְׂרָאֵל"), "שְׁמַע יִשְׂרָאֵל");
+  assert.equal(api.cleanText("<b>שְׁ</b>מַע"), "שְׁמַע");
+});
+
+test("an immediate retry is independent of its cancelled predecessor", async () => {
+  let count = 0;
+  const client = new SefariaClient({ fetchImpl: async (_url, { signal }) => {
+    if (++count === 1) await new Promise((_resolve, reject) =>
+      signal.addEventListener("abort", () => reject(signal.reason), { once: true }));
+    return jsonResponse({ ok: true });
+  } });
+  const first = new AbortController();
+  const pending = client.requestJson("fixture", { signal: first.signal });
+  first.abort();
+  const retry = client.requestJson("fixture", { signal: new AbortController().signal });
+  await assert.rejects(pending, { code: "cancelled" });
+  assert.deepEqual(await retry, { ok: true });
+  assert.equal(count, 2);
 });

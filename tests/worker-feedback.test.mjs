@@ -123,3 +123,12 @@ test("rejects unapproved origins, extra fields, and oversized context", async ()
     400
   );
 });
+
+test("accepts full-length Hebrew feedback and its imported context in UTF-8", async () => {
+  const state = makeEnv();
+  const payload = { ...validPayload, message: "א".repeat(4000), context: { ...validPayload.context, text: "אָ".repeat(10000) } };
+  const request = feedbackRequest(payload);
+  request.headers.set("Content-Length", String(Buffer.byteLength(JSON.stringify(payload))));
+  assert.equal((await handleFeedback(request, state.env)).status, 204);
+  assert.equal(state.emails.length, 1);
+});

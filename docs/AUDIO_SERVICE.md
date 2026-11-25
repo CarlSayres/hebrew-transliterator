@@ -43,10 +43,12 @@ plain-text variable.
 ## Cache identity
 
 The R2 object name is SHA-256 over the normalized Hebrew plus the fixed voice,
-rate, output format, tzere choice, and pronunciation-rules version. Whitespace
+rate, output format, tzere choice, pronunciation-rules version, and the normalized word-to-IPA mapping. Whitespace
 is collapsed to a single space rather than deleted because word boundaries can
 change speech. When pronunciation rules change, increment the Worker rules
 version so old audio cannot be mistaken for the new rendering.
+
+The AudioCoordinator Durable Object serializes cache misses and reference updates for each content hash. Ordinary hits with an existing reference are served directly from R2. The binding and SQLite class migration are declared in wrangler.jsonc.
 
 Sefaria audio objects store the imported reference in the
 `sefariaReferences` custom-metadata field. If identical text is imported from
