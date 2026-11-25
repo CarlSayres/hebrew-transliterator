@@ -87,7 +87,7 @@ test("uses fixed Hila settings, stores Sefaria audio, and reuses the cache", asy
   assert.equal(first.status, 200);
   assert.equal(first.headers.get("X-Audio-Cache"), "MISS");
   assert.match(state.azureBodies[0], /voice name="he-IL-HilaNeural"/);
-  assert.match(state.azureBodies[0], /prosody rate="-60%"/);
+  assert.match(state.azureBodies[0], /prosody rate="-62%"/);
   const lexiconUrl = state.azureBodies[0].match(/<lexicon uri="([^"]+)"\/>/u)?.[1];
   assert.match(
     lexiconUrl,
@@ -131,12 +131,12 @@ test("adds another Sefaria reference to shared cached-audio metadata", async () 
   assert.equal(state.azureCalls, 1);
 });
 
-test("word spacing bypasses recordings generated with the previous pacing", async () => {
+test("continuous speech bypasses recordings generated with per-word breaks", async () => {
   const state = makeEnv();
   const text = "בָּרוּךְ".normalize("NFC");
   const previousIdentity = JSON.stringify({
     text, pronunciation: [[text, "ba.ˈʁux"]], voice: "he-IL-HilaNeural",
-    rate: "-60%", tzere: "ei", rules: "ipa-v7", format: "audio-24khz-48kbitrate-mono-mp3"
+    rate: "-60%", wordBreakMs: 50, tzere: "ei", rules: "ipa-v7", format: "audio-24khz-48kbitrate-mono-mp3"
   });
   const oldKey = `audio/${createHash("sha256").update(previousIdentity).digest("hex")}.mp3`;
   await state.bucket.put(oldKey, new Uint8Array([1]), {
@@ -227,7 +227,7 @@ test("joins a maqaf compound into one uninterrupted Azure pronunciation unit", a
   assert.doesNotMatch(state.azureBodies[0], /־/u);
 });
 
-test("gives ordinary word boundaries a short break and preserves punctuation and maqaf phrasing", async () => {
+test("reads words continuously and preserves punctuation and maqaf phrasing", async () => {
   const state = makeEnv();
   const words = ["שְׁמַע", "יִשְׂרָאֵל", "בְנֵי־יַעֲקֹב"];
   const lexicon = words.map((word, index) => ({
@@ -237,8 +237,8 @@ test("gives ordinary word boundaries a short break and preserves punctuation and
   const result = await handleAudio(audioRequest("arbitrary", words.join(" ") + ", שְׁמַע׃", "", lexicon), state.env);
   assert.equal(result.status, 200);
   const [first, second, compound] = lexicon.map((entry) => entry.grapheme);
-  const gap = ' <break time="50ms"/> ';
-  assert.ok(state.azureBodies[0].includes(`<s>${first}${gap}${second}${gap}${compound}, ${first}׃</s>`));
+  assert.ok(state.azureBodies[0].includes(`<s>${first} ${second} ${compound}, ${first}׃</s>`));
+  assert.doesNotMatch(state.azureBodies[0], /<break\b/u);
 });
 
 test("accepts canonically normalized maqaf compounds from a full Tanakh chapter", async () => {
