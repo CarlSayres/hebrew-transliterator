@@ -240,6 +240,33 @@
       .trim();
   }
 
+  function azurePronunciationText(text) {
+    return canonicalHebrew(text).replace(/[׳'’]?[א-ת][א-ת\p{M}]*[׳'’]?/gu, (word) => {
+      const spelling = word.replace(/\p{M}/gu, "").replace(/['’]/gu, "׳");
+      switch (spelling.replace(/^׳|׳$/gu, "")) {
+        case "יהוה":
+        case "יי":
+        case "ה":
+          return "אֲדֹנָי";
+        case "ליהוה":
+        case "ליי":
+          return "לַדֹנָי";
+        case "ביהוה":
+          return "בַּדֹנָי";
+        case "כיהוה":
+          return "כַּדֹנָי";
+        case "שיהוה":
+          return "שֶׁאֲדֹנָי";
+        case "מיהוה":
+          return "מֵאֲדֹנָי";
+        case "ומיהוה":
+          return "וּמֵאֲדֹנָי";
+        default:
+          return spelling === "לה׳" ? "לַדֹנָי" : word;
+      }
+    }).normalize("NFC");
+  }
+
   function speakableHebrewOnly(text, lexicon = []) {
     const recognizedWords = new Set(
       Array.from(lexicon || [], (entry) => String(entry?.grapheme || "").normalize("NFC")).filter(Boolean)
@@ -443,6 +470,13 @@
     return current && imported && current === imported ? "sefaria" : "arbitrary";
   }
 
+  function prepareAzureHebrew(text, transliterator) {
+    // Azure receives the reading itself, including when it does not match a lexicon entry.
+    const spoken = azurePronunciationText(text);
+    const lexicon = lexiconEntries(spoken, transliterator);
+    return { text: speakableHebrewOnly(spoken, lexicon), lexicon };
+  }
+
   return {
     prepareText,
     chunks,
@@ -458,6 +492,7 @@
     ipaFromTransliteration,
     speechRuleset,
     lexiconEntries,
+    prepareAzureHebrew,
     audioSourceType
   };
 });

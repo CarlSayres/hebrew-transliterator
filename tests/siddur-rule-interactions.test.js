@@ -305,3 +305,22 @@ test("audio lexicon uses corrected classifications and retains the tzere choice"
     }
   }
 });
+
+test("Azure receives the actual Adonai reading for the divine-name spellings", () => {
+  const audioEngine = new Transliterator(speech.speechRuleset(
+    window.HebrewRulesets.speechEnglish, "e"
+  ));
+  const adonai = "אֲדֹנָי".normalize("NFC");
+  for (const input of ["יְהֹוָ֔ה", "יהוה", "יְיָ", "יי", "ה", "ה׳", "ה'", "׳ה"]) {
+    assert.deepEqual(speech.prepareAzureHebrew(input, audioEngine), {
+      text: adonai,
+      lexicon: [{ grapheme: adonai, phoneme: "a.do.ˈnaj" }]
+    }, input);
+  }
+
+  const passage = "ה׳־מֶלֶךְ, לַייָ לה׳ יְהוּדָה עֲלִיָּה!";
+  const prepared = speech.prepareAzureHebrew(passage, audioEngine);
+  assert.equal(prepared.text, "אֲדֹנָימֶלֶךְ, לַדֹנָי לַדֹנָי יְהוּדָה עֲלִיָּה!".normalize("NFC"));
+  assert.equal(prepared.lexicon[0].phoneme, "a.do.naj.me.ˈlex");
+  assert.equal(prepared.lexicon[1].phoneme, "la.do.ˈnaj");
+});

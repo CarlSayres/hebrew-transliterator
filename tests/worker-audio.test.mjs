@@ -119,16 +119,16 @@ test("adds another Sefaria reference to shared cached-audio metadata", async () 
   assert.equal(state.azureCalls, 1);
 });
 
-test("pronunciation rules v5 bypass old audio without deleting it", async () => {
+test("pronunciation rules v6 bypass old audio without deleting it", async () => {
   const state = makeEnv();
   const identity = JSON.stringify({
     text: "בָּרוּךְ".normalize("NFC"), voice: "he-IL-HilaNeural",
-    rate: "-60%", tzere: "ei", rules: "ipa-v4",
+    rate: "-60%", tzere: "ei", rules: "ipa-v5",
     format: "audio-24khz-48kbitrate-mono-mp3"
   });
   const oldKey = `audio/${createHash("sha256").update(identity).digest("hex")}.mp3`;
   await state.bucket.put(oldKey, new Uint8Array([1]), {
-    customMetadata: { rules: "ipa-v4" }
+    customMetadata: { rules: "ipa-v5" }
   });
   const first = await handleAudio(audioRequest(), state.env);
   assert.equal(first.status, 200);
@@ -139,7 +139,7 @@ test("pronunciation rules v5 bypass old audio without deleting it", async () => 
     ([key]) => key.startsWith("audio/") && key !== oldKey
   );
   assert.equal(newAudio.length, 1);
-  assert.equal(newAudio[0][1].customMetadata.rules, "ipa-v5");
+  assert.equal(newAudio[0][1].customMetadata.rules, "ipa-v6");
   const second = await handleAudio(audioRequest(), state.env);
   assert.equal(second.headers.get("X-Audio-Cache"), "HIT");
   assert.equal(state.azureCalls, 1);

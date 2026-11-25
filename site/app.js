@@ -453,8 +453,7 @@
       tzere
     );
     const speechTransliterator = new window.HebrewTransliterator.Transliterator(speechRuleset);
-    const lexicon = speechTools.lexiconEntries(hebrew, speechTransliterator);
-    const text = speechTools.speakableHebrewOnly(hebrew, lexicon);
+    const { text, lexicon } = speechTools.prepareAzureHebrew(hebrew, speechTransliterator);
     const sourceType = speechTools.audioSourceType(
       input.value,
       lastImportedSefariaContext?.text || ""
