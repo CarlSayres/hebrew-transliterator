@@ -17,10 +17,11 @@ const ALLOWED_EVENTS = new Set([
   "style_selected"
 ]);
 
+const AUDIO_LEXICON_ORIGIN = "https://hebrew-transliterator.carl-6b2.workers.dev";
 const ALLOWED_ORIGINS = new Set([
   "https://hebrewtransliterator.com",
   "https://www.hebrewtransliterator.com",
-  "https://hebrew-transliterator.carl-6b2.workers.dev",
+  AUDIO_LEXICON_ORIGIN,
   "http://127.0.0.1:4173",
   "http://localhost:4173",
   "http://localhost:8787"
@@ -32,7 +33,7 @@ const RESEND_EMAIL_ENDPOINT = "https://api.resend.com/emails";
 const AUDIO_SOURCE_TYPES = new Set(["sefaria", "arbitrary"]);
 const AUDIO_VOICE = "he-IL-HilaNeural";
 const AUDIO_RATE = "-60%";
-const AUDIO_RULES_VERSION = "ipa-v6";
+const AUDIO_RULES_VERSION = "ipa-v7";
 const AZURE_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
 const MAX_AUDIO_TEXT_LENGTH = 8000;
 const MAX_AUDIO_BODY_LENGTH = 120000;
@@ -592,7 +593,8 @@ export async function handleAudio(request, env) {
 
   const lexiconId = crypto.randomUUID();
   const lexiconKey = `lexicons/${lexiconId}.xml`;
-  const lexiconUrl = `${new URL(request.url).origin}/api/audio/lexicon/${lexiconId}.xml`;
+  // Azure needs a server-to-server URL that does not require a browser challenge.
+  const lexiconUrl = `${AUDIO_LEXICON_ORIGIN}/api/audio/lexicon/${lexiconId}.xml`;
   const lexicon = buildLexicon(payload.lexicon);
   const ssml = buildSsml(text, lexiconUrl);
   await env.AUDIO_BUCKET.put(lexiconKey, lexicon, {

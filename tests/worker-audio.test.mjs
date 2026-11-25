@@ -80,7 +80,11 @@ test("uses fixed Hila settings, stores Sefaria audio, and reuses the cache", asy
   assert.equal(first.headers.get("X-Audio-Cache"), "MISS");
   assert.match(state.azureBodies[0], /voice name="he-IL-HilaNeural"/);
   assert.match(state.azureBodies[0], /prosody rate="-60%"/);
-  assert.match(state.azureBodies[0], /<lexicon uri="https:\/\/hebrewtransliterator\.com\/api\/audio\/lexicon\//);
+  const lexiconUrl = state.azureBodies[0].match(/<lexicon uri="([^"]+)"\/>/u)?.[1];
+  assert.match(
+    lexiconUrl,
+    /^https:\/\/hebrew-transliterator\.carl-6b2\.workers\.dev\/api\/audio\/lexicon\/[a-f0-9-]{36}\.xml$/u
+  );
   assert.equal(state.points[0].indexes[0], "audio_generated");
   assert.equal(state.points[0].blobs[17], "sefaria");
   assert.equal([...state.bucket.objects.keys()].some((key) => key.startsWith("lexicons/")), false);
@@ -119,16 +123,16 @@ test("adds another Sefaria reference to shared cached-audio metadata", async () 
   assert.equal(state.azureCalls, 1);
 });
 
-test("pronunciation rules v6 bypass old audio without deleting it", async () => {
+test("pronunciation rules v7 bypass old audio without deleting it", async () => {
   const state = makeEnv();
   const identity = JSON.stringify({
     text: "בָּרוּךְ".normalize("NFC"), voice: "he-IL-HilaNeural",
-    rate: "-60%", tzere: "ei", rules: "ipa-v5",
+    rate: "-60%", tzere: "ei", rules: "ipa-v6",
     format: "audio-24khz-48kbitrate-mono-mp3"
   });
   const oldKey = `audio/${createHash("sha256").update(identity).digest("hex")}.mp3`;
   await state.bucket.put(oldKey, new Uint8Array([1]), {
-    customMetadata: { rules: "ipa-v5" }
+    customMetadata: { rules: "ipa-v6" }
   });
   const first = await handleAudio(audioRequest(), state.env);
   assert.equal(first.status, 200);
@@ -139,7 +143,7 @@ test("pronunciation rules v6 bypass old audio without deleting it", async () => 
     ([key]) => key.startsWith("audio/") && key !== oldKey
   );
   assert.equal(newAudio.length, 1);
-  assert.equal(newAudio[0][1].customMetadata.rules, "ipa-v6");
+  assert.equal(newAudio[0][1].customMetadata.rules, "ipa-v7");
   const second = await handleAudio(audioRequest(), state.env);
   assert.equal(second.headers.get("X-Audio-Cache"), "HIT");
   assert.equal(state.azureCalls, 1);

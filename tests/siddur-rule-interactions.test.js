@@ -290,6 +290,7 @@ test("audio lexicon uses corrected classifications and retains the tzere choice"
       window.HebrewRulesets.speechEnglish, tzere
     ));
     for (const [input, expected] of [
+      ["חָכְמָה", "xox.ˈma"],
       ["שֶׁאָמְרוּ", "ʃe.ʔa.me.ˈʁu"],
       ["לְבַבְכֶם", "le.vav.ˈxem"],
       ["וְהַמְרַחֵם", tzere === "ei" ? "ve.ha.me.ʁa.ˈxejm" : "ve.ha.me.ʁa.ˈxem"],

@@ -20,7 +20,10 @@ stress is retained only on the final component of the compound.
 
 The Worker holds the Azure credential, creates a short-lived pronunciation
 lexicon for Azure to retrieve, calls Azure Speech, and deletes that serving copy
-after synthesis. For debugging, it also stores the exact lexicon and SSML in R2
+after synthesis. Azure fetches the lexicon from the existing `workers.dev`
+hostname because the public site's Cloudflare browser challenge can block
+automated requests. Keep that hostname enabled for the lexicon route. For
+debugging, the Worker also stores the exact lexicon and SSML in R2
 under the `debug/` prefix. Audio made from unchanged Sefaria imports is stored
 in R2; audio made from pasted or edited Hebrew is not stored.
 
