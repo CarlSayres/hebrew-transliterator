@@ -131,16 +131,16 @@ test("adds another Sefaria reference to shared cached-audio metadata", async () 
   assert.equal(state.azureCalls, 1);
 });
 
-test("pronunciation rules v7 bypass old audio without deleting it", async () => {
+test("word spacing bypasses recordings generated with the previous pacing", async () => {
   const state = makeEnv();
-  const identity = JSON.stringify({
-    text: "בָּרוּךְ".normalize("NFC"), voice: "he-IL-HilaNeural",
-    rate: "-60%", tzere: "ei", rules: "ipa-v6",
-    format: "audio-24khz-48kbitrate-mono-mp3"
+  const text = "בָּרוּךְ".normalize("NFC");
+  const previousIdentity = JSON.stringify({
+    text, pronunciation: [[text, "ba.ˈʁux"]], voice: "he-IL-HilaNeural",
+    rate: "-60%", tzere: "ei", rules: "ipa-v7", format: "audio-24khz-48kbitrate-mono-mp3"
   });
-  const oldKey = `audio/${createHash("sha256").update(identity).digest("hex")}.mp3`;
+  const oldKey = `audio/${createHash("sha256").update(previousIdentity).digest("hex")}.mp3`;
   await state.bucket.put(oldKey, new Uint8Array([1]), {
-    customMetadata: { rules: "ipa-v6" }
+    customMetadata: { rules: "ipa-v7" }
   });
   const first = await handleAudio(audioRequest(), state.env);
   assert.equal(first.status, 200);
@@ -225,6 +225,20 @@ test("joins a maqaf compound into one uninterrupted Azure pronunciation unit", a
   assert.equal(result.status, 200);
   assert.ok(state.azureBodies[0].includes("<s>זַרְעוֹב֖וֹ</s>".normalize("NFC")));
   assert.doesNotMatch(state.azureBodies[0], /־/u);
+});
+
+test("gives ordinary word boundaries a short break and preserves punctuation and maqaf phrasing", async () => {
+  const state = makeEnv();
+  const words = ["שְׁמַע", "יִשְׂרָאֵל", "בְנֵי־יַעֲקֹב"];
+  const lexicon = words.map((word, index) => ({
+    grapheme: word.replace("־", "").normalize("NFC"),
+    phoneme: ["ʃe.ˈma", "jis.ʁa.ˈʔel", "ve.nej.ja.ˈʔa.kov"][index]
+  }));
+  const result = await handleAudio(audioRequest("arbitrary", words.join(" ") + ", שְׁמַע׃", "", lexicon), state.env);
+  assert.equal(result.status, 200);
+  const [first, second, compound] = lexicon.map((entry) => entry.grapheme);
+  const gap = ' <break time="50ms"/> ';
+  assert.ok(state.azureBodies[0].includes(`<s>${first}${gap}${second}${gap}${compound}, ${first}׃</s>`));
 });
 
 test("accepts canonically normalized maqaf compounds from a full Tanakh chapter", async () => {

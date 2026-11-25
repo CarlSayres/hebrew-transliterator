@@ -33,6 +33,7 @@ const RESEND_EMAIL_ENDPOINT = "https://api.resend.com/emails";
 const AUDIO_SOURCE_TYPES = new Set(["sefaria", "arbitrary"]);
 const AUDIO_VOICE = "he-IL-HilaNeural";
 const AUDIO_RATE = "-60%";
+const WORD_BREAK_MS = 50;
 const AUDIO_RULES_VERSION = "ipa-v7";
 const AZURE_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
 const MAX_AUDIO_TEXT_LENGTH = 8000;
@@ -434,7 +435,10 @@ function speechSentences(text, maximumLength = 500) {
 
 function buildSsml(text, lexiconUrl) {
   const sentences = speechSentences(text)
-    .map((sentence) => `      <s>${xmlEscape(sentence)}</s>`)
+    .map((sentence) => {
+      const spoken = xmlEscape(sentence).replace(/(?<=[א-ת\p{M}]) (?=[א-ת])/gu, ` <break time="${WORD_BREAK_MS}ms"/> `);
+      return `      <s>${spoken}</s>`;
+    })
     .join("\n");
   return `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="he-IL">\n  <voice name="${AUDIO_VOICE}">\n    <lexicon uri="${xmlEscape(lexiconUrl)}"/>\n    <mstts:silence type="Sentenceboundary-exact" value="140ms"/>\n    <prosody rate="${AUDIO_RATE}">\n${sentences}\n    </prosody>\n  </voice>\n</speak>`;
 }
@@ -451,6 +455,7 @@ async function audioCacheKey(text, tzere, entries) {
     pronunciation: entries.map(({ grapheme, phoneme }) => [grapheme.normalize("NFC"), phoneme]).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0),
     voice: AUDIO_VOICE,
     rate: AUDIO_RATE,
+    wordBreakMs: WORD_BREAK_MS,
     tzere,
     rules: AUDIO_RULES_VERSION,
     format: AZURE_OUTPUT_FORMAT

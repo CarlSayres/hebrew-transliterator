@@ -14,7 +14,8 @@ predefined IPA. Dagesh, shin/sin dots, trope, and meteg alone do not otherwise
 make a word vocalized. Relevant punctuation is retained for pacing, while the
 displayed source and transliteration remain unchanged.
 
-Words joined by a Hebrew maqaf are submitted as one grapheme with one combined
+The voice takes a 50 ms break between adjacent spoken words. Punctuation retains
+its own timing. Words joined by a Hebrew maqaf are submitted as one grapheme with one combined
 IPA lexicon entry. No space or SSML break is inserted at the maqaf, and primary
 stress is retained only on the final component of the compound.
 
