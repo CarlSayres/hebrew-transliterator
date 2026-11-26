@@ -1,19 +1,22 @@
 (function (root, factory) {
   const numbers = typeof module === "object" && module.exports ? require("./line-numbers") : root.HebrewTransliteratorLineNumbers;
-  const api = factory(numbers);
+  const catalog = typeof module === "object" && module.exports ? require("./sefaria-catalog") : root.HebrewTransliteratorSefariaCatalog;
+  const api = factory(numbers, catalog);
   if (typeof module === "object" && module.exports) {
     module.exports = api;
   }
   if (root) {
     root.HebrewTransliteratorSefariaClient = api;
   }
-})(typeof window !== "undefined" ? window : globalThis, function (numbers) {
+})(typeof window !== "undefined" ? window : globalThis, function (numbers, catalog) {
   const DEFAULT_TIMEOUT_MS = 9000;
   const DEFAULT_SLOW_REQUEST_MS = 5000;
   const DEFAULT_CACHE_TTL_MS = 10 * 60 * 1000;
   const DEFAULT_CACHE_MAX_ENTRIES = 200;
   const HEBREW_LETTER_RE = /[\u05d0-\u05ea]/g;
-  const HEBREW_VOWEL_RE = /[\u05b0-\u05bb\u05c7]/g;
+  // In NFD an ordinary vowel on vav precedes the dagesh. A bare vav
+  // immediately followed by dagesh represents the vowel shuruk.
+  const HEBREW_VOWEL_RE = /[\u05b0-\u05bb\u05c7]|ו\u05bc/g;
 
   class SefariaRequestError extends Error {
     constructor(message, code, options = {}) {
@@ -49,6 +52,7 @@
   }
 
   function textQuality(text) {
+    text = text.normalize("NFD");
     const letters = text.match(HEBREW_LETTER_RE)?.length || 0;
     const vowels = text.match(HEBREW_VOWEL_RE)?.length || 0;
     if (!letters) {
@@ -110,8 +114,9 @@
 
   function v3Payload(data, fallbackRef) {
     const versions = Array.isArray(data?.versions) ? data.versions : [];
-    const version = versions.find((candidate) => candidate?.language === "he" || candidate?.actualLanguage === "he") || versions[0];
-    const value = version?.text || data?.text || data?.he;
+    const version = versions.find((candidate) => (candidate?.actualLanguage || candidate?.language) === "he" &&
+      textQuality(flattenText(candidate.text)).letters);
+    const value = version?.text || data?.he || (!versions.length && data?.text);
     return {
       ...passageText(value, data?.ref || fallbackRef, data?.categories),
       ref: data?.ref || fallbackRef,
@@ -125,7 +130,7 @@
 
   function v1Payload(data, fallbackRef) {
     return {
-      ...passageText(data?.he || data?.text, data?.ref || fallbackRef, data?.categories),
+      ...passageText(data?.he, data?.ref || fallbackRef, data?.categories),
       ref: data?.ref || fallbackRef,
       heRef: data?.heRef || "",
       categories: Array.isArray(data?.categories) ? data.categories : [],
@@ -256,12 +261,16 @@
           useCache: _useCache,
           slowRequestMs: _slowRequestMs,
           timeoutMs: _timeoutMs,
+          referenceLookup,
           ...fetchOptions
         } = options;
         const response = await this.fetchImpl(url, {
           ...fetchOptions,
           signal: controller.signal
         });
+        if (referenceLookup && (response.status === 400 || response.status === 404)) {
+          return { is_ref: false };
+        }
         if (!response.ok) {
           throw new SefariaRequestError(`Sefaria returned ${response.status}.`, "http", {
             status: response.status
@@ -296,7 +305,7 @@
     async inspectReference(reference, options = {}) {
       const trimmed = String(reference || "").trim();
       const url = `https://www.sefaria.org/api/ref/${encodeURIComponent(trimmed)}`;
-      const data = await this.requestJson(url, options);
+      const data = await this.requestJson(url, { ...options, referenceLookup: true });
       if (!data?.is_ref) {
         return { valid: false, ref: trimmed, reason: "invalid_ref" };
       }
@@ -324,7 +333,7 @@
       try {
         const data = await this.requestJson(v3Url, options);
         const payload = v3Payload(data, trimmed);
-        if (payload.text) {
+        if (textQuality(payload.text).letters) {
           return payload;
         }
       } catch (error) {
@@ -338,7 +347,7 @@
       try {
         const data = await this.requestJson(v1Url, options);
         const payload = v1Payload(data, trimmed);
-        if (payload.text) {
+        if (textQuality(payload.text).letters) {
           return payload;
         }
       } catch (error) {
@@ -360,30 +369,23 @@
       }
 
       if (referenceInfo.kind === "folder") {
-        let quality;
-        const sampleRef = base.sampleRef || referenceInfo.firstAvailableSectionRef;
-        if (sampleRef) {
-          const sample = await this.loadText(sampleRef, options);
-          quality = textQuality(sample.text);
-          if (quality.status === "missing" || quality.status === "unvocalized") {
-            return {
-              ...base,
-              ...referenceInfo,
-              categories: base.categories || [],
-              quality,
-              valid: false,
-              availability: "unavailable"
-            };
+        let chapters = catalog.chapterCount(referenceInfo.ref);
+        let categories = base.categories || [];
+        // A numbered work can have "Siddur" in its title and be a halakhic
+        // book. Use its index to identify the work and its actual divisions.
+        if (!chapters && referenceInfo.nodeType === "JaggedArrayNode" &&
+            referenceInfo.ref === referenceInfo.indexTitle) {
+          const index = await this.requestJson(`https://www.sefaria.org/api/index/${encodeURIComponent(referenceInfo.ref)}`, options);
+          categories = index.categories || categories;
+          if (categories.length && !categories.some(category => ["Tanakh", "Liturgy"].includes(category)) &&
+              referenceInfo.ref !== "Pirkei Avot") {
+            return { ...base, ...referenceInfo, categories, valid: false, availability: "unavailable" };
           }
+          const count = index.schema?.lengths?.[0];
+          if (referenceInfo.depth === 2 && index.schema?.addressTypes?.[0] === "Integer" &&
+              Number.isSafeInteger(count) && count > 0) chapters = count;
         }
-
-        return {
-          ...base,
-          ...referenceInfo,
-          categories: base.categories || [],
-          quality,
-          availability: "browse"
-        };
+        return { ...base, ...referenceInfo, categories, chapters, availability: "browse" };
       }
 
       const payload = await this.loadText(referenceInfo.ref, options);

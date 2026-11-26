@@ -14,6 +14,34 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+test("counts shuruk as a vowel and distinguishes a consonantal vav with dagesh", () => {
+  for (const word of ["קוּם", "שׁוּב", "הוּא", "מוּל"]) {
+    assert.equal(textQuality(word).status, "vocalized");
+  }
+  assert.equal(textQuality("קוּמוּ").vowels, 2);
+  assert.equal(textQuality("וַּ").vowels, 1);
+});
+
+test("a translations-only response falls back to Hebrew or reports no text", async () => {
+  for (const legacyHebrew of ["בָּרוּךְ", ""]) {
+    const client = new SefariaClient({ fetchImpl: async url => jsonResponse(url.includes("/v3/")
+      ? { versions: [{ language: "en", text: "A Hebrew word שלום in an English edition" }] }
+      : { text: "An English translation mentioning שלום", he: legacyHebrew }) });
+    if (legacyHebrew) assert.equal((await client.loadText("Genesis 1")).text, legacyHebrew);
+    else await assert.rejects(client.loadText("Genesis 1"), { code: "no_text" });
+  }
+});
+
+test("canonical Tanakh book search results carry their chapter navigation", async () => {
+  const client = new SefariaClient({ fetchImpl: async () => jsonResponse(refPayload({
+    normalized: "Genesis", start_indexes: []
+  })) });
+  const result = await client.validateResult({ ref: "Bereshit", source: "name" });
+  assert.equal(result.availability, "browse");
+  assert.equal(result.chapters, 50);
+  assert.equal(result.ref, "Genesis");
+});
+
 function refPayload(overrides = {}) {
   return {
     is_ref: true,
@@ -101,7 +129,7 @@ test("validates an importable result and preserves Sefaria metadata", async () =
   assert.equal(requests.length, 2);
 });
 
-test("classifies a collection after verifying its first available section", async () => {
+test("a named prayer menu remains browsable even when its introduction lacks vowels", async () => {
   const requests = [];
   const client = new SefariaClient({
     fetchImpl: async (url) => {
@@ -118,38 +146,36 @@ test("classifies a collection after verifying its first available section", asyn
           depth: null,
           start_indexes: []
         }))
-        : jsonResponse(textPayload());
+        : jsonResponse(textPayload({ versions: [{ language: "he", text: "הקדמה" }] }));
     }
   });
 
   const result = await client.validateResult({ ref: "Siddur Ashkenaz", source: "name" });
   assert.equal(result.availability, "browse");
   assert.equal(result.kind, "folder");
-  assert.equal(result.quality.status, "vocalized");
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, 1);
 });
 
-test("rejects a collection whose available Hebrew is unvocalized", async () => {
+test("distinguishes Siddur Rashi by its index category, independent of its first section", async () => {
   const client = new SefariaClient({
     fetchImpl: async (url) => url.includes("/api/ref/")
       ? jsonResponse(refPayload({
         normalized: "Siddur Rashi",
+        index_title: "Siddur Rashi",
         hebrew: "סידור רש\"י",
         url_ref: "Siddur_Rashi",
         navigation_refs: { first_available_section_ref: "Siddur Rashi 1" },
         depth: 2,
         start_indexes: []
       }))
-      : jsonResponse(textPayload({
-        ref: "Siddur Rashi 1",
-        versions: [{ language: "he", text: "תניא היה רבי מאיר אומר" }]
-      }))
+      : jsonResponse({ categories: ["Halakhah", "Rishonim"],
+        schema: { lengths: [634, 914], addressTypes: ["Integer", "Integer"] } })
   });
 
   const result = await client.validateResult({ ref: "Siddur Rashi", source: "name" });
   assert.equal(result.valid, false);
   assert.equal(result.availability, "unavailable");
-  assert.equal(result.quality.status, "unvocalized");
+  assert.deepEqual(result.categories, ["Halakhah", "Rishonim"]);
 });
 
 test("does not offer unvocalized Hebrew as directly importable", async () => {
@@ -333,7 +359,7 @@ test("cross-chapter labels retain chapter boundaries and skip missing verses", (
   const api = require("../site/sefaria-client");
   const numbers = require("../site/line-numbers");
   const ref = "Genesis 1:31–2:3";
-  const chapters = [["last"], ["first", "", "third"]];
+  const chapters = [["אַחֲרוֹן"], ["רִאשׁוֹן", "", "שְׁלִישִׁי"]];
   const common = { ref, categories: ["Tanakh"] };
   for (const passage of [
     api.v3Payload({ ...common, versions: [{ language: "he", text: chapters }] }, ref),
@@ -341,7 +367,7 @@ test("cross-chapter labels retain chapter boundaries and skip missing verses", (
   ]) {
     assert.deepEqual(passage.verseNumbers, [31, 1, 3]);
     const numbered = numbers.add(passage.text, passage.verseNumbers);
-    assert.equal(numbered, "31. last\n1. first\n3. third");
+    assert.equal(numbered, "31. אַחֲרוֹן\n1. רִאשׁוֹן\n3. שְׁלִישִׁי");
     assert.equal(numbers.remove(numbered, passage.verseNumbers), passage.text);
   }
   assert.equal(api.cleanText("שְׁמַע<br/>יִשְׂרָאֵל"), "שְׁמַע יִשְׂרָאֵל");

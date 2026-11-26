@@ -150,6 +150,7 @@ function loadTransliterator() {
     "site/rulesets/morphhb-silent-initial-mem-sheva.js",
     "site/rulesets/wikidata-silent-initial-mem-sheva.js",
     "site/rulesets/other-prefix-silent-initial-sheva.js",
+    "site/rulesets/lexical-initial-consonants.js",
     "site/rulesets/lexical-initial-she.js",
     "site/rulesets/mam-forced-kamatz-gadol.js",
     "site/rulesets/lev-shalem-forced-kamatz.js",

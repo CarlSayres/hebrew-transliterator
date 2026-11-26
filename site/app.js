@@ -224,10 +224,13 @@
   let sefariaProblemDuringRequest = false;
   let lastSefariaSearch = "";
   let lastImportedSefariaContext = null;
-  let lineNumberStart = 1;
+  let feedbackSession = null;
+  let verseNumbers = null;
+  let previousVerseText = "";
   let currentAlignment = { text: "", segments: [] };
   let outputAlignmentSpans = [];
   let audioElement = null;
+  let playingAudio = null;
   let audioObjectUrl = "";
   let audioCacheIdentity = "";
   let audioRequest = null;
@@ -286,6 +289,7 @@
   }
 
   function updateOutput() {
+    previousVerseText = verseNumbers ? input.value : "";
     stopAudio();
     clearPreparedAudio();
     speechSelectionSnapshot = null;
@@ -392,7 +396,7 @@
         ? speechTools.selectedOrAll(input.value, {
             start: input.selectionStart,
             end: input.selectionEnd
-          })
+          }, currentAlignment.segments)
         : null;
       const indexes = selectionAlignmentTools.matchingIndexes(
         currentAlignment.segments,
@@ -437,7 +441,7 @@
       return speechTools.selectedOrAll(input.value, {
         start: input.selectionStart,
         end: input.selectionEnd
-      });
+      }, currentAlignment.segments);
     }
     const offsets = outputSelectionOffsets(window.getSelection());
     return speechTools.sourceForTargetSelection(
@@ -475,7 +479,7 @@
   }
 
   function setAudioBusy(isBusy) {
-    speechButton.disabled = isBusy;
+    speechButton.disabled = isBusy && !playingAudio;
     speechDownloadButton.disabled = isBusy;
     audioStatus.classList.toggle("is-busy", isBusy);
     if (isBusy) setAudioStatus("Preparing audio…");
@@ -487,10 +491,13 @@
   }
 
   function stopAudio() {
-    if (audioElement) {
-      audioElement.pause();
-      audioElement.currentTime = 0;
+    if (playingAudio) {
+      playingAudio.pause();
+      playingAudio.currentTime = 0;
+      if (playingAudio !== audioElement) URL.revokeObjectURL(playingAudio.src);
+      playingAudio = null;
     }
+    speechButton.disabled = Boolean(audioRequestController);
     setAudioPlaying(false);
   }
 
@@ -499,8 +506,8 @@
     audioRequestController = null;
     audioRequest = null;
     audioCacheIdentity = "";
+    if (audioObjectUrl && playingAudio !== audioElement) URL.revokeObjectURL(audioObjectUrl);
     audioElement = null;
-    if (audioObjectUrl) URL.revokeObjectURL(audioObjectUrl);
     audioObjectUrl = "";
     setAudioBusy(false);
     setAudioStatus("");
@@ -548,6 +555,7 @@
         throw error;
       }
       const blob = await response.blob();
+      controller.signal.throwIfAborted();
       if (response.headers.get("X-Audio-Cache") === "MISS") {
         recordVirtualPage(
           analyticsPageTools.audioPage("Generated", prepared.sourceRef),
@@ -556,9 +564,12 @@
       }
       audioObjectUrl = URL.createObjectURL(blob);
       audioElement = new Audio(audioObjectUrl);
-      audioElement.addEventListener("ended", () => setAudioPlaying(false));
-      audioElement.addEventListener("error", () => {
-        setAudioPlaying(false);
+      audioElement.addEventListener("ended", (event) => {
+        if (event.currentTarget === playingAudio) stopAudio();
+      });
+      audioElement.addEventListener("error", (event) => {
+        if (event.currentTarget !== playingAudio) return;
+        stopAudio();
         setAudioStatus("The audio file could not be played.", true);
       });
       setAudioStatus(response.headers.get("X-Audio-Cache") === "HIT" ? "Audio ready from cache." : "Audio ready.");
@@ -624,11 +635,11 @@
   }
 
   function addLineNumbers(text) {
-    return lineNumberTools.add(text, lineNumberStart);
+    return lineNumberTools.add(text, verseNumbers);
   }
 
   function removeLineNumbers(text) {
-    return lineNumberTools.remove(text, lineNumberStart);
+    return lineNumberTools.remove(text, verseNumbers);
   }
 
   function supportsLineNumbers(result) {
@@ -639,7 +650,8 @@
 
   function setLineNumberAvailability(result) {
     const supported = supportsLineNumbers(result);
-    lineNumberStart = supported ? (result.verseNumbers || lineNumberTools.startFromRef(result.ref)) : 1;
+    verseNumbers = supported ? result.verseNumbers || result.text.split("\n")
+      .map((_, index) => lineNumberTools.startFromRef(result.ref) + index) : null;
     lineNumbersToggle.checked = supported;
     lineNumbersControl.hidden = !supported;
   }
@@ -788,6 +800,12 @@
     }
   }
 
+  function cancelSefariaRequest() {
+    if (!activeSefariaController) return;
+    activeSefariaController.abort();
+    finishSefariaRequest(activeSefariaController);
+  }
+
   function normalizeSearchTerm(value) {
     return value
       .toLowerCase()
@@ -867,33 +885,26 @@
         names.push(title.text);
       }
     }
-    return names;
-  }
-
-  function nodeMatches(node, refPart) {
-    const normalizedPart = normalizeRefPart(refPart);
-    return nodeNames(node).some((name) => normalizeRefPart(name) === normalizedPart);
+    return [...new Set(names)];
   }
 
   function childNodes(node) {
     return Array.isArray(node?.nodes) ? node.nodes : [];
   }
 
-  function findSchemaNode(node, pathParts, index = 0) {
-    if (!node || index >= pathParts.length) {
-      return node;
-    }
-
-    if (nodeMatches(node, pathParts[index])) {
-      return findSchemaNode(node, pathParts, index + 1);
-    }
-
-    for (const child of childNodes(node)) {
-      if (nodeMatches(child, pathParts[index])) {
-        return findSchemaNode(child, pathParts, index + 1);
+  function findSchemaPath(node, reference, parents = []) {
+    if (!node) return null;
+    const pathParts = [...parents, primaryNodeName(node)];
+    for (const name of nodeNames(node)) {
+      const key = normalizeRefPart(name);
+      if (reference === key) return { node, pathParts };
+      if (!reference.startsWith(key + ",")) continue;
+      const remainder = reference.slice(key.length + 1).trim();
+      for (const child of childNodes(node)) {
+        const match = findSchemaPath(child, remainder, pathParts);
+        if (match) return match;
       }
     }
-
     return null;
   }
 
@@ -914,8 +925,8 @@
     return fetchJson(indexUrl, { signal });
   }
 
-  function setHebrewSourceHeading(ref = "") {
-    hebrewInputLabel.textContent = sefariaResultTools.importedTextHeading(ref);
+  function setHebrewSourceHeading(ref = "", schemaTitle = "") {
+    hebrewInputLabel.textContent = schemaTitle ? `Vocalized Hebrew — ${schemaTitle}` : sefariaResultTools.importedTextHeading(ref);
     hebrewInputLabel.title = ref;
   }
 
@@ -977,6 +988,8 @@
 
   function openFeedbackDialog() {
     const context = currentFeedbackContext();
+    feedbackSession = { context, revision: 0 };
+    feedbackSubmitButton.disabled = false;
     feedbackStatus.textContent = "";
     feedbackStatus.classList.remove("error");
     feedbackContextSummary.textContent = "";
@@ -1002,6 +1015,10 @@
 
   async function submitFeedback(event) {
     event.preventDefault();
+    if (!feedbackDialog.open || feedbackSubmitButton.disabled) return;
+    const session = feedbackSession;
+    const revision = session.revision;
+    const sameDialog = () => feedbackDialog.open && feedbackSession === session;
     const message = feedbackMessage.value.trim();
     if (!message) {
       feedbackStatus.textContent = "Enter a feedback message.";
@@ -1014,7 +1031,7 @@
     feedbackStatus.textContent = "Sending feedback...";
     feedbackStatus.classList.remove("error");
     try {
-      const context = feedbackIncludeContext.checked ? currentFeedbackContext() : null;
+      const context = feedbackIncludeContext.checked ? session.context : null;
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1034,16 +1051,54 @@
         }
         throw new Error("Feedback could not be sent. Please try again shortly.");
       }
+      recordUsageEvent("feedback_sent");
+      if (!sameDialog()) return;
+      if (session.revision !== revision) {
+        feedbackStatus.textContent = "Your original feedback was sent. Your latest edits are still here.";
+        return;
+      }
       feedbackForm.reset();
       feedbackStatus.textContent = "Thank you—your feedback was sent.";
-      recordUsageEvent("feedback_sent");
-      window.setTimeout(closeFeedbackDialog, 1200);
+      window.setTimeout(() => {
+        if (sameDialog() && session.revision === revision) closeFeedbackDialog();
+      }, 1200);
     } catch (error) {
+      if (!sameDialog()) return;
       feedbackStatus.textContent = error.message;
       feedbackStatus.classList.add("error");
     } finally {
-      feedbackSubmitButton.disabled = false;
+      if (sameDialog()) feedbackSubmitButton.disabled = false;
     }
+  }
+
+  function displayImportedPassage(result, reference, initialRevision) {
+    if (editorRevision !== initialRevision) {
+      setSefariaStatus("The Hebrew changed during import. Your edits were kept.");
+      return;
+    }
+    if (result.quality?.status === "missing") {
+      throw new window.HebrewTransliteratorSefariaClient.SefariaRequestError(
+        `No Hebrew text was found for ${reference}.`, "no_text"
+      );
+    }
+    setLineNumberAvailability(result);
+    insertImportedText(lineNumbersToggle.checked ? addLineNumbers(result.text) : result.text);
+    lastImportedSefariaContext = {
+      ref: result.ref || reference,
+      versionTitle: result.versionTitle || "",
+      text: result.text
+    };
+    const ref = lastImportedSefariaContext.ref;
+    setHebrewSourceHeading(ref, result.source === "schemaLeaf" ? result.displayLabel : "");
+    const warning = result.quality?.status === "unvocalized"
+      ? " The source contains no vowel points, so transliteration will be limited."
+      : result.quality?.status === "partial"
+        ? " Some of the source appears only partially vocalized."
+        : "";
+    setSefariaStatus(`Imported ${ref}.${warning}${sefariaProblemWarning()}`);
+    renderImportedSource(result);
+    recordUsageEvent("sefaria_import_succeeded");
+    recordVirtualPage(analyticsPageTools.sefariaPage(ref), ref);
   }
 
   async function importSefariaReference(reference, preparedResult = null) {
@@ -1056,7 +1111,6 @@
     const controller = beginSefariaRequest();
     const initialRevision = editorRevision;
     setSefariaStatus(`Importing ${trimmed}...`);
-    sefariaImportSource.textContent = "";
 
     try {
       let result = preparedResult;
@@ -1082,30 +1136,7 @@
         };
       }
       if (controller.signal.aborted) return;
-      if (editorRevision !== initialRevision) {
-        setSefariaStatus("The Hebrew changed during import. Your edits were kept.");
-        return;
-      }
-      setLineNumberAvailability(result);
-      insertImportedText(lineNumbersToggle.checked ? addLineNumbers(result.text) : result.text);
-      lastImportedSefariaContext = {
-        ref: result.ref || trimmed,
-        versionTitle: result.versionTitle || "",
-        text: result.text
-      };
-      setHebrewSourceHeading(lastImportedSefariaContext.ref);
-      const warning = result.quality?.status === "unvocalized"
-        ? " The source contains no vowel points, so transliteration will be limited."
-        : result.quality?.status === "partial"
-          ? " Some of the source appears only partially vocalized."
-          : "";
-      setSefariaStatus(`Imported ${result.ref || trimmed}.${warning}${sefariaProblemWarning()}`);
-      renderImportedSource(result);
-      recordUsageEvent("sefaria_import_succeeded");
-      recordVirtualPage(
-        analyticsPageTools.sefariaPage(lastImportedSefariaContext.ref),
-        lastImportedSefariaContext.ref
-      );
+      displayImportedPassage(result, trimmed, initialRevision);
     } catch (error) {
       if (activeSefariaController !== controller) return;
       setSefariaStatus(sefariaErrorMessage(error));
@@ -1219,25 +1250,23 @@
     };
   }
 
-  async function schemaChildResults(reference, signal) {
-    const pathParts = splitRefPath(reference);
-    if (!pathParts.length) {
-      return [];
-    }
-
-    const indexData = await fetchSefariaIndex(pathParts[0], signal);
-    const schemaNode = findSchemaNode(indexData.schema, pathParts);
-    const children = childNodes(schemaNode);
-    return children.map((child) => {
-      const childRef = appendRefPart(pathParts, primaryNodeName(child)).join(", ");
+  async function schemaChildResults(result, signal) {
+    const indexData = await fetchSefariaIndex(result.indexTitle || splitRefPath(result.ref)[0], signal);
+    const match = findSchemaPath(indexData.schema, normalizeRefPart(result.ref));
+    if (!match) return { pathParts: [], results: [] };
+    const { node, pathParts } = match;
+    const results = childNodes(node).map((child) => {
+      const displayLabel = primaryNodeName(child);
+      const childRef = appendRefPart(pathParts, displayLabel).join(", ");
       const hasChildren = childNodes(child).length > 0;
       return resultFromRef(
         childRef,
         indexData.categories || [],
         hasChildren ? "schema" : "schemaLeaf",
-        { hasChildren }
+        { hasChildren, displayLabel }
       );
     });
+    return { pathParts, results };
   }
 
   async function openSefariaResult(result) {
@@ -1250,16 +1279,19 @@
     setSefariaStatus(`Opening ${trimmed}...`);
 
     try {
-      const childResults = await schemaChildResults(trimmed, controller.signal);
+      const { results: childResults, pathParts } = await schemaChildResults(result, controller.signal);
+      if (controller.signal.aborted) return;
       if (childResults.length) {
         setSefariaStatus(`Checking sections in ${trimmed}...`);
         const pageSize = 30;
         const validated = await validateSefariaResults(childResults.slice(0, pageSize), "", controller.signal, pageSize);
+        if (controller.signal.aborted) return;
         if (currentSefariaResults) {
           sefariaNavigationStack.push(currentSefariaResults);
         }
         renderRefResults(validated.results, {
           parentRef: trimmed,
+          pathParts,
           alreadyValidated: true,
           failedCount: validated.failedCount,
           showAll: true,
@@ -1297,6 +1329,7 @@
 
     try {
       const validated = await validateSefariaResults(pageResults, "", controller.signal, pagination.pageSize);
+      if (controller.signal.aborted) return;
       renderRefResults(validated.results, {
         ...options,
         failedCount: validated.failedCount,
@@ -1323,6 +1356,7 @@
       return;
     }
     if (result.availability === "browse" && result.chapters) {
+      cancelSefariaRequest();
       const chapters = Array.from({ length: result.chapters }, (_value, index) => ({
         ref: `${result.ref} ${index + 1}`,
         displayLabel: String(index + 1),
@@ -1349,6 +1383,7 @@
   function goBackSefariaResults() {
     const previous = sefariaNavigationStack.pop();
     if (previous) {
+      cancelSefariaRequest();
       renderRefResults(previous.results, previous.options, { preserveStack: true });
     }
   }
@@ -1367,6 +1402,7 @@
     }
 
     const targetState = sefariaNavigationStack[stateIndex];
+    cancelSefariaRequest();
     sefariaNavigationStack = sefariaNavigationStack.slice(0, stateIndex);
     renderRefResults(targetState.results, targetState.options, { preserveStack: true });
   }
@@ -1393,7 +1429,7 @@
       trail.className = "sefaria-breadcrumb";
       trail.setAttribute("aria-label", "Sefaria location");
 
-      const pathParts = splitRefPath(options.parentRef);
+      const pathParts = options.pathParts || [options.parentRef];
       pathParts.forEach((part, index) => {
         if (index > 0) {
           const separator = document.createElement("span");
@@ -1409,7 +1445,7 @@
         const breadcrumbButton = document.createElement("button");
         breadcrumbButton.className = "sefaria-breadcrumb-button";
         breadcrumbButton.type = "button";
-        breadcrumbButton.textContent = shortRefLabel(part);
+        breadcrumbButton.textContent = part;
 
         if (isCurrent) {
           breadcrumbButton.disabled = true;
@@ -1647,10 +1683,7 @@
 
     const catalogKey = sefariaCatalog.keyForQuery(trimmed);
     if (catalogKey && !sefariaCatalog.requiresValidation(catalogKey)) {
-      if (activeSefariaController) {
-        activeSefariaController.abort();
-        finishSefariaRequest(activeSefariaController);
-      }
+      cancelSefariaRequest();
       sefariaImportSource.textContent = "";
       const catalogResults = sefariaCatalog.resultsForKey(catalogKey);
       const label = sefariaCatalog.collectionLabels[catalogKey];
@@ -1671,6 +1704,7 @@
     }
 
     const controller = beginSefariaRequest();
+    const initialRevision = editorRevision;
     setSefariaStatus(`Searching Sefaria for ${trimmed}...`);
     sefariaImportSource.textContent = "";
     sefariaResults.textContent = "";
@@ -1684,15 +1718,18 @@
       const aliasResults = aliasMatches.flatMap((alias) =>
         alias.refs.map((ref) => resultFromRef(ref, ["Liturgy"], "alias"))
       );
-      const exactResults = /\d/.test(trimmed)
-        ? [resultFromRef(trimmed, [], "exact")]
-        : [];
+      // A verified numbered reference is a lookup. Full-text matches can be
+      // other passages whose translations or footnotes merely cite it.
+      const numbered = !useCatalog && /\d[ab]?\s*$/i.test(trimmed)
+        ? await sefariaClient.validateResult(resultFromRef(trimmed, [], "exact"), { signal: controller.signal })
+        : null;
+      const exact = numbered && numbered.availability !== "invalid";
       const queryTerms = [
         trimmed,
         ...aliasMatches.map((alias) => alias.hebrewQuery).filter(Boolean)
       ];
 
-      const searches = useCatalog
+      const searches = useCatalog || exact
         ? []
         : [
           nameSearch(trimmed, controller.signal),
@@ -1708,17 +1745,30 @@
         result.status === "fulfilled" ? result.value : []
       );
 
-      if (!catalogResults.length && !exactResults.length && !aliasResults.length && !remoteResults.length && successfulSearchCount === 0) {
+      if (!catalogResults.length && !exact && !aliasResults.length && !remoteResults.length && successfulSearchCount === 0) {
         throw searchErrors[0].reason;
       }
 
       setSefariaStatus(`Checking ${trimmed} results for usable Hebrew...`);
-      const validated = await validateSefariaResults([
+      const validated = exact ? {
+        results: numbered.valid ? [numbered] : [],
+        failedCount: numbered.valid ? 0 : 1
+      } : await validateSefariaResults([
         ...catalogResults,
-        ...exactResults,
         ...aliasResults,
         ...remoteResults
       ], trimmed, controller.signal);
+      if (controller.signal.aborted) return;
+      const directPassage = numbered?.kind === "text" ? numbered : validated.results.find(result =>
+        !useCatalog && result.availability === "import" &&
+        sefariaResultTools.normalizeRefKey(result.ref) === sefariaResultTools.normalizeRefKey(trimmed)
+      );
+      if (directPassage) {
+        displayImportedPassage(directPassage, trimmed, initialRevision);
+        recordUsageEvent("sefaria_search_succeeded");
+        recordSefariaSearch(trimmed, "succeeded", 1);
+        return;
+      }
       const partialMessage = searchErrors.length
         ? `${searchErrors.length} Sefaria search source${searchErrors.length === 1 ? " was" : "s were"} unavailable.`
         : "";
@@ -1747,6 +1797,9 @@
   }
 
   input.addEventListener("input", () => {
+    if (verseNumbers) {
+      verseNumbers = lineNumberTools.afterEdit(previousVerseText, input.value, verseNumbers, lineNumbersToggle.checked);
+    }
     editorRevision += 1;
     setHebrewSourceHeading();
     updateOutput();
@@ -1778,14 +1831,16 @@
     event.preventDefault();
   });
   speechButton.addEventListener("click", async () => {
-    if (audioElement && !audioElement.paused) {
+    if (playingAudio) {
       stopAudio();
       return;
     }
     const hebrew = speechSelectionSnapshot ?? selectedHebrewForSpeech() ?? input.value;
     try {
       const prepared = await prepareAudio(hebrew);
+      playingAudio = prepared.audio;
       await prepared.audio.play();
+      if (playingAudio !== prepared.audio) return;
       setAudioPlaying(true);
       recordUsageEvent("audio_listened", prepared.sourceType);
       recordVirtualPage(
@@ -1793,7 +1848,7 @@
         prepared.sourceRef
       );
     } catch (error) {
-      setAudioPlaying(false);
+      if (playingAudio?.paused) stopAudio();
       if (error.name !== "AbortError") {
         setAudioStatus(error.message || "The audio could not be played.", true);
       }
@@ -1877,6 +1932,9 @@
   feedbackCloseButton.addEventListener("click", closeFeedbackDialog);
   feedbackCancelButton.addEventListener("click", closeFeedbackDialog);
   feedbackForm.addEventListener("submit", submitFeedback);
+  feedbackForm.addEventListener("input", () => {
+    if (feedbackSession) feedbackSession.revision++;
+  });
   feedbackDialog.addEventListener("click", (event) => {
     if (event.target === feedbackDialog) {
       closeFeedbackDialog();
@@ -1897,7 +1955,8 @@
   }
 
   sefariaCancelButton.addEventListener("click", () => {
-    activeSefariaController?.abort();
+    cancelSefariaRequest();
+    setSefariaStatus("Sefaria request cancelled.");
   });
 
   verboseResultsToggle.addEventListener("change", () => {

@@ -322,6 +322,6 @@ test("Azure receives the actual Adonai reading for the divine-name spellings", (
   const passage = "ה׳־מֶלֶךְ, לַייָ לה׳ יְהוּדָה עֲלִיָּה!";
   const prepared = speech.prepareAzureHebrew(passage, audioEngine);
   assert.equal(prepared.text, "אֲדֹנָימֶלֶךְ, לַדֹנָי לַדֹנָי יְהוּדָה עֲלִיָּה!".normalize("NFC"));
-  assert.equal(prepared.lexicon[0].phoneme, "a.do.naj.me.ˈlex");
+  assert.equal(prepared.lexicon[0].phoneme, "a.do.naj.ˈme.lex");
   assert.equal(prepared.lexicon[1].phoneme, "la.do.ˈnaj");
 });

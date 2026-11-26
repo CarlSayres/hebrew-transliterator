@@ -14,6 +14,7 @@ class MemoryBucket {
   async put(key, body, options = {}) {
     this.objects.set(key, {
       body,
+      size: typeof body === "string" ? Buffer.byteLength(body) : body.byteLength,
       customMetadata: options.customMetadata || {},
       httpMetadata: options.httpMetadata || {}
     });
@@ -22,6 +23,24 @@ class MemoryBucket {
     this.objects.delete(key);
   }
 }
+
+test("a successful MP3 response at the ten-minute cutoff is never served or cached", async () => {
+  const state = makeEnv();
+  const cutoff = new Uint8Array(10 * 60 * 48000 / 8);
+  state.env.AZURE_SPEECH_FETCH = async () => new Response(cutoff);
+  const result = await handleAudio(audioRequest(), state.env);
+  assert.equal(result.status, 413);
+  assert.equal([...state.bucket.objects.keys()].some(key => key.startsWith("audio/")), false);
+  assert.equal(state.points.length, 0);
+
+  // An old, truncated recording can exist before this safeguard is deployed.
+  state.env.AZURE_SPEECH_FETCH = async () => new Response(new Uint8Array([1]));
+  assert.equal((await handleAudio(audioRequest(), state.env)).status, 200);
+  const [key, object] = [...state.bucket.objects].find(([key]) => key.startsWith("audio/"));
+  await state.bucket.put(key, cutoff, { customMetadata: object.customMetadata });
+  assert.equal((await handleAudio(audioRequest(), state.env)).status, 413);
+  assert.equal((await handleAudio(audioRequest("sefaria", "בָּרוּךְ", "Other reference"), state.env)).status, 413);
+});
 
 function audioRequest(
   sourceType = "sefaria",
@@ -234,7 +253,8 @@ test("reads words continuously and preserves punctuation and maqaf phrasing", as
     grapheme: word.replace("־", "").normalize("NFC"),
     phoneme: ["ʃe.ˈma", "jis.ʁa.ˈʔel", "ve.nej.ja.ˈʔa.kov"][index]
   }));
-  const result = await handleAudio(audioRequest("arbitrary", words.join(" ") + ", שְׁמַע׃", "", lexicon), state.env);
+  const passage = words[0] + " (repeat 2–4 times!) " + words.slice(1).join(" ") + ", שְׁמַע׃";
+  const result = await handleAudio(audioRequest("arbitrary", passage, "", lexicon), state.env);
   assert.equal(result.status, 200);
   const [first, second, compound] = lexicon.map((entry) => entry.grapheme);
   assert.ok(state.azureBodies[0].includes(`<s>${first} ${second} ${compound}, ${first}׃</s>`));

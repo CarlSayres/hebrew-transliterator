@@ -2,6 +2,19 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const lineNumbers = require("../site/line-numbers");
 
+test("edited lines keep surviving verse labels across toggles and chapter boundaries", () => {
+  const original = "31. last\n1. first\n3. third";
+  const changed = "1. first\n2024. a note\n3. changed";
+  const labels = lineNumbers.afterEdit(original, changed, [31, 1, 3], true);
+  assert.deepEqual(labels, [1, null, 3]);
+  const hidden = lineNumbers.remove(changed, labels);
+  assert.equal(hidden, "first\n2024. a note\nchanged");
+  assert.equal(lineNumbers.add(hidden, labels), changed);
+  const shorter = "2024. a note\nchanged";
+  const shorterLabels = lineNumbers.afterEdit(hidden, shorter, labels, false);
+  assert.equal(lineNumbers.add(shorter, shorterLabels), "2024. a note\n3. changed");
+});
+
 test("starts a same-chapter verse range at its actual first verse", () => {
   assert.equal(lineNumbers.startFromRef("Deuteronomy 6:4-9"), 4);
   assert.equal(lineNumbers.add("first\nsecond\nthird", 4), "4. first\n5. second\n6. third");

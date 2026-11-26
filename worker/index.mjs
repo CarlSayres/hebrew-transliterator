@@ -1,3 +1,5 @@
+import speech from "../site/speech.js";
+
 const EVENT_SCHEMA_VERSION = 3;
 const SUPPORTED_CLIENT_SCHEMA_VERSIONS = new Set([1, 2, 3]);
 
@@ -35,6 +37,9 @@ const AUDIO_VOICE = "he-IL-HilaNeural";
 const AUDIO_RATE = "-62%";
 const AUDIO_RULES_VERSION = "ipa-v7";
 const AZURE_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3";
+// The synchronous endpoint truncates at ten minutes with a successful HTTP
+// response. At our fixed 48 kb/s, allow one second for MP3 frame rounding.
+const AUDIO_CUTOFF_BYTES = (600 - 1) * 48000 / 8;
 const MAX_AUDIO_TEXT_LENGTH = 8000;
 // JSON escaping requires at most six bytes per UTF-16 code unit.
 const MAX_FEEDBACK_BODY_BYTES = 26_000 * 6;
@@ -333,49 +338,6 @@ export async function handleEvent(request, env) {
   return response(204);
 }
 
-function canonicalAudioText(value) {
-  return String(value || "")
-    .normalize("NFC")
-    .replace(/[ \t]*\{\s*[פס]\s*\}[ \t]*/gu, " ")
-    .replace(/\r\n?/g, "\n")
-    .split("\n")
-    .map((line) => line.replace(/^\s*\d+\.\s*/, "").trim())
-    .filter(Boolean)
-    .join(" ")
-    .replace(/\s+/gu, " ")
-    .trim();
-}
-
-function speakableAudioText(value, lexicon) {
-  const recognizedWords = new Set(
-    Array.from(lexicon || [], (entry) => String(entry?.grapheme || "").normalize("NFC")).filter(Boolean)
-  );
-  const tokens = canonicalAudioText(value).match(
-    /[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*|[.,!?;:׃–—…]+/gu
-  ) || [];
-  let result = "";
-  for (const token of tokens) {
-    if (/^[\u05d0-\u05ea]/u.test(token)) {
-      const parts = token.split("־");
-      const joined = parts.join("").normalize("NFC");
-      const joinedRecognized = recognizedWords.has(joined);
-      const speakableParts = parts.filter((part) =>
-        /[\u05b0-\u05bb\u05c7]/u.test(part) || recognizedWords.has(part.normalize("NFC"))
-      );
-      if (!joinedRecognized && !speakableParts.length) continue;
-      const words = joinedRecognized || (speakableParts.length === parts.length && parts.length === 1)
-        ? [joined]
-        : speakableParts;
-      for (const word of words) {
-        result += `${result && !result.endsWith(" ") ? " " : ""}${word}`;
-      }
-    } else if (result) {
-      result = `${result.trimEnd()}${token} `;
-    }
-  }
-  return result.trim();
-}
-
 function xmlEscape(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -560,7 +522,7 @@ export async function handleAudio(request, env) {
   const isCurrentPayload = payload?.schemaVersion === 2 &&
     keys.length === 6 && keys[0] === "lexicon" && keys[1] === "schemaVersion" &&
     keys[2] === "sourceRef" && keys[3] === "sourceType" && keys[4] === "text" && keys[5] === "tzere";
-  const text = speakableAudioText(payload?.text, payload?.lexicon);
+  const text = speech.speakableHebrewOnly(payload?.text, Array.isArray(payload?.lexicon) ? payload.lexicon : [], { joinUnlistedMaqaf: false });
   const sourceRef = cleanSefariaReference(payload?.sourceRef);
   if (text.length > MAX_AUDIO_TEXT_LENGTH || (Array.isArray(payload?.lexicon) && payload.lexicon.length > 1000)) {
     return response(413);
@@ -578,6 +540,7 @@ export async function handleAudio(request, env) {
   let result;
   if (payload.sourceType === "sefaria") {
     const cached = await env.AUDIO_BUCKET.get(cacheKey);
+    if (cached?.size >= AUDIO_CUTOFF_BYTES) return response(413);
     const existingRefs = cached?.customMetadata?.sefariaReferences;
     if (cached && (!sourceRef || existingRefs?.split(" | ").includes(sourceRef))) {
       return audioResponse(cached.body, "HIT");
@@ -616,6 +579,7 @@ async function generateAudio({ cacheKey, text, payload, sourceRef }, env, rateKe
   if (payload.sourceType === "sefaria") {
     const cached = await env.AUDIO_BUCKET.get(cacheKey);
     if (cached) {
+      if (cached.size >= AUDIO_CUTOFF_BYTES) return response(413);
       const references = mergedSefariaReferences(cached.customMetadata?.sefariaReferences, sourceRef);
       if (sourceRef && references !== cached.customMetadata?.sefariaReferences) {
         const audio = await new Response(cached.body).arrayBuffer();
@@ -669,6 +633,7 @@ async function generateAudio({ cacheKey, text, payload, sourceRef }, env, rateKe
     }
     const audio = await azureResponse.arrayBuffer();
     if (!audio.byteLength) return response(502);
+    if (audio.byteLength >= AUDIO_CUTOFF_BYTES) return response(413);
     if (payload.sourceType === "sefaria") {
       try {
         await env.AUDIO_BUCKET.put(cacheKey, audio, {

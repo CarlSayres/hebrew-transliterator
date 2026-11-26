@@ -96,14 +96,84 @@
     );
   }
 
+  // A quoted hey or two yods can stand for the Name. In an unquoted pair,
+  // ordinary vowel points such as the hiriq in חַיִּים belong to a real word.
+  const abbreviatedName = /(?<![א-ת\p{M}])(?<![א-ת\p{M}][״"])(?<prefix>(?:(?:ו\p{M}*[בכלמ]|[ובכלמשה])\p{M}*)?)(?:ה\p{M}*[׳'’]|[׳'’]ה\p{M}*|י\p{M}*[״"]י\p{M}*|י[\u0591-\u05b0\u05bd]*י[\u0591-\u05af\u05b8\u05bd]*)(?![א-ת\p{M}]|[״"][א-ת])/gu;
+
+  const elohim = "אֱלֹהִים";
+  const spokenDivineNames = new Map(Object.entries({
+    "יהוה": "אֲדֹנָי", "ויהוה": "וָדֹנָי", "ביהוה": "בַּדֹנָי",
+    "כיהוה": "כַּדֹנָי", "ליהוה": "לַדֹנָי", "מיהוה": "מֵאֲדֹנָי",
+    "שיהוה": "שֶׁאֲדֹנָי", "היהוה": "הַאֲדֹנָי", "וביהוה": "וּבַדֹנָי",
+    "וכיהוה": "וּכַדֹנָי", "וליהוה": "וְלַדֹנָי", "ומיהוה": "וּמֵאֲדֹנָי"
+  }));
+
+  function adjacentWrittenAdonai(tokens, index, step) {
+    for (let i = index + step; i >= 0 && i < tokens.length; i += step) {
+      const token = tokens[i];
+      if (token.type === "maqaf" || token.type === "psik" ||
+          (token.type === "other" && /^\s+$/u.test(token.value))) continue;
+      if (token.type !== "hebrew") return null;
+      const word = stripTropeAndMeteg(token.value);
+      // The hiriq in אֲדֹנִי ("my lord") distinguishes it from אֲדֹנָי.
+      return word === "אדני" || (/^אד[ו]?ני$/u.test(stripMarks(word)) && /נָי$/u.test(word))
+        ? token : null;
+    }
+    return null;
+  }
+
+  function resolveDivineNames(tokens) {
+    for (const [index, token] of tokens.entries()) {
+      if (token.type !== "hebrew" || !token.value.includes("י") || !token.value.includes("ה")) continue;
+      const spelling = stripMarks(token.value);
+      const usualReading = spokenDivineNames.get(spelling);
+      if (!usualReading) continue;
+      token.spokenReading = usualReading;
+      const next = adjacentWrittenAdonai(tokens, index, 1);
+      if (next) {
+        // The site's reading is Adonai Elohim in either written order.
+        next.value = next.spokenReading = elohim;
+      } else if (spelling === "יהוה") {
+        const previous = adjacentWrittenAdonai(tokens, index, -1);
+        if (previous) previous.spokenReading = spokenDivineNames.get("יהוה");
+        if (previous || /ו\p{M}*\u05b4\p{M}*ה\p{M}*$/u.test(token.value)) {
+          token.value = token.spokenReading = elohim;
+        }
+      }
+    }
+  }
+
+  function fullName(prefix) {
+    return stripMarks(prefix) + "יהוה";
+  }
+
   function splitInput(text) {
     const source = String(text || "");
     const tokens = [];
     let buffer = "";
     let mode = null;
     let bufferStart = 0;
+    const names = source.matchAll(abbreviatedName);
+    let name = names.next().value;
+    const flush = (end) => {
+      if (mode === "sofPasuq" && tokens.at(-1)?.type === "hebrew") {
+        tokens.at(-1).verseEnd = true;
+      }
+      if (buffer) tokens.push({ type: mode, value: mode === "other" ? buffer : normalize(buffer),
+        sourceStart: bufferStart, sourceEnd: end });
+      buffer = "";
+    };
 
     for (let index = 0; index < source.length;) {
+      if (name && name.index === index) {
+        flush(index);
+        const end = index + name[0].length;
+        tokens.push({ type: "hebrew", value: fullName(name.groups.prefix), sourceStart: index, sourceEnd: end });
+        name = names.next().value;
+        index = end;
+        mode = null;
+        continue;
+      }
       const codePoint = source.codePointAt(index);
       const char = String.fromCodePoint(codePoint);
       const charLength = char.length;
@@ -116,20 +186,12 @@
         nextMode = "psik";
       } else if (char === SOF_PASUQ) {
         nextMode = "sofPasuq";
-      } else if (/[\u0591-\u05bd\u05bf-\u05c7\u05d0-\u05ea]/.test(char)) {
+      } else if (/[\u0591-\u05bd\u05bf-\u05c7\u05d0-\u05ea]/.test(char.normalize("NFD"))) {
         nextMode = "hebrew";
       }
 
-      if (mode && nextMode !== mode) {
-        tokens.push({
-          type: mode,
-          value: normalize(buffer),
-          sourceStart: bufferStart,
-          sourceEnd: index
-        });
-        buffer = "";
-        bufferStart = index;
-      } else if (!mode) {
+      if (nextMode !== mode) {
+        flush(index);
         bufferStart = index;
       }
       mode = nextMode;
@@ -137,15 +199,8 @@
       index += charLength;
     }
 
-    if (buffer) {
-      tokens.push({
-        type: mode,
-        value: normalize(buffer),
-        sourceStart: bufferStart,
-        sourceEnd: source.length
-      });
-    }
-
+    flush(source.length);
+    resolveDivineNames(tokens);
     return tokens;
   }
 
@@ -174,6 +229,25 @@
       clusters[clusters.length - 1].wordFinal = true;
     }
 
+    // Biblical ירושלים often writes the yod's hiriq on the lamed alongside
+    // its own patah/qamatz. Keep the lamed's accents on the -la- syllable.
+    const lamed = clusters[clusters.length - 2];
+    if (lamed?.base === "ל" && hasHiriq(lamed) &&
+        (hasPatach(lamed) || hasMark(lamed, MARKS.QAMATS)) &&
+        clusters.slice(-6).map(cluster => cluster.base).join("") === "ירושלם") {
+      lamed.marks = lamed.marks.filter(mark => mark !== MARKS.HIRIQ);
+      clusters.splice(clusters.length - 1, 0, { ...lamed, base: "י", marks: [MARKS.HIRIQ] });
+    }
+
+    // Daniel 5:6, 5:9: MAM explicitly marks the vav of Aramaic zīwōhī.
+    // Some editions print an ordinary holam on it (the word still means
+    // "his countenance"). Restrict this ambiguous יוֹ spelling to these forms.
+    const danielVav = clusters[clusters.length - 3];
+    if (danielVav?.base === "ו" && hasMark(danielVav, MARKS.HOLAM) &&
+        /^(?:וְ)?זִיוֹהִי$/u.test(stripTropeAndMeteg(word))) {
+      danielVav.marks = danielVav.marks.map(mark => mark === MARKS.HOLAM ? MARKS.HOLAM_HASER : mark);
+    }
+
     // A sin's upper-left dot is sometimes printed once for both the sin dot
     // and a holam haser. Infer the shared vowel on a non-final sin that has
     // no other vowel or sh'va. The principal contrasting spelling is a sin
@@ -193,7 +267,8 @@
         cluster.marks.includes(MARKS.SIN_DOT) &&
         !hasExplicitVowel &&
         !cluster.marks.includes(MARKS.SHEVA) &&
-        !nextIsShuruk
+        !nextIsShuruk &&
+        !(next.base === "ו" && hasMark(next, MARKS.HOLAM))
       ) {
         cluster.marks.push(MARKS.HOLAM_HASER);
       }
@@ -211,6 +286,31 @@
     )).join("").normalize("NFD");
   }
 
+  function markLexicalInitials(clusters, ruleset) {
+    const first = clusters[0];
+    if (first && "בכלהמ".includes(first.base)) {
+      // Initial begadkefat dagesh varies with the preceding word. The corpus
+      // lookup excludes spellings attested with both a lexical and a prefix reading.
+      const key = clusterLookupKey(clusters)
+        .replace(/\u05ba/gu, MARKS.HOLAM)
+        .replace(/^([בכ])(\p{M}*)/u, (_, base, marks) => base + marks.replace(MARKS.DAGESH, ""));
+      first.lexicalInitial = window.HebrewLexicalInitialConsonants?.has(key);
+      // The plural of bayit contracts to bāttim / bāttei. Its long qamatz
+      // survives the internal dagesh (also in suffixed forms such as בָּתֵּינוּ).
+      if (first.lexicalInitial && first.base === "ב" && hasMark(first, MARKS.QAMATS) &&
+          clusters[1]?.base === "ת" && hasMark(clusters[1], MARKS.DAGESH)) {
+        first.forceKamatzGadol = true;
+      }
+    }
+    for (let index = 0; index < clusters.length; index++) {
+      if (clusters[index].base === "ש") {
+        clusters[index].lexicalInitialShe = Boolean(
+          ruleset.exceptions.lexicalInitialShe?.[clusterLookupKey(clusters, index)]
+        );
+      }
+    }
+  }
+
   function hasMark(cluster, mark) {
     return cluster.marks.includes(mark);
   }
@@ -219,8 +319,9 @@
     return cluster.marks.some((mark) => marks.has(mark));
   }
 
-  function hasStressMarker(cluster) {
+  function hasStressMarker(cluster, ignoreDehi = false) {
     return cluster.marks.some((mark) => {
+      if (ignoreDehi && mark === "\u05ad") return false;
       const code = mark.codePointAt(0);
       return TROPE_RANGES.some(([start, end]) => code >= start && code <= end);
     });
@@ -246,13 +347,18 @@
       const edgeIndex = edge === "start" ? 0 : clusters.length - 1;
       if (indexes.length > 1 && indexes.includes(edgeIndex)) {
         helpers.set(mark, new Set(indexes.filter((index) => index !== edgeIndex)));
+      } else if (mark === "\u05ad" && indexes.length === 1 &&
+          (indexes[0] === 0 || clusters[indexes[0] - 1].wordFinal)) {
+        // A lone prepositive dehi marks the word, without locating its stressed vowel.
+        helpers.set(mark, new Set());
       }
     }
     return helpers;
   }
 
-  function hasEffectiveStressMarker(cluster, index, positionalHelpers) {
+  function hasEffectiveStressMarker(cluster, index, positionalHelpers, includeMeteg = true) {
     return cluster.marks.some((mark) => {
+      if (!includeMeteg && mark === MARKS.METEG) return false;
       const code = mark.codePointAt(0);
       if (!TROPE_RANGES.some(([start, end]) => code >= start && code <= end)) {
         return false;
@@ -425,7 +531,8 @@
   function getSyllableNuclei(clusters) {
     return clusters
       .map((cluster, index) => ({ cluster, index }))
-      .filter(({ cluster, index }) => isSyllableNucleus(cluster) || isStressShevaNucleus(clusters, index));
+      .filter(({ cluster, index }) => !isFurtivePatach(clusters, index) &&
+        (isSyllableNucleus(cluster) || isStressShevaNucleus(clusters, index)));
   }
 
   function syllableIndexForCluster(nuclei, clusterIndex, clusters = null) {
@@ -484,7 +591,7 @@
     );
   }
 
-  function assignStress(clusters) {
+  function assignStress(clusters, ruleset, verseEnd = false) {
     const nuclei = getSyllableNuclei(clusters);
     if (!nuclei.length) {
       return;
@@ -496,6 +603,9 @@
     const helperSyllables = new Set();
     const syllableMarks = new Map();
     const positionalHelpers = positionalStressHelperIndexes(clusters);
+    const lastWordStart = clusters.findLastIndex((cluster, index) =>
+      cluster.wordFinal && index < clusters.length - 1) + 1;
+    let silluqSyllable = -1;
 
     clusters.forEach((cluster, index) => {
       if (!hasEffectiveStressMarker(cluster, index, positionalHelpers)) {
@@ -504,20 +614,25 @@
 
       const syllableIndex = stressMarkerSyllableIndex(clusters, nuclei, index);
       if (syllableIndex >= 0) {
+        // U+05BD serves as both meteg and silluq. Immediately before sof pasuq,
+        // the rightmost such mark in the final word is the verse-ending accent.
+        if (verseEnd && index >= lastWordStart && hasMeteg(cluster)) silluqSyllable = syllableIndex;
         markedSyllables.add(syllableIndex);
         if (isPositionalStressHelper(cluster, index, positionalHelpers)) {
           helperSyllables.add(syllableIndex);
         }
         const marks = syllableMarks.get(syllableIndex) || { meteg: false, trope: false, forwardedSheva: false };
         marks.meteg = marks.meteg || hasMeteg(cluster);
-        marks.trope = marks.trope || hasDisplayTropeMarker(cluster);
+        marks.trope = marks.trope || hasEffectiveStressMarker(cluster, index, positionalHelpers, false);
         marks.forwardedSheva = marks.forwardedSheva || isForwardedShevaStressMarker(clusters, index);
         syllableMarks.set(syllableIndex, marks);
       }
     });
 
     let primarySyllable = lastSyllable;
-    if (helperSyllables.size === 1) {
+    if (silluqSyllable >= 0) {
+      primarySyllable = silluqSyllable;
+    } else if (helperSyllables.size === 1) {
       primarySyllable = [...helperSyllables][0];
     } else if (syllableMarks.get(lastSyllable)?.trope) {
       primarySyllable = lastSyllable;
@@ -527,6 +642,12 @@
       !syllableMarks.get(penultimateSyllable)?.forwardedSheva
     ) {
       primarySyllable = penultimateSyllable;
+    } else if (!markedSyllables.size || positionalHelpers.get("\u05ad")?.size === 0) {
+      const spelling = clusterLookupKey(clusters, lastWordStart);
+      if (penultimateSyllable >= 0 && (ruleset?.exceptions?.penultimateStress?.[spelling] ||
+          /יְ?רוּשָׁל[ַָ]יִם$/u.test(spelling))) {
+        primarySyllable = penultimateSyllable;
+      }
     } else if (
       penultimateSyllable >= 0 &&
       markedSyllables.has(penultimateSyllable) &&
@@ -592,7 +713,7 @@
   }
 
   function isNonDoublingProcliticBoundary(clusters, index) {
-    if (index !== 1 || isArticlePrefixBeforeDagesh(clusters, index)) {
+    if (index !== 1 || clusters[0].lexicalInitial || isArticlePrefixBeforeDagesh(clusters, index)) {
       return false;
     }
 
@@ -1130,7 +1251,7 @@
         return false;
       }
 
-      return !(index === 1 && previous.base === "ו" && !hasStressMarker(previous));
+      return !(index === 1 && previous.base === "ו" && !hasStressMarker(previous, true));
     }
 
     if (previous.base === "ו" && clusters[index - 2]?.vowelName === "holam") {
@@ -1191,22 +1312,12 @@
     return consonant + consonant;
   }
 
-  function inferredUnvocalizedHolamWord(clusters, ruleset) {
-    if (
-      clusters.length !== 3 ||
-      clusters[1].base !== "ו" ||
-      clusters.some((cluster) => cluster.marks.length > 0)
-    ) {
-      return "";
-    }
-
-    const first = consonantOutput(clusters[0], ruleset);
-    const last = consonantOutput(clusters[2], ruleset);
-    if (!last) {
-      return "";
-    }
-
-    return `${first}o${last}`;
+  function isHolamMalei(clusters, vavIndex) {
+    const vav = clusters[vavIndex];
+    const carrier = clusters[vavIndex - 1];
+    return vav?.base === "ו" && hasMark(vav, MARKS.HOLAM) &&
+      !hasMark(vav, MARKS.DAGESH) && !hasMark(vav, MARKS.SHEVA) &&
+      carrier && !getVowelMark(carrier) && !hasMark(carrier, MARKS.SHEVA);
   }
 
   function shouldSkipMater(clusters, index) {
@@ -1216,13 +1327,25 @@
       return false;
     }
 
+    // The Torah's feminine pronoun is often written הוא and pointed הִוא.
+    // Prefixes leave its reading hi intact, including in וְהִוא.
+    if (index === clusters.length - 2 && previous.base === "ה" && hasHiriq(previous) &&
+        isUnmarkedVav(current) && clusters[index + 1].base === "א" &&
+        !getVowelMark(clusters[index + 1]) && !hasMark(clusters[index + 1], MARKS.SHEVA)) {
+      return true;
+    }
+
     if (isSuperPleneHolamAlefVav(clusters, index)) {
       return true;
     }
 
     if (current.base === "י" && !getVowelMark(current) && !hasMark(current, MARKS.SHEVA)) {
-      if (hasMark(current, MARKS.DAGESH) || clusters[index + 1]?.base === "ו") {
+      if (hasMark(current, MARKS.DAGESH)) {
         return false;
+      }
+      const next = clusters[index + 1];
+      if (next?.base === "ו") {
+        return previous.vowelName === "hiriq" && hasMark(next, MARKS.HOLAM_HASER);
       }
 
       return (
@@ -1235,13 +1358,13 @@
 
     if (current.base === "ו" && !hasMark(current, MARKS.SHEVA)) {
       return (
-        (hasMark(current, MARKS.HOLAM) && !hasMark(previous, MARKS.SHEVA)) ||
-        (previous.vowelName === "holam" && !getVowelMark(current))
+        isHolamMalei(clusters, index) ||
+        (previous.vowelName === "holam" && isUnmarkedVav(current))
       );
     }
 
     if (current.base === "א" && !getVowelMark(current) && !hasMark(current, MARKS.SHEVA)) {
-      return previous.vowelName === "tzere";
+      return previous.vowelName === "tzere" && !isHolamMalei(clusters, index + 1);
     }
 
     return false;
@@ -1284,11 +1407,7 @@
       }
     }
 
-    if (next && next.base === "ו" && !hasMark(next, MARKS.SHEVA)) {
-      if (cluster.vowelName === "holam" || (hasMark(next, MARKS.HOLAM) && !hasMark(cluster, MARKS.SHEVA))) {
-        return "o";
-      }
-    }
+    if (isHolamMalei(clusters, index + 1)) return "o";
 
     return cluster.vowelOut;
   }
@@ -1297,14 +1416,11 @@
     const cluster = clusters[index];
     const next = clusters[index + 1];
 
-    const combinedStressKind = () => displayedStressKind(cluster) || displayedStressKind(next);
+    const combinedStressKind = () => cluster?.primaryStress || next?.primaryStress
+      ? "primary" : displayedStressKind(cluster) || displayedStressKind(next);
 
-    if (
-      next &&
-      next.base === "ו" &&
-      !hasMark(next, MARKS.SHEVA) &&
-      (cluster.vowelName === "holam" || (hasMark(next, MARKS.HOLAM) && !hasMark(cluster, MARKS.SHEVA)))
-    ) {
+    if (isHolamMalei(clusters, index + 1) ||
+        (next && cluster.vowelName === "holam" && isUnmarkedVav(next))) {
       return combinedStressKind();
     }
 
@@ -1325,7 +1441,7 @@
   function isFurtivePatach(clusters, index) {
     const cluster = clusters[index];
     return (
-      index === clusters.length - 1 &&
+      cluster.wordFinal && index > 0 && !clusters[index - 1].wordFinal &&
       FINAL_GUTTURALS.has(cluster.base) &&
       hasMark(cluster, MARKS.PATAH) &&
       (cluster.base !== "ה" || hasMark(cluster, MARKS.DAGESH))
@@ -1337,11 +1453,10 @@
     return (
       index === clusters.length - 2 &&
       clusters[index].base === "י" &&
+      !getVowelMark(clusters[index]) &&
+      !hasMark(clusters[index], MARKS.SHEVA) &&
       !hasMark(clusters[index], MARKS.DAGESH) &&
-      vav.base === "ו" &&
-      !hasMark(vav, MARKS.DAGESH) &&
-      !hasMark(vav, MARKS.HOLAM) &&
-      !hasMark(vav, MARKS.HOLAM_HASER)
+      isUnmarkedVav(vav)
     );
   }
 
@@ -1399,7 +1514,7 @@
   }
 
   function initialPrefixValue(clusters, index, consonant, vowelOut) {
-    if (index < 0 || index >= clusters.length - 1) {
+    if (index < 0 || index >= clusters.length - 1 || clusters[index].lexicalInitial) {
       return "";
     }
 
@@ -1603,13 +1718,17 @@
     );
   }
 
-  function capitalizeSentenceStarts(text) {
+  function capitalizeSentenceStarts(text, segments) {
+    let offset = 0;
+    let segment = 0;
     let shouldCapitalize = true;
     let output = "";
 
     for (const char of text) {
       if (/[a-z]/i.test(char)) {
-        output += shouldCapitalize ? char.toUpperCase() : char;
+        while (segment < segments.length && segments[segment].targetEnd <= offset) segment++;
+        const generated = segment < segments.length && segments[segment].targetStart <= offset;
+        output += shouldCapitalize && generated ? char.toUpperCase() : char;
         shouldCapitalize = false;
       } else {
         output += char;
@@ -1619,6 +1738,7 @@
           shouldCapitalize = false;
         }
       }
+      offset += char.length;
     }
 
     return output;
@@ -1680,12 +1800,13 @@
     const normalized = normalize(word);
     const cleaned = stripTropeAndMeteg(word);
     const noMarks = stripMarks(word);
-    return (
+    const override = (
       ruleset.exceptions.stressOverrides?.[normalized] ||
       ruleset.exceptions.stressOverrides?.[cleaned] ||
       ruleset.exceptions.stressOverrides?.[noMarks] ||
       null
     );
+    return override?.unaccentedOnly && /[\u0591-\u05ae\u05bd]/u.test(normalized) ? null : override;
   }
 
   function useRuleStressForExactWord(word, ruleset) {
@@ -1717,6 +1838,9 @@
     }
 
     const nuclei = getSyllableNuclei(clusters);
+    if (nuclei.length && isFurtivePatach(clusters, clusters.length - 1)) {
+      return clusters.some((cluster) => cluster.primaryStress);
+    }
     if (nuclei.length <= 1) {
       return false;
     }
@@ -1737,14 +1861,23 @@
     return primarySyllable >= 0 && primarySyllable < nuclei.length - 1;
   }
 
+  function usesStressMarks(format) {
+    return format === "stressMarks" || format === "stressMarksAll" || format === "primaryStress" || format === "phonemeStress";
+  }
+
   function transliterateClusters(clusters, ruleset, format = "text") {
     let output = "";
     const chunks = [];
     const options = outputOptions(ruleset);
-    const add = (value, stressKind = "") => {
+    const add = (value, stressKind = "", consonant = false) => {
       output += value;
-      if ((format === "stressMarks" || format === "stressMarksAll") && value) {
-        chunks.push({ value, stressKind });
+      if (usesStressMarks(format) && value) {
+        // The IPA tokenizer reads each Hebrew consonant atomically: e.g. shin is
+        // |sh, but a sin followed by he is |s|h. This is never a syllable break.
+        chunks.push({
+          value: format === "phonemeStress" && consonant ? "|" + value : value,
+          stressKind: (format === "primaryStress" || format === "phonemeStress") && stressKind === "secondary" ? "" : stressKind
+        });
       }
     };
 
@@ -1783,11 +1916,11 @@
       }
 
       if (isFurtivePatach(clusters, index)) {
-        add(ruleset.vowels.patach, clusterOutputStress);
+        add(ruleset.vowels.patach);
         if (cluster.base === "ה" && hasMark(cluster, MARKS.DAGESH)) {
-          add(options.mappiqHeh, clusterOutputStress);
+          add(options.mappiqHeh, clusterOutputStress, true);
         } else {
-          add(consonant, clusterOutputStress);
+          add(consonant, clusterOutputStress, true);
         }
         return;
       }
@@ -1799,7 +1932,8 @@
         !hasMark(cluster, MARKS.SHEVA)
       ) {
         if (clusters[index + 1]?.base === "ו") {
-          add(consonant, cluster.primaryStress);
+          add(consonant, clusterOutputStress, true);
+          if (isHolamMalei(clusters, index + 1)) add(ruleset.vowels.holam, clusterOutputStress);
           return;
         }
 
@@ -1862,7 +1996,7 @@
         add(options.vowelSeparator);
       }
 
-      add(consonant, clusterOutputStress);
+      add(consonant, clusterOutputStress, true);
 
       if (cluster.base === "ה" && index === clusters.length - 1 && hasMark(cluster, MARKS.DAGESH)) {
         add(options.mappiqHeh.slice(1), clusterOutputStress);
@@ -1885,7 +2019,7 @@
       }
     });
 
-    return (format === "stressMarks" || format === "stressMarksAll") ? stressMarksFromChunks(chunks) : output;
+    return usesStressMarks(format) ? stressMarksFromChunks(chunks) : output;
   }
 
   class Transliterator {
@@ -1894,17 +2028,27 @@
     }
 
     transliterate(text) {
-      const transliterated = this.transliterateTokens(splitInput(text));
-      return capitalizeSentenceStarts(transliterated);
+      return this.transliterateWithAlignment(text).text;
     }
 
     transliterateWithStressMarks(text) {
-      const transliterated = this.transliterateTokens(splitInput(text), "stressMarks");
-      return capitalizeSentenceStarts(transliterated);
+      return this.transliterateWithAlignment(text, "stressMarks").text;
     }
 
-    transliterateWithAllStressMarks(text) {
-      return this.transliterateTokens(splitInput(text), "stressMarksAll");
+    transliterateWithAllStressMarks(text, { primaryOnly = false, forIPA = false } = {}) {
+      const format = forIPA ? "phonemeStress" : primaryOnly ? "primaryStress" : "stressMarksAll";
+      return this.transliterateTokens(splitInput(text), format);
+    }
+
+    expandDivineNameAbbreviations(text) {
+      return String(text || "").replace(abbreviatedName, (_name, prefix) => fullName(prefix));
+    }
+
+    nameReadingsForSpeech(text) {
+      const source = String(text || "");
+      return splitInput(source).map(token =>
+        token.spokenReading || source.slice(token.sourceStart, token.sourceEnd)
+      ).join("");
     }
 
     pronunciationHebrew(text, options = {}) {
@@ -1926,7 +2070,7 @@
         if (token.type !== "hebrew" || !hasHebrew(token.value)) {
           return token.value;
         }
-        return this.pronunciationHebrewWord(token.value, tzere);
+        return token.spokenReading || this.pronunciationHebrewWord(token.value, tzere);
       }).join("");
     }
 
@@ -1946,15 +2090,9 @@
         return speechCleaned;
       }
 
-      for (let index = 0; index < clusters.length; index += 1) {
-        if (clusters[index].base === "ש") {
-          clusters[index].lexicalInitialShe = Boolean(
-            this.ruleset.exceptions.lexicalInitialShe?.[clusterLookupKey(clusters, index)]
-          );
-        }
-      }
+      markLexicalInitials(clusters, this.ruleset);
       repairMissingHolamMalei(clusters);
-      assignStress(clusters);
+      assignStress(clusters, this.ruleset);
       applyMissingMetegKamatzSheva(clusters, word, this.ruleset);
       applyForcedKamatzGadol(clusters, word, this.ruleset);
       applyForcedKamatzKatan(clusters, word, this.ruleset);
@@ -2119,46 +2257,35 @@
       const segments = [];
       let output = "";
 
-      const appendAligned = (value, sourceStart, sourceEnd) => {
+      const appendAligned = (value, token) => {
         const targetStart = output.length;
         output += value;
         segments.push({
-          sourceStart,
-          sourceEnd,
+          sourceStart: token.sourceStart,
+          sourceEnd: token.sourceEnd,
+          ...(token.spokenReading ? { spokenReading: token.spokenReading } : {}),
           targetStart,
           targetEnd: output.length
         });
       };
 
       for (let index = 0; index < tokens.length; index += 1) {
-        const lamedHeyApostropheSuffix = this.lamedHeyApostropheDivineNameSuffix(tokens, index);
-        const heyApostropheSuffix = this.heyApostropheDivineNameSuffix(tokens, index);
-        const apostropheHeyPrefix = this.apostropheHeyDivineNamePrefix(tokens, index);
-        if (lamedHeyApostropheSuffix !== null || heyApostropheSuffix !== null) {
-          const name = lamedHeyApostropheSuffix !== null ? "Ladonai" : "Adonai";
-          appendAligned(name, tokens[index].sourceStart, tokens[index + 1].sourceStart + 1);
-          output += lamedHeyApostropheSuffix ?? heyApostropheSuffix;
-          index += 1;
-        } else if (apostropheHeyPrefix !== null) {
-          output += apostropheHeyPrefix;
-          appendAligned("Adonai", tokens[index].sourceEnd - 1, tokens[index + 1].sourceEnd);
-          index += 1;
-        } else if (this.startsMaqafGroup(tokens, index)) {
+        if (this.startsMaqafGroup(tokens, index)) {
           const group = this.collectMaqafGroup(tokens, index);
-          const rendered = this.transliterateMaqafParts(group.words, format);
+          const rendered = this.transliterateMaqafParts(group.words, format, group.verseEnd);
           rendered.parts.forEach((part, partIndex) => {
             if (partIndex > 0) {
               output += rendered.separator;
             }
             const sourceToken = tokens[index + (partIndex * 2)];
-            appendAligned(part, sourceToken.sourceStart, sourceToken.sourceEnd);
+            appendAligned(part, sourceToken);
           });
           index = group.endIndex;
         } else {
           const token = tokens[index];
           const rendered = this.transliterateToken(token, format);
           if (token.type === "hebrew" && hasHebrew(token.value)) {
-            appendAligned(rendered, token.sourceStart, token.sourceEnd);
+            appendAligned(rendered, token);
           } else {
             output += rendered;
           }
@@ -2166,7 +2293,7 @@
       }
 
       return {
-        text: capitalizeSentenceStarts(output),
+        text: capitalizeSentenceStarts(output, segments),
         segments
       };
     }
@@ -2176,22 +2303,6 @@
       const words = [];
 
       for (let index = 0; index < tokens.length; index += 1) {
-        const lamedHeyApostropheSuffix = this.lamedHeyApostropheDivineNameSuffix(tokens, index);
-        const heyApostropheSuffix = this.heyApostropheDivineNameSuffix(tokens, index);
-        const apostropheHeyPrefix = this.apostropheHeyDivineNamePrefix(tokens, index);
-        if (lamedHeyApostropheSuffix !== null) {
-          index += 1;
-          continue;
-        }
-        if (heyApostropheSuffix !== null) {
-          index += 1;
-          continue;
-        }
-        if (apostropheHeyPrefix !== null) {
-          index += 1;
-          continue;
-        }
-
         if (
           tokens[index].type === "hebrew" &&
           hasHebrew(tokens[index].value) &&
@@ -2206,25 +2317,10 @@
 
     transliterateTokens(tokens, format = "text") {
       let output = "";
-      const word = (value) => value;
-      const literal = (value) => value;
-
       for (let index = 0; index < tokens.length; index += 1) {
-        const lamedHeyApostropheSuffix = this.lamedHeyApostropheDivineNameSuffix(tokens, index);
-        const heyApostropheSuffix = this.heyApostropheDivineNameSuffix(tokens, index);
-        const apostropheHeyPrefix = this.apostropheHeyDivineNamePrefix(tokens, index);
-        if (lamedHeyApostropheSuffix !== null) {
-          output += word("Ladonai") + literal(lamedHeyApostropheSuffix);
-          index += 1;
-        } else if (heyApostropheSuffix !== null) {
-          output += word("Adonai") + literal(heyApostropheSuffix);
-          index += 1;
-        } else if (apostropheHeyPrefix !== null) {
-          output += literal(apostropheHeyPrefix) + word("Adonai");
-          index += 1;
-        } else if (this.startsMaqafGroup(tokens, index)) {
+        if (this.startsMaqafGroup(tokens, index)) {
           const group = this.collectMaqafGroup(tokens, index);
-          output += this.transliterateMaqafGroup(group.words, format);
+          output += this.transliterateMaqafGroup(group.words, format, group.verseEnd);
           index = group.endIndex;
         } else {
           output += this.transliterateToken(tokens[index], format);
@@ -2232,57 +2328,6 @@
       }
 
       return output;
-    }
-
-    lamedHeyApostropheDivineNameSuffix(tokens, index) {
-      if (
-        tokens[index]?.type === "hebrew" &&
-        stripMarks(tokens[index].value) === "לה" &&
-        tokens[index + 1]?.type === "other" &&
-        /^[׳'’]/.test(tokens[index + 1].value)
-      ) {
-        return tokens[index + 1].value.slice(1);
-      }
-
-      return null;
-    }
-
-    startsHeyApostropheDivineName(tokens, index) {
-      return (
-        this.heyApostropheDivineNameSuffix(tokens, index) !== null
-      );
-    }
-
-    heyApostropheDivineNameSuffix(tokens, index) {
-      if (
-        tokens[index]?.type === "hebrew" &&
-        stripMarks(tokens[index].value) === "ה" &&
-        tokens[index + 1]?.type === "other" &&
-        /^[׳'’]/.test(tokens[index + 1].value)
-      ) {
-        return tokens[index + 1].value.slice(1);
-      }
-
-      return null;
-    }
-
-    startsApostropheHeyDivineName(tokens, index) {
-      return (
-        this.apostropheHeyDivineNamePrefix(tokens, index) !== null
-      );
-    }
-
-    apostropheHeyDivineNamePrefix(tokens, index) {
-      if (
-        tokens[index]?.type !== "other" ||
-        !/[׳'’]$/.test(tokens[index].value) ||
-        tokens[index + 1]?.type !== "hebrew" ||
-        stripMarks(tokens[index + 1].value) !== "ה"
-      ) {
-        return null;
-      }
-
-      return tokens[index].value.slice(0, -1);
     }
 
     startsMaqafGroup(tokens, index) {
@@ -2302,10 +2347,10 @@
         index += 2;
       }
 
-      return { words, endIndex: index };
+      return { words, endIndex: index, verseEnd: tokens[index].verseEnd };
     }
 
-    transliterateMaqafParts(words, format = "text") {
+    transliterateMaqafParts(words, format = "text", verseEnd = false) {
       const options = outputOptions(this.ruleset);
       const clusterGroups = words.map((word) => parseClusters(word));
       const combinedClusters = clusterGroups.flat();
@@ -2313,7 +2358,7 @@
       const separator = options.fusedMaqafWords.includes(normalizedGroup)
         ? ""
         : options.maqafSeparator;
-      assignStress(combinedClusters);
+      assignStress(combinedClusters, this.ruleset, verseEnd);
       const wordFormat =
         format === "stressMarks" && shouldShowStressMarksForClusters(combinedClusters, null)
           ? "stressMarksAll"
@@ -2327,8 +2372,8 @@
       };
     }
 
-    transliterateMaqafGroup(words, format = "text") {
-      const rendered = this.transliterateMaqafParts(words, format);
+    transliterateMaqafGroup(words, format = "text", verseEnd = false) {
+      const rendered = this.transliterateMaqafParts(words, format, verseEnd);
       return rendered.parts.join(rendered.separator);
     }
 
@@ -2349,10 +2394,10 @@
         return token.value;
       }
 
-      return this.transliterateWord(token.value, null, false, format);
+      return this.transliterateWord(token.value, null, false, format, token.verseEnd);
     }
 
-    transliterateWord(word, clusters = null, stressAssigned = false, format = "text") {
+    transliterateWord(word, clusters = null, stressAssigned = false, format = "text", verseEnd = false) {
       const normalized = normalize(word);
       const cleaned = stripTropeAndMeteg(word);
       const noMarks = stripMarks(word);
@@ -2361,45 +2406,50 @@
       const canUseNiqqudless = normalized === noMarks || noMarks.includes("יהוה") || noMarks === "יי";
       const niqqudless = canUseNiqqudless ? this.ruleset.exceptions.niqqudless[noMarks] : null;
       const stressOverride = stressOverrideForWord(word, this.ruleset);
-      const useRuleStress = clusters && (format === "stressMarks" || format === "stressMarksAll") && useRuleStressForExactWord(word, this.ruleset);
+      const useRuleStress = clusters && usesStressMarks(format) && useRuleStressForExactWord(word, this.ruleset);
       const markStress = (value) => (
         stressOverride ? stressMarkedVowelGroup(value, stressOverride) : value
       );
 
       if (exact && !useRuleStress) {
-        return (format === "stressMarks" || format === "stressMarksAll") ? markStress(exact) : exact;
+        // An exception supplies a spelling. A cantillation mark can still
+        // locate its stressed vowel, including when "ai" spells one vowel.
+        if (!stressOverride && usesStressMarks(format) &&
+            /[\u0591-\u05ae\u05bd]/u.test(normalized) && !niqqudless) {
+          const marked = clusters || parseClusters(word);
+          if (!stressAssigned) assignStress(marked, this.ruleset, verseEnd);
+          const nuclei = getSyllableNuclei(marked);
+          const primary = nuclei.findIndex(({ cluster }) => cluster.primaryStress);
+          if (primary >= 0 && (format !== "stressMarks" || primary < nuclei.length - 1)) {
+            return stressMarkedVowelGroup(exact, { vowelFromEnd: nuclei.length - primary });
+          }
+        }
+        return usesStressMarks(format) ? markStress(exact) : exact;
       }
 
       if (niqqudless) {
-        return (format === "stressMarks" || format === "stressMarksAll") ? markStress(niqqudless) : niqqudless;
+        const reading = noMarks === "מיהוה" || noMarks === "ומיהוה"
+          ? niqqudless.replace(/mei?/, "m" + this.ruleset.vowels.tzere)
+          : niqqudless;
+        return usesStressMarks(format) ? markStress(reading) : reading;
       }
 
       if (phrase && !this.ruleset.output?.doubleDageshChazak) {
-        return (format === "stressMarks" || format === "stressMarksAll") ? markStress(phrase) : phrase;
+        return usesStressMarks(format) ? markStress(phrase) : phrase;
       }
 
       const wordClusters = clusters || parseClusters(word);
       if (!hasWordVocalization(wordClusters)) {
-        const inferred = inferredUnvocalizedHolamWord(wordClusters, this.ruleset);
-        if (inferred) {
-          return inferred;
-        }
         return word;
       }
 
-      for (let index = 0; index < wordClusters.length; index += 1) {
-        if (wordClusters[index].base === "ש") {
-          wordClusters[index].lexicalInitialShe = Boolean(
-            this.ruleset.exceptions.lexicalInitialShe?.[clusterLookupKey(wordClusters, index)]
-          );
-        }
-      }
+      markLexicalInitials(wordClusters, this.ruleset);
 
       repairMissingHolamMalei(wordClusters);
       if (!stressAssigned) {
-        assignStress(wordClusters);
+        assignStress(wordClusters, this.ruleset, verseEnd);
       }
-      if (format === "stressMarks" || format === "stressMarksAll") {
+      if (usesStressMarks(format)) {
         applyStressOverrideToClusters(wordClusters, stressOverride);
       }
       applyMissingMetegKamatzSheva(wordClusters, word, this.ruleset);
@@ -2413,8 +2463,11 @@
         forceSilentInitialPrefixSheva(wordClusters);
       }
       applyForcedSilentShevas(wordClusters, word, this.ruleset);
-      if ((format === "stressMarks" || format === "stressMarksAll") && stressOverride?.vowelFromEnd) {
-        return stressMarkedVowelGroup(transliterateClusters(wordClusters, this.ruleset), stressOverride);
+      if (usesStressMarks(format) && stressOverride?.vowelFromEnd) {
+        const spelling = format === "phonemeStress"
+          ? transliterateClusters(wordClusters, this.ruleset, format).replace(/\u0301/gu, "")
+          : transliterateClusters(wordClusters, this.ruleset);
+        return stressMarkedVowelGroup(spelling, stressOverride);
       }
       if (format === "stressMarks" && !shouldShowStressMarksForClusters(wordClusters, stressOverride)) {
         return exact || transliterateClusters(wordClusters, this.ruleset);
@@ -2435,7 +2488,7 @@
       }
 
       const clusters = parseClusters(word);
-      return !hasWordVocalization(clusters) && !inferredUnvocalizedHolamWord(clusters, this.ruleset);
+      return !hasWordVocalization(clusters);
     }
   }
 

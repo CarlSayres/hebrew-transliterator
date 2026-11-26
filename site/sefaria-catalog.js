@@ -64,10 +64,12 @@
     ketuvim: "Ketuvim"
   };
 
+  const chapterCounts = new Map(Object.values(tanakhCollections).flat());
+
   function normalizeQuery(value) {
     return String(value || "")
       .toLowerCase()
-      .replace(/[^a-z\u0590-\u05ff]+/g, " ")
+      .replace(/[^a-z0-9\u0590-\u05ff]+/g, " ")
       .trim();
   }
 
@@ -132,6 +134,7 @@
   }
 
   return {
+    chapterCount: (canonicalRef) => chapterCounts.get(canonicalRef),
     collectionLabels,
     haggadot: Object.freeze(haggadot),
     keyForQuery,

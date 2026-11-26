@@ -27,6 +27,7 @@
   const niqqudless = {
     "יי": "Adonai",
     "יהוה": "Adonai",
+    "ויהוה": "Vadonai",
     "ה׳": "Adonai",
     "ה'": "Adonai",
     "ה’": "Adonai",
@@ -34,10 +35,19 @@
     "ליהוה": "Ladonai",
     "ביהוה": "Badonai",
     "כיהוה": "Kadonai",
+    "מיהוה": "me·Adonai",
+    "ומיהוה": "ume·Adonai",
+    "וביהוה": "uvadonai",
+    "וכיהוה": "ukhadonai",
+    "וליהוה": "veladonai",
+    "היהוה": "ha·Adonai",
     "טוב": "tov",
     "עושה": "oseh",
     "בו": "bo",
     "או": "o",
+    "אור": "or",
+    "הוד": "hod",
+    "סוף": "sof",
     "אדני": "Adonai",
     "אלהינו": "Eloheinu",
     "אלהי": "Elohei",
@@ -80,10 +90,6 @@
     "אֱלֹהָיו": "Elohav",
     "אֲדֹנֵינוּ": "Adoneinu",
     "שֶׁיְהֹוָה": "she·Adonai",
-    "מֵיְהֹוָה": "me·Adonai",
-    "מֵיְהוָה": "me·Adonai",
-    "וּמֵיְהֹוָה": "ume·Adonai",
-    "וּמֵיְהוָה": "ume·Adonai",
     "יִשָּׂשכָר": "Yissakhar",
     "לָיְלָה": "lailah",
     "לַיהֹוָה": "Ladonai",
@@ -128,28 +134,6 @@
     "ולו": "velo",
     "וכל": "vekhol",
     "וכּל": "vekol",
-    "כָּל": "kol",
-    "כָּל": "kol",
-    "כָל": "kol",
-    "ככָּל": "khkol",
-    "ככָל": "khkol",
-    "לכָּל": "lkol",
-    "לכָל": "lkol",
-    "הכָּל": "hkol",
-    "הכָל": "hkol",
-    "מִכָּל": "mikol",
-    "מִכָל": "mikol",
-    "בכָּל": "vkol",
-    "בכָל": "vkol",
-    "בְּכָּל": "bekhol",
-    "בְּכָל": "bekhol",
-    "וּבְכָּל": "uv·khol",
-    "וּבְכָל": "uv·khol",
-    "וּבְכׇּל": "uv·khol",
-    "וּבְכׇל": "uv·khol",
-    "שכָּל": "shkol",
-    "שכָל": "shkol",
-    "וְכָּל": "vekhol",
     "וְכָל": "vekhol",
     "כְּכָל": "kekhol",
     "מִן": "min",
@@ -349,6 +333,8 @@
   };
 
   const stressOverrides = {
+    "לָיְלָה": { vowelFromEnd: 2, unaccentedOnly: true },
+    "שְׁתַּיִם": { vowelFromEnd: 2, unaccentedOnly: true },
     "אֱלֹהֵינוּ": { vowelFromEnd: 2 },
     "אֱלהֵינוּ": { vowelFromEnd: 2 },
     "אֱלֹהֶיךָ": { vowelFromEnd: 2 },
@@ -359,8 +345,49 @@
     "וַיְהִי": true
   };
 
+  // Fallback for unaccented siddur text and lone dehi. The listed dehi spellings
+  // also occur with a locating accent in at least three separate MAM verses,
+  // unanimously penultimate. Includes the common segolate חֶסֶד and its controls.
+  const penultimateStress = Object.fromEntries(`
+אֱלֹהֵינוּ אֱלֹהֶיךָ אֲבֹתֶיךָ אֲנַחְנוּ אִוֶּלֶת אֵבוֹשָׁה אֵלֶּה אֵלֶיךָ אֵפֶר
+אֶבֶן אֶרֶץ אַחֲרֶיהָ אַיִן אַפַּיִם אָהַבְתִּי אָוֶן אָמַרְתִּי אָנִי
+אֹזֶן אֹכֶל אֹמֶר אׇזְנַיִם אוֹיְבֶיךָ בְּלִיַּעַל בְּמִצְרַיִם בְּצֶדֶק בַּבֹּקֶר
+בַּסֵּתֶר בַּקַּיִץ בַּשָּׁמַיִם בָּאָרֶץ בָּנֶיךָ בָּעֶרֶב בָנֶיהָ בֹּאוּ בֹּקֶר
+גֶּבֶר גֶּפֶן דִּבַּרְתִּי דֶּשֶׁא הֲבִינֵנִי הֲיָדַעְתָּ הִגַּדְתִּי הִשָּׁמֶר הֵמָּה
+הֵנָּה הַגֶּבֶר הַדֶּלֶת הַדֶּרֶךְ הַוּוֹת הַיַּיִן הַכֶּסֶף הַלְלוּהוּ הַמֶּלֶךְ
+הַצִּילֵנִי הַשֶּׁמֶשׁ הַשָּׁמַיִם הָאֵלֶּה הָאָרֶץ הָיִיתִי הָיִיתָ הוֹשִׁיעֵנִי וְאֵלֶּה
+וְאֶפְרַיִם וְהֵמָּה וְהָיִיתָ וְחֶרֶב וְלַיְלָה וְצַלְמָוֶת וַיַּגִּידוּ וַיַּעַן וַתֹּאמֶר
+וָאֶבֶן וָאַיִן וָחֶסֶד וָשֶׁמֶן וּבְדַעַת וּמַיִם זֶרַע חֶסֶד חֶרֶב
+חַיִל חַתּוּ חָטָאתִי חָסִיתִי חֹשֶׁךְ טֶרֶף יְרוּשָׁלִַם יִתְּנֵנִי יֵבֹשׁוּ
+יַחַד יָבֹאוּ יָדֵינוּ יָדֶיהָ יָדַעְתִּי יָדַעְתָּ יָלִינוּ יָמֵינוּ יָשׁוּבוּ
+יוֹעִילוּ כַּמַּיִם לְאֵבֶל לְאָבִיךָ לְמַעַן לְפָנֶיךָ לְרֵעֵהוּ לֶחֶם לַיְלָה
+לַיִשׁ לַכֶּסֶף לַנַּעַר לָאָרֶץ לָבֶטַח לָמָּה לָנֶצַח לָנוּ לָקַחַת
+מִלְּפָנֶיךָ מִמֶּנִּי מִנֶּגֶד מִנַּחַל מִצְוֺתֶיךָ מִצְרַיִם מִשְׁפָּטֶיךָ מִשָּׁמַיִם מִתַּחַת
+מֵחֶרֶב מֵרֶחֶם מֶלֶךְ מַיִם מָצָאתִי נֶפֶשׁ נַפְשֵׁנוּ סְבָבוּנִי סֶלַע
+עֲבָדֶיךָ עֲנֵנִי עֵדֹתֶיךָ עֵזֶר עֵינֶיךָ עֵינַיִם עֶבֶד עַיִן עָלֵינוּ
+עָלֶיהָ עָלֶיךָ עָשִׂיתִי עָשִׂיתָ עוּרָה פִּיהָ פִּיךָ פִקּוּדֶיךָ פֶּרֶץ
+פֶּשַׁע פֶרֶץ פֶשַׁע פָּנֶיךָ פָּעַלְתָּ פָנֶיךָ צִוִּיתָ צֶדֶק צַלְמָוֶת
+קְרָאתִיךָ קִוִּיתִי קִנֵּאתִי קָרָאתִי קֹדֶשׁ קֹרַח רֶמֶשׂ רֶשֶׁת רַגְלֶיהָ
+רָאִיתִי רָאִיתָ שְׂפָתַיִם שִׁבְעָתַיִם שֶׁבֶר שֶׁקֶר שַׂמְתָּ שָׁמַיִם שָׁמַעְנוּ
+שָׁמַעְתִּי שָׁמַעְתָּ שָׁמַרְתִּי שָׁמָּה שָׂנֵאתִי שֹׁמַעַת שׇׁמְרֵנִי תַּחַת תָּשֻׁבוּ
+  `.normalize("NFD").trim().split(/\s+/u).map(word => [word, true]));
+
+  // Both attested Daniel forms (5:6 and 5:9) stress their consonantal vo.
+  penultimateStress["זִיוֺהִי"] = true;
+  penultimateStress["וְזִיוֺהִי"] = true;
+
   normalizeLookup(exactWords);
   normalizeLookup(silentInitialPrefixSheva);
+  // After a consonant with sh'va, וֹ and וֺ both denote consonantal vo.
+  // Accept either encoding in the reviewed lexical list (e.g. מִצְוֹתָיו).
+  for (const table of [silentInitialPrefixSheva, penultimateStress]) {
+    for (const key of Object.keys(table)) {
+      if (key.includes("ֺ")) {
+        const ordinaryHolam = key.replace(/(ְ[\u05bc\u05c1\u05c2]*ו)ֺ/gu, "$1ֹ");
+        table[ordinaryHolam] = true;
+      }
+    }
+  }
   normalizeLookup(missingMetegKamatzSheva);
   normalizeLookup(silentShevaByWord);
   normalizeLookup(lexicalInitialHey);
@@ -436,6 +463,7 @@
       silentShevaByWord,
       phraseCapitalization,
       stressOverrides,
+      penultimateStress,
       stressRuleWords
     }
   };
@@ -462,22 +490,19 @@
   levShalem.exceptions.niqqudless = normalizeLookup(mapValues(niqqudless, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.phraseCapitalization = normalizeLookup(mapValues(phraseCapitalization, (value) => replaceModernMarks(value, "·", "h")));
   levShalem.exceptions.exactWords["שֶׁיְהֹוָה".normalize("NFD")] = "she-Adonai";
-  levShalem.exceptions.exactWords["מֵיְהֹוָה".normalize("NFD")] = "mei-Adonai";
-  levShalem.exceptions.exactWords["מֵיְהוָה".normalize("NFD")] = "mei-Adonai";
-  levShalem.exceptions.exactWords["וּמֵיְהֹוָה".normalize("NFD")] = "u-mei-Adonai";
-  levShalem.exceptions.exactWords["וּמֵיְהוָה".normalize("NFD")] = "u-mei-Adonai";
+  levShalem.exceptions.niqqudless["מיהוה"] = "mei-Adonai";
+  levShalem.exceptions.niqqudless["ומיהוה"] = "u-mei-Adonai";
+  levShalem.exceptions.niqqudless["וביהוה"] = "u-vadonai";
+  levShalem.exceptions.niqqudless["וכיהוה"] = "u-khadonai";
+  levShalem.exceptions.niqqudless["וליהוה"] = "v'ladonai";
+  levShalem.exceptions.niqqudless["היהוה"] = "ha-Adonai";
   levShalem.exceptions.exactWords["בְּעָלְמָא".normalize("NFD")] = "b'alma";
   levShalem.exceptions.exactWords["דְכָל".normalize("NFD")] = "d'khol";
   levShalem.exceptions.exactWords["וַיְהִי".normalize("NFD")] = "va-y'hi";
   levShalem.exceptions.exactWords["הָיְתָה".normalize("NFD")] = "haitah";
   levShalem.exceptions.exactWords["וּלְעָלְמֵי".normalize("NFD")] = "u-l'almei";
-  levShalem.exceptions.exactWords["וּבְכָּל".normalize("NFD")] = "u-v'khol";
-  levShalem.exceptions.exactWords["וּבְכָל".normalize("NFD")] = "u-v'khol";
-  levShalem.exceptions.exactWords["וּבְכׇּל".normalize("NFD")] = "u-v'khol";
-  levShalem.exceptions.exactWords["וּבְכׇל".normalize("NFD")] = "u-v'khol";
   levShalem.exceptions.exactWords["וְלא".normalize("NFD")] = "v'lo";
   levShalem.exceptions.exactWords["וְעָרְבָה".normalize("NFD")] = "v'arvah";
-  levShalem.exceptions.exactWords["וְכָּל".normalize("NFD")] = "v'khol";
   levShalem.exceptions.exactWords["וְכָל".normalize("NFD")] = "v'khol";
   levShalem.exceptions.exactWords["וֵאלהֵי".normalize("NFD")] = "ve-Elohei";
   // These are lexical vav words, not the conjunction.
@@ -503,10 +528,9 @@
   mishkanTefilah.exceptions.niqqudless = normalizeLookup(mapValues(niqqudless, (value) => replaceKh(replaceModernMarks(value, "-", "ḣ"))));
   mishkanTefilah.exceptions.phraseCapitalization = normalizeLookup(mapValues(phraseCapitalization, (value) => replaceKh(replaceModernMarks(value, "-", "ḣ"))));
   mishkanTefilah.exceptions.exactWords["בְּעָלְמָא".normalize("NFD")] = "b'alma";
-  mishkanTefilah.exceptions.exactWords["מֵיְהֹוָה".normalize("NFD")] = "mei-Adonai";
-  mishkanTefilah.exceptions.exactWords["מֵיְהוָה".normalize("NFD")] = "mei-Adonai";
-  mishkanTefilah.exceptions.exactWords["וּמֵיְהֹוָה".normalize("NFD")] = "u-mei-Adonai";
-  mishkanTefilah.exceptions.exactWords["וּמֵיְהוָה".normalize("NFD")] = "u-mei-Adonai";
+  mishkanTefilah.exceptions.niqqudless["מיהוה"] = "mei-Adonai";
+  mishkanTefilah.exceptions.niqqudless["ומיהוה"] = "u-mei-Adonai";
+  mishkanTefilah.exceptions.niqqudless["וליהוה"] = "v'ladonai";
   mishkanTefilah.exceptions.exactWords["דְכָל".normalize("NFD")] = "d'chol";
   mishkanTefilah.exceptions.exactWords["אֱלֹהֵיכֶם".normalize("NFD")] = "Eloheichem";
   mishkanTefilah.exceptions.exactWords["אֱלֹהֵיכֶן".normalize("NFD")] = "Eloheichen";
@@ -514,6 +538,7 @@
   mishkanTefilah.exceptions.exactWords["וַיְהִי".normalize("NFD")] = "vay'hi";
   mishkanTefilah.exceptions.exactWords["הָיְתָה".normalize("NFD")] = "hay'tah";
   mishkanTefilah.exceptions.exactWords["וְלא".normalize("NFD")] = "v'lo";
+  mishkanTefilah.exceptions.exactWords["וְכָל".normalize("NFD")] = "v'chol";
   mishkanTefilah.exceptions.exactWords["כְּכָל".normalize("NFD")] = "k'chol";
 
   // Private source style for English text-to-speech. It is deliberately

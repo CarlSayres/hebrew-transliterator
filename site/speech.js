@@ -2,14 +2,13 @@
   const api = factory();
   if (typeof module === "object" && module.exports) {
     module.exports = api;
-  }
-  if (root) {
+  } else if (root) {
     root.HebrewTransliteratorSpeech = api;
   }
 })(typeof window !== "undefined" ? window : globalThis, function () {
   function prepareText(text) {
     return String(text || "")
-      .split("\n")
+      .split(/\r\n?|\n/u)
       .map((line) => line.replace(/^\s*\d+\.\s*/, "").trim())
       .filter(Boolean)
       .join("\n")
@@ -60,7 +59,7 @@
     return result;
   }
 
-  function selectedOrAll(text, offsets) {
+  function selectedOrAll(text, offsets, segments = []) {
     const value = String(text || "");
     if (
       offsets &&
@@ -69,8 +68,19 @@
       offsets.start !== offsets.end
     ) {
       const start = Math.max(0, Math.min(offsets.start, offsets.end));
-      const end = Math.min(value.length, Math.max(offsets.start, offsets.end));
-      return value.slice(start, end);
+      let end = Math.min(value.length, Math.max(offsets.start, offsets.end));
+      // The adjacent sof pasuq identifies silluq in the selected final word.
+      if (value[end] === "׃" && segments.some(s => s.sourceStart >= start && s.sourceEnd === end)) end++;
+      let cursor = start;
+      let reading = "";
+      for (const segment of segments) {
+        if (segment.sourceStart >= end) break;
+        if (segment.spokenReading && segment.sourceStart >= start && segment.sourceEnd <= end) {
+          reading += value.slice(cursor, segment.sourceStart) + segment.spokenReading;
+          cursor = segment.sourceEnd;
+        }
+      }
+      return reading + value.slice(cursor, end);
     }
     return value;
   }
@@ -97,7 +107,7 @@
 
     const sourceStart = Math.min(...matching.map((segment) => segment.sourceStart));
     const sourceEnd = Math.max(...matching.map((segment) => segment.sourceEnd));
-    return source.slice(sourceStart, sourceEnd);
+    return selectedOrAll(source, { start: sourceStart, end: sourceEnd }, matching);
   }
 
   const vowelUnits = ["ei", "ai", "oi", "a", "e", "i", "o", "u"];
@@ -217,7 +227,7 @@
       .replace(/\u034f/gu, "")
       .normalize("NFC")
       .replace(/[ \t]*\{\s*[פס]\s*\}[ \t]*/gu, " ")
-      .split("\n")
+      .split(/\r\n?|\n/u)
       .map((line) => line.replace(/^\s*\d+\.\s*/, "").trim())
       .filter(Boolean)
       .join(" ")
@@ -232,42 +242,28 @@
         case "הקב״ה":
         case 'הקב"ה':
           return "הַקָּדוֹשׁ בָּרוּךְ הוּא";
-        case "יהוה":
-        case "י״י":
-        case 'י"י':
-        case "יי":
         case "ה":
-          return "אֲדֹנָי";
-        case "ליהוה":
-        case "ליי":
-          return "לַדֹנָי";
-        case "ביהוה":
-          return "בַּדֹנָי";
-        case "כיהוה":
-          return "כַּדֹנָי";
-        case "שיהוה":
-          return "שֶׁאֲדֹנָי";
-        case "מיהוה":
-          return "מֵאֲדֹנָי";
-        case "ומיהוה":
-          return "וּמֵאֲדֹנָי";
+          return word === "ה" ? "אֲדֹנָי" : word;
         default:
           if (/[א-ת][״"׳][א-ת]/u.test(spelling)) return " ";
-          return spelling === "לה׳" ? "לַדֹנָי" : word;
+          return word;
       }
     }).normalize("NFC");
   }
 
-  function speakableHebrewOnly(text, lexicon = []) {
+  function speakableHebrewOnly(text, lexicon = [], { joinUnlistedMaqaf = !lexicon?.length } = {}) {
     const recognizedWords = new Set(
       Array.from(lexicon || [], (entry) => String(entry?.grapheme || "").normalize("NFC")).filter(Boolean)
     );
-    const tokens = canonicalHebrew(text).match(
-      /[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*|[.,!?;:׃–—…]+/gu
+    const passage = canonicalHebrew(text).replace(/\([^()א-ת]*\)|\[[^\[\]א-ת]*\]/gu, " ");
+    const tokens = passage.match(
+      /[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*|[.,!?;:׃–—…]+|[\p{L}\p{N}]/gu
     ) || [];
     let result = "";
+    let ignorePunctuation = false;
     for (const token of tokens) {
       if (/^[\u05d0-\u05ea]/u.test(token)) {
+        ignorePunctuation = false;
         const parts = token.split("־");
         const joined = parts.join("").normalize("NFC");
         const joinedRecognized = recognizedWords.has(joined);
@@ -276,13 +272,15 @@
         );
         if (!joinedRecognized && !speakableParts.length) continue;
         const words = joinedRecognized || (speakableParts.length === parts.length &&
-          (parts.length === 1 || !lexicon.length))
+          (parts.length === 1 || joinUnlistedMaqaf))
           ? [joined]
           : speakableParts;
         for (const word of words) {
           result += `${result && !result.endsWith(" ") ? " " : ""}${word}`;
         }
-      } else if (result) {
+      } else if (/[\p{L}\p{N}]/u.test(token)) {
+        ignorePunctuation = true;
+      } else if (result && !ignorePunctuation) {
         result = `${result.trimEnd()}${token} `;
       }
     }
@@ -306,11 +304,16 @@
     const normalized = String(value || "")
       .normalize("NFD")
       .toLowerCase()
-      .replace(/([eao])\u0301([iy])/gu, "$1$2\u0301");
+      .replace(/([eao])\u0301i/gu, "$1i\u0301");
     const units = [];
     let index = 0;
     while (index < normalized.length) {
       const tail = normalized.slice(index);
+      if (tail[0] === "|") {
+        // Consonant boundary from the Hebrew renderer, not a syllable boundary.
+        index += 1;
+        continue;
+      }
       if (tail[0] === "\u0301") {
         if (units.length) {
           units[units.length - 1].stressed = true;
@@ -423,20 +426,20 @@
 
   function lexiconEntries(text, transliterator) {
     const prepared = canonicalHebrew(text);
-    const units = prepared.match(
-      /[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*/gu
-    ) || [];
+    const units = prepared.matchAll(
+      /([\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*)(׃?)/gu
+    );
     const entries = new Map();
-    const wordEntry = (word) => {
+    const wordEntry = (word, verseEnding) => {
       const grapheme = word.normalize("NFC");
-      const rendered = transliterator.transliterateWithAllStressMarks(grapheme);
+      const rendered = transliterator.transliterateWithAllStressMarks(grapheme + verseEnding, { primaryOnly: true, forIPA: true });
       const nfd = grapheme.normalize("NFD");
       const preserveFinalH = /ה[^א-ת]*\u05bc[^א-ת]*$/u.test(nfd);
       return { grapheme, phoneme: ipaFromTransliteration(rendered, { preserveFinalH }) };
     };
-    for (const unit of units) {
+    for (const [, unit, verseEnding] of units) {
       const parts = unit.split("־");
-      const partEntries = parts.map(wordEntry);
+      const partEntries = parts.map((word, index) => wordEntry(word, index === parts.length - 1 ? verseEnding : ""));
       if (parts.length > 1 && partEntries.every((entry) => entry.phoneme)) {
         const grapheme = parts.join("").normalize("NFC");
         const phoneme = partEntries.map((entry, index) => {
@@ -461,9 +464,27 @@
     return current && imported && current === imported ? "sefaria" : "arbitrary";
   }
 
+  function distinguishVerseEndings(text) {
+    // A PLS lexicon has one reading per spelling. In a mixed passage the same
+    // two-meteg word can need different stress in medial and verse-final use.
+    if (!text.includes("׃") || !text.includes("\u05bd")) return text;
+    const words = /([א-ת][א-ת\p{M}]*)(׃?)/gu;
+    const medial = new Set();
+    for (const [, word, ending] of text.matchAll(words)) {
+      if (!ending && word.indexOf("\u05bd") !== word.lastIndexOf("\u05bd")) medial.add(word);
+    }
+    if (!medial.size) return text;
+    return text.replace(words, (match, word, ending) => {
+      if (!ending || !medial.has(word)) return match;
+      // Mark the already-stressed silluq with an explicit locating accent in
+      // the private synthesis text. All original letters and vowels survive.
+      return word.replace(/\u05bd([^\u05bd]*)$/u, "\u05bd\u05a3$1") + ending;
+    }).normalize("NFC");
+  }
+
   function prepareAzureHebrew(text, transliterator) {
     // Azure receives the reading itself, including when it does not match a lexicon entry.
-    const spoken = azurePronunciationText(text);
+    const spoken = distinguishVerseEndings(azurePronunciationText(transliterator.nameReadingsForSpeech(text)));
     const lexicon = lexiconEntries(spoken, transliterator);
     return { text: speakableHebrewOnly(spoken, lexicon), lexicon };
   }

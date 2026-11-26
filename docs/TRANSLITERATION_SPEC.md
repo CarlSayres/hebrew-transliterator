@@ -67,7 +67,7 @@ Fully unvocalized Hebrew words are left unchanged in the output, because their v
 
 Known exact exceptions, especially sacred-name forms such as `יהוה` or `ה׳`, may still be transliterated.
 
-As a conservative fallback, three-letter unvocalized words with medial `ו` are assumed to contain holam-vav. For example, `הוד` -> `hod` and `אור` -> `or`. Longer unvocalized words such as `שלום` remain unchanged unless listed as safe exceptions.
+Recognized readings include `הוד` → `hod` and `אור` → `or`. A medial vav alone does not determine the vowel. Other unpointed words, including `קום` and `רוח`, retain their Hebrew spelling and are omitted from audio unless a reading is listed explicitly.
 
 When the input contains unvocalized Hebrew words that are preserved, the page displays a note so the user knows those words were not transliterated.
 
@@ -578,7 +578,7 @@ Example:
 
 Default output is lowercase except for sacred names and recognized liturgical phrase forms.
 
-The divine name is transliterated as `Adonai`.
+The tetragrammaton normally reads `Adonai`. When it appears beside a separately written `אֲדֹנָי`, this site's convention is `Adonai Elohim` in either order, including Genesis 15:2 and Habakkuk 3:19. The repeated tetragrammaton in Exodus 34:6 reads `Adonai Adonai`. A tetragrammaton pointed for Elohim in isolation also reads `Elohim`. Selecting one of the paired names for audio keeps its reading in that passage.
 
 | Hebrew | Output |
 |---|---|

@@ -2,6 +2,176 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const speech = require("../site/speech");
 
+test("selecting a complete verse-final word keeps its silluq in speech", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const t = new engine.HebrewTransliterator.Transliterator(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, "e"));
+  const source = "הֵם יִֽהְיֽוּ׃";
+  const { segments } = t.transliterateWithAlignment(source);
+  const last = segments.at(-1);
+  const fromHebrew = speech.selectedOrAll(source, { start: last.sourceStart, end: last.sourceEnd }, segments);
+  const fromLatin = speech.sourceForTargetSelection(source, segments, { start: last.targetStart, end: last.targetEnd });
+  assert.equal(fromHebrew, "יִֽהְיֽוּ׃");
+  assert.equal(fromLatin, fromHebrew);
+  assert.equal(speech.prepareAzureHebrew(fromHebrew, t).lexicon[0].phoneme, "jih.ˈju");
+});
+
+test("the IPA stresses the trope when the same word also has a secondary meteg", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const t = new engine.HebrewTransliterator.Transliterator(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, "e"));
+  for (const [word, expected] of [
+    ["תַּֽדְשֵׁ֤א", "tad.ˈʃe"], ["הַֽחַיָּ֣ה", "ha.xa.ˈja"], ["לָֽרָקִ֖יעַ", "la.ʁa.ˈki.a"]
+  ]) {
+    assert.equal(speech.prepareAzureHebrew(word, t).lexicon[0].phoneme, expected, word);
+  }
+  assert.equal(t.transliterateWithAllStressMarks("תַּֽדְשֵׁ֤א").match(/\u0301/gu).length, 2);
+  // With no primary trope, the meteg can still supply stress.
+  assert.equal(speech.prepareAzureHebrew("לָנֶֽצַח", t).lexicon[0].phoneme, "la.ˈne.t͡sax");
+});
+
+test("secondary meteg preserves primary audio stress across the Genesis fixture", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const t = new engine.HebrewTransliterator.Transliterator(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, "e"));
+  const displayIPA = word => speech.ipaFromTransliteration(t.transliterateWithAllStressMarks(word));
+  const spokenIPA = word => speech.prepareAzureHebrew(word, t).lexicon[0].phoneme;
+  const withoutStress = ipa => ipa.replace(/[ˈˌ]/gu, "");
+  for (const chapter of require("./fixtures/genesis/source.json").chapters) {
+    for (const verse of chapter.verses) {
+      for (const word of verse.hebrew.match(/[א-ת][א-ת\p{M}]*/gu) || []) {
+        if (!word.includes("\u05bd") || !/[\u0591-\u05ae]/u.test(word)) continue;
+        const withoutMeteg = word.replace(/\u05bd/gu, "");
+        const marked = displayIPA(word), unmarked = displayIPA(withoutMeteg);
+        // Some metegs affect the vowel itself. Compare only a difference in stress.
+        if (marked !== unmarked && withoutStress(marked) === withoutStress(unmarked)) {
+          assert.equal(spokenIPA(word), spokenIPA(withoutMeteg), "Genesis " + chapter.chapter + ":" + verse.verse + " " + word);
+        }
+      }
+    }
+  }
+});
+
+test("abbreviated names with prefixes match the full reading, speech and selection", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const Trans = engine.HebrewTransliterator.Transliterator;
+  for (const tzere of ["e", "ei"]) {
+    const audio = new Trans(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, tzere));
+    for (const style of engine.HebrewRulesets.all) {
+      const t = new Trans({ ...style, vowels: { ...style.vowels, tzere } });
+      for (const prefix of ["", "בַּ", "כַּ", "לַ", "וַ", "מֵ", "וּמֵ", "שֶׁ"]) {
+        const full = prefix + "יהוה";
+        for (const short of ["ה׳", "ה'", "ה’", "יְיָ", "יי", "י״י", 'י"י']) {
+          const word = prefix + short;
+          const source = "🙏 " + word + "!";
+          const aligned = t.transliterateWithAlignment(source);
+          assert.equal(aligned.text, t.transliterate("🙏 " + full + "!"), word);
+          const [segment] = aligned.segments;
+          assert.equal(source.slice(segment.sourceStart, segment.sourceEnd), word);
+          assert.equal(t.unvocalizedWords(word).length, 0);
+          assert.deepEqual(speech.prepareAzureHebrew(word, audio), speech.prepareAzureHebrew(full, audio), word);
+        }
+      }
+      for (const other of ["בָּהּ", "חַיַּי", "חַיִּים", "הַבַּיִת", "ב״ה", "הקב״ה"]) {
+        assert.equal(t.expandDivineNameAbbreviations(other), other);
+      }
+    }
+  }
+});
+
+test("sentence capitalization preserves literal English, links and Unicode spelling", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const t = new engine.HebrewTransliterator.Transliterator(engine.HebrewRulesets.modernSefardi);
+  const latin = "iPhone https://example.org/file.name. café. e\u0301lan.";
+  const source = latin + " שָׁלוֹם: iPad.\nשָׁלוֹם";
+  const expected = latin + " Shalom: iPad.\nShalom";
+  const aligned = t.transliterateWithAlignment(source);
+  assert.equal(t.transliterate(source), expected);
+  assert.equal(t.transliterateWithStressMarks(source), expected);
+  assert.equal(aligned.text, expected);
+  for (const segment of aligned.segments) {
+    assert.equal(source.slice(segment.sourceStart, segment.sourceEnd), "שָׁלוֹם");
+    assert.equal(aligned.text.slice(segment.targetStart, segment.targetEnd), "Shalom");
+  }
+});
+
+test("English cues and their punctuation are omitted while passage punctuation survives", () => {
+  const first = "שָׁלוֹם", second = "עֲלֵיכֶם";
+  for (const cue of ["(repeat 2–4 times!)", "[pp. 10–12]", "repeat 2–4 times!"]) {
+    const source = first + ", " + cue + " " + second + "׃";
+    assert.equal(speech.speakableHebrewOnly(source), (first + ", " + second + "׃").normalize("NFC"));
+  }
+  assert.equal(speech.speakableHebrewOnly(first + " (repeat!), " + second), (first + ", " + second).normalize("NFC"));
+  assert.equal(speech.speakableHebrewOnly("(sing " + first + "!)"), (first + "!").normalize("NFC"));
+});
+
+test("the vav-prefixed divine name is Vadonai in every style and in the speech lexicon", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const Trans = engine.HebrewTransliterator.Transliterator;
+  const audio = new Trans(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, "e"));
+  const fixture = require("./fixtures/genesis/source.json");
+  const words = fixture.chapters.flatMap(chapter => chapter.verses.flatMap(verse =>
+    Array.from(verse.hebrew.matchAll(/[א-ת][א-ת\p{M}]*/gu), match => match[0])
+      .filter(word => word.replace(/\p{M}/gu, "") === "ויהוה")));
+  assert.equal(words.length, 7);
+  for (const word of [...words, "ויהוה"]) {
+    for (const style of engine.HebrewRulesets.all) {
+      assert.equal(new Trans(style).transliterate(word), "Vadonai");
+    }
+    assert.equal(speech.prepareAzureHebrew(word, audio).lexicon[0].phoneme, "va.do.ˈnaj");
+  }
+});
+
+test("mem-prefixed divine names keep their style and tzere with any subset of points", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const Trans = engine.HebrewTransliterator.Transliterator;
+  for (const tzere of ["e", "ei"]) {
+    const prefix = "m" + tzere;
+    const audio = new Trans(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, tzere));
+    for (const style of engine.HebrewRulesets.all) {
+      const t = new Trans({ ...style, vowels: { ...style.vowels, tzere } });
+      const modern = style.id === "modernSefardi";
+      for (const word of ["מֵיְהֹוָ֖ה", "וּמֵיְהֹוָה"]) {
+        const withVav = word.startsWith("ו");
+        const reading = (withVav ? (modern ? "u" : "u-") : "") + prefix + (modern ? "·" : "-") + "Adonai";
+        const expected = reading[0].toUpperCase() + reading.slice(1);
+        const ipa = (withVav ? "u." : "") + (tzere === "e" ? "me" : "mej") + ".ʔa.do.ˈnaj";
+        let variants = [""];
+        for (const char of word) {
+          const withChar = variants.map(value => value + char);
+          variants = /\p{M}/u.test(char) ? variants.concat(withChar) : withChar;
+        }
+        for (const variant of variants) {
+          assert.equal(t.transliterateWithAlignment(variant).text, expected, variant);
+          assert.equal(t.transliterateWithStressMarks(variant), expected, variant);
+          assert.equal(t.unvocalizedWords(variant).length, 0, variant);
+          assert.equal(speech.prepareAzureHebrew(variant, audio).lexicon[0].phoneme, ipa, variant);
+        }
+      }
+    }
+  }
+});
+
+test("IPA respects Hebrew stress on spelling exceptions and before furtive patach", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  const audio = new engine.HebrewTransliterator.Transliterator(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, "e"));
+  for (const [word, expected] of [
+    ["לָ֑יְלָה", "ˈlaj.la"], ["לָיְלָה", "ˈlaj.la"], ["שְׁתַּ֥יִם", "ˈʃta.jim"],
+    ["רוּחַ", "ˈʁu.ax"], ["כֹּחַ", "ˈko.ax"], ["מָשִׁיחַ", "ma.ˈʃi.ax"],
+    ["גָּבוֹהַּ", "ga.ˈvo.ah"]
+  ]) {
+    assert.equal(speech.prepareAzureHebrew(word, audio).lexicon[0].phoneme, expected, word);
+  }
+});
+
+test("presentation forms preserve spelling and original selection offsets", () => {
+  const engine = require("../scripts/genesis-audit").loadTransliterator();
+  for (const style of engine.HebrewRulesets.all) {
+    const t = new engine.HebrewTransliterator.Transliterator(style);
+    const text = "שָׁלוֹם בָּרוּךְ";
+    const result = t.transliterateWithAlignment(text);
+    assert.equal(result.text, t.transliterate(text.normalize("NFD")));
+    assert.deepEqual(Array.from(result.segments, s => text.slice(s.sourceStart, s.sourceEnd)), text.split(" "));
+  }
+});
+
 test("removes displayed line numbers before speaking", () => {
   assert.equal(
     speech.prepareText("4. Sh'ma yisra·eil\n5. V'ahavta"),
