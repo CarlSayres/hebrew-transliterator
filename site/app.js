@@ -1494,14 +1494,10 @@
     sefariaResults.appendChild(nav);
   }
 
-  function renderRefResults(results, options = {}, renderOptions = {}) {
+  function renderSefariaResultList(results, options) {
     sefariaResults.textContent = "";
     const verboseResults = verboseResultsToggle.checked && !options.chapterStrip;
     sefariaResults.classList.toggle("verbose-results", verboseResults);
-    if (!renderOptions.preserveStack && !options.parentRef) {
-      sefariaNavigationStack = [];
-    }
-    currentSefariaResults = { results, options };
     renderSefariaNavigation(options);
 
     let resultHost = sefariaResults;
@@ -1516,15 +1512,6 @@
     const uniqueResults = options.alreadyValidated
       ? (options.showAll ? results : results.slice(0, 10))
       : sefariaResultTools.prepareResults(results, options.query || "", 10);
-
-    if (!uniqueResults.length) {
-      const checkedText = options.failedCount
-        ? " Sefaria returned possible matches, but none could be verified as usable Hebrew texts."
-        : "";
-      const partialText = options.partialMessage ? ` ${options.partialMessage}` : "";
-      setSefariaStatus(`No importable Tanakh or liturgy results found. Try a prayer name, or Import an exact reference like Genesis 1:1.${checkedText}${partialText}`);
-      return 0;
-    }
 
     for (const result of uniqueResults) {
       const label = result.displayLabel || (options.parentRef ? shortRefLabel(result.ref) : result.ref);
@@ -1627,24 +1614,39 @@
       card.appendChild(actions);
       resultHost.appendChild(card);
     }
+    return uniqueResults.length;
+  }
 
+  function renderRefResults(results, options = {}, renderOptions = {}) {
+    if (!renderOptions.preserveStack && !options.parentRef) {
+      sefariaNavigationStack = [];
+    }
+    currentSefariaResults = { results, options };
+    const count = renderSefariaResultList(results, options);
+    const sourceWarning = options.partialMessage ? ` ${options.partialMessage}` : "";
+    if (!count) {
+      const checkedText = options.failedCount
+        ? " Sefaria returned possible matches, but none could be verified as usable Hebrew texts."
+        : "";
+      setSefariaStatus(`No importable Tanakh or liturgy results found. Try a prayer name, or Import an exact reference like Genesis 1:1.${checkedText}${sourceWarning}`);
+      return 0;
+    }
     const partialText = options.failedCount
       ? ` ${options.failedCount} additional result${options.failedCount === 1 ? " could" : "s could"} not be verified and ${options.failedCount === 1 ? "was" : "were"} hidden.`
       : "";
-    const sourceWarning = options.partialMessage ? ` ${options.partialMessage}` : "";
     const serviceWarning = sefariaProblemWarning();
     if (options.statusMessage) {
       setSefariaStatus(`${options.statusMessage}${serviceWarning}`);
     } else if (options.pagination) {
       const start = options.pagination.page * options.pagination.pageSize + 1;
       const end = Math.min(start + options.pagination.pageSize - 1, options.pagination.total);
-      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"} (${start}–${end} of ${options.pagination.total}).${partialText}${sourceWarning}${serviceWarning}`);
+      setSefariaStatus(`Showing ${count} verified section${count === 1 ? "" : "s"} (${start}–${end} of ${options.pagination.total}).${partialText}${sourceWarning}${serviceWarning}`);
     } else if (options.parentRef) {
-      setSefariaStatus(`Showing ${uniqueResults.length} verified section${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}${serviceWarning}`);
+      setSefariaStatus(`Showing ${count} verified section${count === 1 ? "" : "s"}.${partialText}${sourceWarning}${serviceWarning}`);
     } else {
-      setSefariaStatus(`Found ${uniqueResults.length} verified result${uniqueResults.length === 1 ? "" : "s"}.${partialText}${sourceWarning}${serviceWarning}`);
+      setSefariaStatus(`Found ${count} verified result${count === 1 ? "" : "s"}.${partialText}${sourceWarning}${serviceWarning}`);
     }
-    return uniqueResults.length;
+    return count;
   }
 
   async function searchWrapper(query, size = 12, signal) {
@@ -1961,11 +1963,7 @@
 
   verboseResultsToggle.addEventListener("change", () => {
     if (currentSefariaResults) {
-      renderRefResults(
-        currentSefariaResults.results,
-        currentSefariaResults.options,
-        { preserveStack: true }
-      );
+      renderSefariaResultList(currentSefariaResults.results, currentSefariaResults.options);
     }
   });
 

@@ -62,3 +62,47 @@ test("identical medial and verse-final spellings keep distinct IPA in one lexico
     for (const entry of prepared.lexicon) assert.ok(prepared.text.includes(entry.grapheme));
   }
 });
+
+test("a maqaf group and its selected unstressed member keep the same kamatz", () => {
+  const display = new HebrewTransliterator.Transliterator(HebrewRulesets.levShalem);
+  for (const [ordinary, expected, first] of [
+    ["כְּתָב־לְךָ֖", "ke.tov.le.ˈxa", "ke.ˈtov"],
+    ["לֶאֱכָל־לֶ֛חֶם", "le.ʔe.xol.ˈle.xem", "le.ʔe.ˈxol"],
+    ["חָק־עוֹלָ֔ם", "xok.ʔo.ˈlam", "ˈxok"]
+  ]) {
+    assert.deepEqual(ipa(ordinary), [expected]);
+    assert.deepEqual(ipa(ordinary.replace("ָ", "ׇ")), [expected]);
+    const { segments } = display.transliterateWithAlignment(ordinary);
+    const word = segments[0];
+    assert.deepEqual(ipa(speech.sourceForTargetSelection(ordinary, segments,
+      { start: word.targetStart, end: word.targetEnd })), [first]);
+    assert.deepEqual(ipa(speech.selectedOrAll(ordinary,
+      { start: word.sourceStart, end: word.sourceEnd }, segments)), [first]);
+    assert.equal(speech.selectedOrAll(ordinary, { start: 0, end: ordinary.length }, segments), ordinary);
+  }
+});
+
+test("silent alef in a coda and consonantal alef at the start of a syllable", () => {
+  for (const [input, expected] of [
+    ["רֹאשׁ", "ˈʁoʃ"], ["זֹאת", "ˈzot"], ["וַיֹּ֣אמֶר", "va.ˈjo.meʁ"], ["קָרָאתִי", "ka.ˈʁa.ti"],
+    ["יִרְאָה", "jiʁ.ˈʔa"], ["מֵאוֹר", "me.ˈʔoʁ"], ["בּוֹאוּ", "bo.ˈʔu"]
+  ]) assert.deepEqual(ipa(input), [expected], input);
+});
+
+test("unaccented prayer words keep lexical stress and its effect on kamatz", () => {
+  const display = new HebrewTransliterator.Transliterator(HebrewRulesets.levShalem);
+  for (const [input, marked, expected] of [
+    ["אֲנָחְנוּ", "אֲנָֽחְנוּ", "ʔa.ˈnax.nu"], ["אָתָּה", "אָ֑תָּה", "ˈʔa.ta"],
+    ["עֶרֶב", "עֶ֣רֶב", "ˈʔe.ʁev"], ["אֲבוֹתֵינוּ", "אֲבוֹתֵ֖ינוּ", "ʔa.vo.ˈtej.nu"],
+    ["אֱלוֹהַּ", "אֱל֣וֹהַּ", "e.ˈlo.ah"], ["בַּדֶּרֶךְ", "בַּדֶּ֔רֶךְ", "ba.ˈde.ʁex"]
+  ]) {
+    assert.deepEqual(ipa(input), [expected], input);
+    assert.deepEqual(ipa(marked), [expected], marked);
+    assert.equal(display.transliterateWithStressMarks(input), display.transliterateWithStressMarks(marked));
+  }
+  assert.deepEqual(ipa("עֶרֶ֣ב"), ["ʔe.ˈʁev"]);
+  // Psalm 142:8 has an accent on the sh'va and another on the stressed mem.
+  assert.deepEqual(ipa("שְׁ֫מֶ֥ךָ"), ["ʃe.ˈme.xa"]);
+  assert.deepEqual(ipa("וּשְׁמָע"), ["uʃ.ˈma"]);
+  assert.deepEqual(ipa("זָרַ֣ע זָ֑רַע"), ["za.ˈʁa", "ˈza.ʁa"]);
+});

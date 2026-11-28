@@ -74,3 +74,27 @@ test("the Torah's feminine pronoun keeps its reading under prefixes", () => {
   }
   assert.equal(speech.prepareAzureHebrew("וְהוּא", audio).lexicon[0].phoneme, "ve.ˈhu");
 });
+
+test("Issachar keeps the silent second shin when prefixed", () => {
+  for (const style of HebrewRulesets.all) {
+    const t = new Transliterator(style);
+    const name = t.transliterate("יִשָּׂשכָר").toLowerCase();
+    for (const prefix of ["וְ", "בְּ", "לְ", "וּלְ"]) {
+      const word = prefix + "יִשָּׂשכָ֖ר";
+      assert.ok(t.transliterate(word).toLowerCase().endsWith(name), word);
+      assert.match(speech.prepareAzureHebrew(word, audio).lexicon[0].phoneme, /jis\.sa\.ˈxaʁ$/u);
+    }
+  }
+});
+
+test("lexical initials, the definite article, and the suffixed infinitive molkho", () => {
+  const t = new Transliterator(HebrewRulesets.levShalem);
+  for (const [word, expected] of [
+    ["לַחְמָם", "Laḥmam"], ["מִיכָה", "Mikhah"], ["מִדָּה", "Midah"],
+    ["בָּהּ", "Bah"], ["מִכֹּל", "Mi-kol"], ["הָאִישׁ", "Ha-ish"],
+    ["הָעִיר", "Ha-ir"], ["הָעִירָה", "Ha·irah"], ["הָעֵד", "Ha·eid"],
+    ["בְּמָלְכ֜וֹ", "B'molkho"], ["בְמָלְכוֹ", "V'molkho"], ["לְמָלְכוֹ", "L'molkho"]
+  ]) assert.equal(t.transliterate(word), expected, word);
+  assert.equal(speech.prepareAzureHebrew("לַחְמָם", audio).lexicon[0].phoneme, "lax.ˈmam");
+  assert.equal(speech.prepareAzureHebrew("בְּמָלְכ֜וֹ", audio).lexicon[0].phoneme, "be.mol.ˈxo");
+});

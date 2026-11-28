@@ -38,7 +38,7 @@ test("editor, imports, preferences, selection and audio attribution", async () =
       if (url.hostname === "www.sefaria.org") {
         const ref = decodeURIComponent(url.pathname.split("/").at(-1));
         if (url.pathname.startsWith("/api/name/")) {
-          return route.fulfill({ json: { completions: [ref] } });
+          return route.fulfill({ json: { completions: ref === "no matches" ? [] : [ref] } });
         }
         if (url.pathname.includes("/search-wrapper")) {
           const { query } = route.request().postDataJSON();
@@ -277,6 +277,28 @@ test("editor, imports, preferences, selection and audio attribution", async () =
     await page.getByRole("button", { name: "Import Exodus 2:24", exact: true }).waitFor();
     assert.equal(await page.locator("#sefariaResults .page-button").count(), 2);
     assert.equal(await editor.inputValue(), importedPrayer);
+    const verbose = page.locator("#verboseResultsToggle");
+    const status = page.locator("#sefariaStatus");
+    await importRef("Genesis 35:22");
+    await page.waitForFunction(() => document.querySelector("#sefariaStatus").textContent.startsWith("Imported Genesis 35:22."));
+    const importedStatus = await status.textContent();
+    const importedVerse = await editor.inputValue();
+    await verbose.check();
+    assert.equal(await page.locator("#sefariaResults .result-card").count(), 2);
+    assert.equal(await status.textContent(), importedStatus);
+    await verbose.uncheck();
+    assert.equal(await page.locator("#sefariaResults .page-button").count(), 2);
+    assert.equal(await status.textContent(), importedStatus);
+    await search("no matches");
+    await page.waitForFunction(() => document.querySelector("#sefariaStatus").textContent.startsWith("No importable"));
+    await importRef("Genesis 35:22");
+    await page.waitForFunction(() => document.querySelector("#sefariaStatus").textContent === "Imported Genesis 35:22.");
+    await verbose.check();
+    assert.equal(await status.textContent(), importedStatus);
+    await verbose.uncheck();
+    assert.equal(await status.textContent(), importedStatus);
+    assert.equal(await editor.inputValue(), importedVerse);
+    assert.equal(await page.locator("#sefariaResults button").count(), 0);
     await search("prayer 42");
     await page.getByRole("button", { name: "Import Deuteronomy 33:6", exact: true }).waitFor();
     assert.ok(fullTextQueries.includes("prayer 42"));
@@ -322,6 +344,11 @@ test("editor, imports, preferences, selection and audio attribution", async () =
     await page.click("#speechDownloadButton");
     await selectedNameDownload;
     assert.equal(audioRequests.at(-1).text, "אֱלֹהִים".normalize("NFC"));
+    await editor.fill("(לא) [ל֥וֹ] כְּתָב־לְךָ֖");
+    const qereDownload = page.waitForEvent("download");
+    await page.click("#speechDownloadButton");
+    await qereDownload;
+    assert.deepEqual(audioRequests.at(-1).lexicon.map(entry => entry.phoneme), ["ˈlo", "ke.tov.le.ˈxa"]);
     await editor.fill("יְהֹוָ֣ה ׀ יְהֹוָ֔ה");
     assert.equal((await output.textContent()).replace(/\s+/gu, " "), "Adonai Adonai");
     assert.deepEqual(errors, []);

@@ -60,13 +60,14 @@
   }
 
   function selectedOrAll(text, offsets, segments = []) {
-    const value = String(text || "");
+    const source = String(text || "");
     if (
       offsets &&
       Number.isInteger(offsets.start) &&
       Number.isInteger(offsets.end) &&
       offsets.start !== offsets.end
     ) {
+      const value = spokenQereText(source, true);
       const start = Math.max(0, Math.min(offsets.start, offsets.end));
       let end = Math.min(value.length, Math.max(offsets.start, offsets.end));
       // The adjacent sof pasuq identifies silluq in the selected final word.
@@ -75,14 +76,16 @@
       let reading = "";
       for (const segment of segments) {
         if (segment.sourceStart >= end) break;
-        if (segment.spokenReading && segment.sourceStart >= start && segment.sourceEnd <= end) {
-          reading += value.slice(cursor, segment.sourceStart) + segment.spokenReading;
+        const spoken = segment.spokenReading || (end < segment.maqafGroupEnd && segment.maqafReading);
+        if (spoken && segment.sourceStart >= start && segment.sourceEnd <= end &&
+            value[segment.sourceStart] !== "\0") {
+          reading += value.slice(cursor, segment.sourceStart) + spoken;
           cursor = segment.sourceEnd;
         }
       }
-      return reading + value.slice(cursor, end);
+      return (reading + value.slice(cursor, end)).replace(/\0/gu, "");
     }
-    return value;
+    return source;
   }
 
   function sourceForTargetSelection(sourceText, segments, offsets) {
@@ -233,6 +236,16 @@
       .join(" ")
       .replace(/\s+/gu, " ")
       .trim();
+  }
+
+  function spokenQereText(text, keepOffsets = false) {
+    // MAM displays the unpointed ketiv in parentheses immediately before
+    // the vocalized qere in brackets. Preserve offsets for partial selections.
+    return String(text || "").replace(/\([א-ת][א-ת־ \t]*\)[ \t]*\[([א-ת\p{M}־ \t׃]+)\]/gu, (pair, reading) => {
+      if (!/[\u05b0-\u05bb\u05c7]|ו\p{M}*\u05bc/u.test(reading)) return pair;
+      if (!keepOffsets) return reading;
+      return "\0".repeat(pair.indexOf("[") + 1) + reading + "\0";
+    });
   }
 
   function azurePronunciationText(text) {
@@ -430,16 +443,17 @@
       /([\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*(?:־[\u05d0-\u05ea][\u0591-\u05bd\u05bf-\u05c2\u05c4\u05c5\u05c7\u05d0-\u05ea]*)*)(׃?)/gu
     );
     const entries = new Map();
-    const wordEntry = (word, verseEnding) => {
-      const grapheme = word.normalize("NFC");
-      const rendered = transliterator.transliterateWithAllStressMarks(grapheme + verseEnding, { primaryOnly: true, forIPA: true });
-      const nfd = grapheme.normalize("NFD");
-      const preserveFinalH = /ה[^א-ת]*\u05bc[^א-ת]*$/u.test(nfd);
-      return { grapheme, phoneme: ipaFromTransliteration(rendered, { preserveFinalH }) };
-    };
     for (const [, unit, verseEnding] of units) {
       const parts = unit.split("־");
-      const partEntries = parts.map((word, index) => wordEntry(word, index === parts.length - 1 ? verseEnding : ""));
+      const rendered = parts.length > 1
+        ? transliterator.transliterateMaqafParts(parts, "phonemeStress", Boolean(verseEnding)).parts
+        : [transliterator.transliterateWithAllStressMarks(unit + verseEnding, { forIPA: true })];
+      const partEntries = parts.map((grapheme, index) => ({
+        grapheme,
+        phoneme: ipaFromTransliteration(rendered[index], {
+          preserveFinalH: /ה[^א-ת]*\u05bc[^א-ת]*$/u.test(grapheme)
+        })
+      }));
       if (parts.length > 1 && partEntries.every((entry) => entry.phoneme)) {
         const grapheme = parts.join("").normalize("NFC");
         const phoneme = partEntries.map((entry, index) => {
@@ -484,7 +498,7 @@
 
   function prepareAzureHebrew(text, transliterator) {
     // Azure receives the reading itself, including when it does not match a lexicon entry.
-    const spoken = distinguishVerseEndings(azurePronunciationText(transliterator.nameReadingsForSpeech(text)));
+    const spoken = distinguishVerseEndings(azurePronunciationText(transliterator.nameReadingsForSpeech(spokenQereText(text))));
     const lexicon = lexiconEntries(spoken, transliterator);
     return { text: speakableHebrewOnly(spoken, lexicon), lexicon };
   }

@@ -239,6 +239,13 @@
       clusters.splice(clusters.length - 1, 0, { ...lamed, base: "י", marks: [MARKS.HIRIQ] });
     }
 
+    // In Yissakhar the unpointed second shin is silent, also after a prefix.
+    if (clusters.at(-3)?.base === "ש" && clusters.at(-4)?.base === "ש" &&
+        clusterLookupKey(clusters.slice(-5)) === "יִשָּׂשכָר".normalize("NFD")) {
+      clusters.at(-4).issacharSin = true;
+      clusters.splice(clusters.length - 3, 1);
+    }
+
     // Daniel 5:6, 5:9: MAM explicitly marks the vav of Aramaic zīwōhī.
     // Some editions print an ordinary holam on it (the word still means
     // "his countenance"). Restrict this ambiguous יוֹ spelling to these forms.
@@ -294,7 +301,8 @@
       const key = clusterLookupKey(clusters)
         .replace(/\u05ba/gu, MARKS.HOLAM)
         .replace(/^([בכ])(\p{M}*)/u, (_, base, marks) => base + marks.replace(MARKS.DAGESH, ""));
-      first.lexicalInitial = window.HebrewLexicalInitialConsonants?.has(key);
+      first.lexicalInitial = window.HebrewLexicalInitialConsonants?.has(key) ||
+        (first.base === "ה" && ruleset.exceptions.lexicalInitialHey?.[key]);
       // The plural of bayit contracts to bāttim / bāttei. Its long qamatz
       // survives the internal dagesh (also in suffixed forms such as בָּתֵּינוּ).
       if (first.lexicalInitial && first.base === "ב" && hasMark(first, MARKS.QAMATS) &&
@@ -621,10 +629,13 @@
         if (isPositionalStressHelper(cluster, index, positionalHelpers)) {
           helperSyllables.add(syllableIndex);
         }
-        const marks = syllableMarks.get(syllableIndex) || { meteg: false, trope: false, forwardedSheva: false };
+        const marks = syllableMarks.get(syllableIndex) || { meteg: false, trope: false, directTrope: false, forwardedSheva: false };
+        const trope = hasEffectiveStressMarker(cluster, index, positionalHelpers, false);
+        const forwarded = isForwardedShevaStressMarker(clusters, index);
         marks.meteg = marks.meteg || hasMeteg(cluster);
-        marks.trope = marks.trope || hasEffectiveStressMarker(cluster, index, positionalHelpers, false);
-        marks.forwardedSheva = marks.forwardedSheva || isForwardedShevaStressMarker(clusters, index);
+        marks.trope = marks.trope || trope;
+        marks.directTrope = marks.directTrope || (trope && !forwarded);
+        marks.forwardedSheva = marks.forwardedSheva || forwarded;
         syllableMarks.set(syllableIndex, marks);
       }
     });
@@ -638,13 +649,14 @@
       primarySyllable = lastSyllable;
     } else if (
       penultimateSyllable >= 0 &&
-      syllableMarks.get(penultimateSyllable)?.trope &&
-      !syllableMarks.get(penultimateSyllable)?.forwardedSheva
+      syllableMarks.get(penultimateSyllable)?.directTrope
     ) {
       primarySyllable = penultimateSyllable;
     } else if (!markedSyllables.size || positionalHelpers.get("\u05ad")?.size === 0) {
       const spelling = clusterLookupKey(clusters, lastWordStart);
       if (penultimateSyllable >= 0 && (ruleset?.exceptions?.penultimateStress?.[spelling] ||
+          (ruleset?.exceptions?.prayerPenultimateStress?.[spelling] &&
+            !clusters.slice(lastWordStart).some(cluster => hasStressMarker(cluster))) ||
           /יְ?רוּשָׁל[ַָ]יִם$/u.test(spelling))) {
         primarySyllable = penultimateSyllable;
       }
@@ -1278,7 +1290,7 @@
 
     if (cluster.base === "ש") {
       if (hasMark(cluster, MARKS.SIN_DOT)) {
-        return mapping.sin;
+        return cluster.issacharSin ? mapping.sin.repeat(2) : mapping.sin;
       }
       return hasMark(cluster, MARKS.SHIN_DOT) ? mapping.shin : mapping.plain;
     }
@@ -1574,6 +1586,7 @@
     if (cluster.base === "ב") {
       const prefixConsonant = hasMark(cluster, MARKS.DAGESH) ? "b" : "v";
       const following = clusters[index + 1];
+      if (following.wordFinal && !isSyllableNucleus(following)) return "";
       const fullVowelBoundary = Boolean(
         following?.sheva === "vocal" ||
         hasMark(following, MARKS.DAGESH) ||
@@ -1674,11 +1687,10 @@
       }
 
       const following = clusters[index + 1];
-      if (
-        cluster.vowelName === "kamatzGadol" &&
-        ["א", "ע", "ר"].includes(following?.base) &&
-        ["kamatzGadol", "kamatzKatan"].includes(following?.vowelName)
-      ) {
+      if (cluster.vowelName === "kamatzGadol" && (
+        (["א", "ע"].includes(following?.base) && getVowelMark(following)) ||
+        (following?.base === "ר" && ["kamatzGadol", "kamatzKatan"].includes(following.vowelName))
+      )) {
         return "ha";
       }
 
@@ -1750,7 +1762,7 @@
 
   function stressMarkedVowelGroup(value, override) {
     const text = String(value);
-    const matches = Array.from(text.matchAll(/[aeiou]+/gi));
+    const matches = Array.from(text.matchAll(/ei|ai|oi|[aeiou]/gi));
     if (!matches.length || !override?.vowelFromEnd) {
       return text;
     }
@@ -1902,7 +1914,14 @@
         return;
       }
 
-      const consonant = consonantWithDageshDoubling(clusters, index, ruleset, options);
+      // A vowelless alef after a full vowel is quiescent (rosh, zot,
+      // vayomer), unless it carries the following shuruk or holam malei.
+      const previous = clusters[index - 1];
+      const quiescentAlef = format === "phonemeStress" && cluster.base === "א" &&
+        !getVowelMark(cluster) && !hasMark(cluster, MARKS.SHEVA) && !hasMark(cluster, MARKS.DAGESH) &&
+        previous && isSyllableNucleus(previous) && !hasShuruk(clusters[index + 1]) &&
+        !isHolamMalei(clusters, index + 1);
+      const consonant = quiescentAlef ? "" : consonantWithDageshDoubling(clusters, index, ruleset, options);
       const clusterOutputStress = outputStressForCluster(clusters, index);
 
       if (
@@ -2257,13 +2276,14 @@
       const segments = [];
       let output = "";
 
-      const appendAligned = (value, token) => {
+      const appendAligned = (value, token, speechContext = {}) => {
         const targetStart = output.length;
         output += value;
         segments.push({
           sourceStart: token.sourceStart,
           sourceEnd: token.sourceEnd,
           ...(token.spokenReading ? { spokenReading: token.spokenReading } : {}),
+          ...speechContext,
           targetStart,
           targetEnd: output.length
         });
@@ -2278,7 +2298,20 @@
               output += rendered.separator;
             }
             const sourceToken = tokens[index + (partIndex * 2)];
-            appendAligned(part, sourceToken);
+            const clusters = rendered.clusterGroups[partIndex];
+            let speechContext;
+            if (partIndex < group.words.length - 1 && clusters.some(c =>
+              c.vowelName === "kamatzKatan" && hasMark(c, MARKS.QAMATS))) {
+              // A user may select only the unstressed member. Carry its vowel
+              // into the selection even when the rest of the maqaf group is absent.
+              const letters = sourceToken.value.match(/[א-ת]\p{M}*/gu);
+              if (letters?.length === clusters.length) {
+                const maqafReading = letters.map((letter, i) => clusters[i].vowelName === "kamatzKatan"
+                  ? letter.replace(MARKS.QAMATS, MARKS.QAMATS_QATAN) : letter).join("");
+                speechContext = { maqafReading, maqafGroupEnd: tokens[group.endIndex].sourceEnd };
+              }
+            }
+            appendAligned(part, sourceToken, speechContext);
           });
           index = group.endIndex;
         } else {
@@ -2368,7 +2401,8 @@
         parts: words.map((word, index) =>
           this.transliterateWord(word, clusterGroups[index], true, wordFormat)
         ),
-        separator
+        separator,
+        clusterGroups
       };
     }
 
@@ -2414,14 +2448,15 @@
       if (exact && !useRuleStress) {
         // An exception supplies a spelling. A cantillation mark can still
         // locate its stressed vowel, including when "ai" spells one vowel.
-        if (!stressOverride && usesStressMarks(format) &&
-            /[\u0591-\u05ae\u05bd]/u.test(normalized) && !niqqudless) {
+        if (!stressOverride && usesStressMarks(format) && !niqqudless) {
           const marked = clusters || parseClusters(word);
+          const furtive = isFurtivePatach(marked, marked.length - 1);
           if (!stressAssigned) assignStress(marked, this.ruleset, verseEnd);
           const nuclei = getSyllableNuclei(marked);
           const primary = nuclei.findIndex(({ cluster }) => cluster.primaryStress);
-          if (primary >= 0 && (format !== "stressMarks" || primary < nuclei.length - 1)) {
-            return stressMarkedVowelGroup(exact, { vowelFromEnd: nuclei.length - primary });
+          if (primary >= 0 && (furtive || primary < nuclei.length - 1 ||
+              (format !== "stressMarks" && /[\u0591-\u05ae\u05bd]/u.test(normalized)))) {
+            return stressMarkedVowelGroup(exact, { vowelFromEnd: nuclei.length - primary + Number(furtive) });
           }
         }
         return usesStressMarks(format) ? markStress(exact) : exact;

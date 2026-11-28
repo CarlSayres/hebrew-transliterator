@@ -2,6 +2,29 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const speech = require("../site/speech");
 
+test("MAM ketiv and qere stay visible but only the qere enters speech, including selections", () => {
+  const { HebrewTransliterator, HebrewRulesets } = require("../scripts/genesis-audit").loadTransliterator();
+  const display = new HebrewTransliterator.Transliterator(HebrewRulesets.levShalem);
+  const voice = new HebrewTransliterator.Transliterator(speech.speechRuleset(HebrewRulesets.speechEnglish, "e"));
+  const say = text => speech.prepareAzureHebrew(text, voice);
+  for (const [written, read] of [["לא", "ל֥וֹ"], ["לא", "ל֣וּ"], ["כי טוב", "כְּט֣וֹב"], ["או", "אֵ֣י"]]) {
+    const source = require("../site/sefaria-client").cleanText(
+      `<span class="mam-kq-k">(${written})</span> <span class="mam-kq-q">[${read}]</span>`
+    );
+    const { text, segments } = display.transliterateWithAlignment(source);
+    assert.match(text, /\(.+\) \[.+\]/u);
+    assert.deepEqual(say(source), say(read));
+    const end = source.indexOf(")");
+    assert.equal(speech.selectedOrAll(source, { start: 1, end }, segments), "");
+    assert.equal(speech.sourceForTargetSelection(source, segments, {
+      start: segments[0].targetStart, end: segments[0].targetEnd
+    }), "");
+    assert.deepEqual(say(speech.selectedOrAll(source, { start: end - 1, end: source.length }, segments)), say(read));
+  }
+  assert.deepEqual(say("(לא) [לוֹ־]מֶלֶךְ"), say("לוֹ־מֶלֶךְ"));
+  assert.deepEqual(say("(בָּרוּךְ) [אַתָּה]"), say("בָּרוּךְ אַתָּה"));
+});
+
 test("selecting a complete verse-final word keeps its silluq in speech", () => {
   const engine = require("../scripts/genesis-audit").loadTransliterator();
   const t = new engine.HebrewTransliterator.Transliterator(speech.speechRuleset(engine.HebrewRulesets.speechEnglish, "e"));
